@@ -1,7 +1,7 @@
 # Release History
 *****************
 
-## Release T2S Node.js Client 1.4.0
+## Release ONDEWO T2S Node.js Client 1.4.0
 
 ### New Features
  * Added first public release
