@@ -15,8 +15,6 @@ interface IText2SpeechService extends grpc.ServiceDefinition<grpc.UntypedService
     deleteT2sPipeline: IText2SpeechService_IDeleteT2sPipeline;
     updateT2sPipeline: IText2SpeechService_IUpdateT2sPipeline;
     listT2sPipelines: IText2SpeechService_IListT2sPipelines;
-    listT2sLanguages: IText2SpeechService_IListT2sLanguages;
-    listT2sDomains: IText2SpeechService_IListT2sDomains;
 }
 
 interface IText2SpeechService_ISynthesize extends grpc.MethodDefinition<ondewo_t2s_text_to_speech_pb.SynthesizeRequest, ondewo_t2s_text_to_speech_pb.SynthesizeResponse> {
@@ -73,24 +71,6 @@ interface IText2SpeechService_IListT2sPipelines extends grpc.MethodDefinition<on
     responseSerialize: grpc.serialize<ondewo_t2s_text_to_speech_pb.ListT2sPipelinesResponse>;
     responseDeserialize: grpc.deserialize<ondewo_t2s_text_to_speech_pb.ListT2sPipelinesResponse>;
 }
-interface IText2SpeechService_IListT2sLanguages extends grpc.MethodDefinition<ondewo_t2s_text_to_speech_pb.ListT2sLanguagesRequest, ondewo_t2s_text_to_speech_pb.ListT2sLanguagesResponse> {
-    path: "/ondewo.t2s.Text2Speech/ListT2sLanguages";
-    requestStream: false;
-    responseStream: false;
-    requestSerialize: grpc.serialize<ondewo_t2s_text_to_speech_pb.ListT2sLanguagesRequest>;
-    requestDeserialize: grpc.deserialize<ondewo_t2s_text_to_speech_pb.ListT2sLanguagesRequest>;
-    responseSerialize: grpc.serialize<ondewo_t2s_text_to_speech_pb.ListT2sLanguagesResponse>;
-    responseDeserialize: grpc.deserialize<ondewo_t2s_text_to_speech_pb.ListT2sLanguagesResponse>;
-}
-interface IText2SpeechService_IListT2sDomains extends grpc.MethodDefinition<ondewo_t2s_text_to_speech_pb.ListT2sDomainsRequest, ondewo_t2s_text_to_speech_pb.ListT2sDomainsResponse> {
-    path: "/ondewo.t2s.Text2Speech/ListT2sDomains";
-    requestStream: false;
-    responseStream: false;
-    requestSerialize: grpc.serialize<ondewo_t2s_text_to_speech_pb.ListT2sDomainsRequest>;
-    requestDeserialize: grpc.deserialize<ondewo_t2s_text_to_speech_pb.ListT2sDomainsRequest>;
-    responseSerialize: grpc.serialize<ondewo_t2s_text_to_speech_pb.ListT2sDomainsResponse>;
-    responseDeserialize: grpc.deserialize<ondewo_t2s_text_to_speech_pb.ListT2sDomainsResponse>;
-}
 
 export const Text2SpeechService: IText2SpeechService;
 
@@ -101,8 +81,6 @@ export interface IText2SpeechServer {
     deleteT2sPipeline: grpc.handleUnaryCall<ondewo_t2s_text_to_speech_pb.T2sPipelineId, google_protobuf_empty_pb.Empty>;
     updateT2sPipeline: grpc.handleUnaryCall<ondewo_t2s_text_to_speech_pb.Text2SpeechConfig, google_protobuf_empty_pb.Empty>;
     listT2sPipelines: grpc.handleUnaryCall<ondewo_t2s_text_to_speech_pb.ListT2sPipelinesRequest, ondewo_t2s_text_to_speech_pb.ListT2sPipelinesResponse>;
-    listT2sLanguages: grpc.handleUnaryCall<ondewo_t2s_text_to_speech_pb.ListT2sLanguagesRequest, ondewo_t2s_text_to_speech_pb.ListT2sLanguagesResponse>;
-    listT2sDomains: grpc.handleUnaryCall<ondewo_t2s_text_to_speech_pb.ListT2sDomainsRequest, ondewo_t2s_text_to_speech_pb.ListT2sDomainsResponse>;
 }
 
 export interface IText2SpeechClient {
@@ -124,12 +102,6 @@ export interface IText2SpeechClient {
     listT2sPipelines(request: ondewo_t2s_text_to_speech_pb.ListT2sPipelinesRequest, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListT2sPipelinesResponse) => void): grpc.ClientUnaryCall;
     listT2sPipelines(request: ondewo_t2s_text_to_speech_pb.ListT2sPipelinesRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListT2sPipelinesResponse) => void): grpc.ClientUnaryCall;
     listT2sPipelines(request: ondewo_t2s_text_to_speech_pb.ListT2sPipelinesRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListT2sPipelinesResponse) => void): grpc.ClientUnaryCall;
-    listT2sLanguages(request: ondewo_t2s_text_to_speech_pb.ListT2sLanguagesRequest, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListT2sLanguagesResponse) => void): grpc.ClientUnaryCall;
-    listT2sLanguages(request: ondewo_t2s_text_to_speech_pb.ListT2sLanguagesRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListT2sLanguagesResponse) => void): grpc.ClientUnaryCall;
-    listT2sLanguages(request: ondewo_t2s_text_to_speech_pb.ListT2sLanguagesRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListT2sLanguagesResponse) => void): grpc.ClientUnaryCall;
-    listT2sDomains(request: ondewo_t2s_text_to_speech_pb.ListT2sDomainsRequest, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListT2sDomainsResponse) => void): grpc.ClientUnaryCall;
-    listT2sDomains(request: ondewo_t2s_text_to_speech_pb.ListT2sDomainsRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListT2sDomainsResponse) => void): grpc.ClientUnaryCall;
-    listT2sDomains(request: ondewo_t2s_text_to_speech_pb.ListT2sDomainsRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListT2sDomainsResponse) => void): grpc.ClientUnaryCall;
 }
 
 export class Text2SpeechClient extends grpc.Client implements IText2SpeechClient {
@@ -152,10 +124,4 @@ export class Text2SpeechClient extends grpc.Client implements IText2SpeechClient
     public listT2sPipelines(request: ondewo_t2s_text_to_speech_pb.ListT2sPipelinesRequest, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListT2sPipelinesResponse) => void): grpc.ClientUnaryCall;
     public listT2sPipelines(request: ondewo_t2s_text_to_speech_pb.ListT2sPipelinesRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListT2sPipelinesResponse) => void): grpc.ClientUnaryCall;
     public listT2sPipelines(request: ondewo_t2s_text_to_speech_pb.ListT2sPipelinesRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListT2sPipelinesResponse) => void): grpc.ClientUnaryCall;
-    public listT2sLanguages(request: ondewo_t2s_text_to_speech_pb.ListT2sLanguagesRequest, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListT2sLanguagesResponse) => void): grpc.ClientUnaryCall;
-    public listT2sLanguages(request: ondewo_t2s_text_to_speech_pb.ListT2sLanguagesRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListT2sLanguagesResponse) => void): grpc.ClientUnaryCall;
-    public listT2sLanguages(request: ondewo_t2s_text_to_speech_pb.ListT2sLanguagesRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListT2sLanguagesResponse) => void): grpc.ClientUnaryCall;
-    public listT2sDomains(request: ondewo_t2s_text_to_speech_pb.ListT2sDomainsRequest, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListT2sDomainsResponse) => void): grpc.ClientUnaryCall;
-    public listT2sDomains(request: ondewo_t2s_text_to_speech_pb.ListT2sDomainsRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListT2sDomainsResponse) => void): grpc.ClientUnaryCall;
-    public listT2sDomains(request: ondewo_t2s_text_to_speech_pb.ListT2sDomainsRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListT2sDomainsResponse) => void): grpc.ClientUnaryCall;
 }

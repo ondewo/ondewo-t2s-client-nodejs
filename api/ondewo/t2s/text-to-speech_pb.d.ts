@@ -160,124 +160,6 @@ export namespace ListT2sPipelinesResponse {
     }
 }
 
-export class ListT2sLanguagesRequest extends jspb.Message { 
-    clearSpeakerSexesList(): void;
-    getSpeakerSexesList(): Array<string>;
-    setSpeakerSexesList(value: Array<string>): ListT2sLanguagesRequest;
-    addSpeakerSexes(value: string, index?: number): string;
-    clearPipelineOwnersList(): void;
-    getPipelineOwnersList(): Array<string>;
-    setPipelineOwnersList(value: Array<string>): ListT2sLanguagesRequest;
-    addPipelineOwners(value: string, index?: number): string;
-    clearSpeakerNamesList(): void;
-    getSpeakerNamesList(): Array<string>;
-    setSpeakerNamesList(value: Array<string>): ListT2sLanguagesRequest;
-    addSpeakerNames(value: string, index?: number): string;
-    clearDomainsList(): void;
-    getDomainsList(): Array<string>;
-    setDomainsList(value: Array<string>): ListT2sLanguagesRequest;
-    addDomains(value: string, index?: number): string;
-
-    serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): ListT2sLanguagesRequest.AsObject;
-    static toObject(includeInstance: boolean, msg: ListT2sLanguagesRequest): ListT2sLanguagesRequest.AsObject;
-    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
-    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-    static serializeBinaryToWriter(message: ListT2sLanguagesRequest, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): ListT2sLanguagesRequest;
-    static deserializeBinaryFromReader(message: ListT2sLanguagesRequest, reader: jspb.BinaryReader): ListT2sLanguagesRequest;
-}
-
-export namespace ListT2sLanguagesRequest {
-    export type AsObject = {
-        speakerSexesList: Array<string>,
-        pipelineOwnersList: Array<string>,
-        speakerNamesList: Array<string>,
-        domainsList: Array<string>,
-    }
-}
-
-export class ListT2sLanguagesResponse extends jspb.Message { 
-    clearLanguagesList(): void;
-    getLanguagesList(): Array<string>;
-    setLanguagesList(value: Array<string>): ListT2sLanguagesResponse;
-    addLanguages(value: string, index?: number): string;
-
-    serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): ListT2sLanguagesResponse.AsObject;
-    static toObject(includeInstance: boolean, msg: ListT2sLanguagesResponse): ListT2sLanguagesResponse.AsObject;
-    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
-    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-    static serializeBinaryToWriter(message: ListT2sLanguagesResponse, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): ListT2sLanguagesResponse;
-    static deserializeBinaryFromReader(message: ListT2sLanguagesResponse, reader: jspb.BinaryReader): ListT2sLanguagesResponse;
-}
-
-export namespace ListT2sLanguagesResponse {
-    export type AsObject = {
-        languagesList: Array<string>,
-    }
-}
-
-export class ListT2sDomainsRequest extends jspb.Message { 
-    clearSpeakerSexesList(): void;
-    getSpeakerSexesList(): Array<string>;
-    setSpeakerSexesList(value: Array<string>): ListT2sDomainsRequest;
-    addSpeakerSexes(value: string, index?: number): string;
-    clearPipelineOwnersList(): void;
-    getPipelineOwnersList(): Array<string>;
-    setPipelineOwnersList(value: Array<string>): ListT2sDomainsRequest;
-    addPipelineOwners(value: string, index?: number): string;
-    clearSpeakerNamesList(): void;
-    getSpeakerNamesList(): Array<string>;
-    setSpeakerNamesList(value: Array<string>): ListT2sDomainsRequest;
-    addSpeakerNames(value: string, index?: number): string;
-    clearLanguagesList(): void;
-    getLanguagesList(): Array<string>;
-    setLanguagesList(value: Array<string>): ListT2sDomainsRequest;
-    addLanguages(value: string, index?: number): string;
-
-    serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): ListT2sDomainsRequest.AsObject;
-    static toObject(includeInstance: boolean, msg: ListT2sDomainsRequest): ListT2sDomainsRequest.AsObject;
-    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
-    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-    static serializeBinaryToWriter(message: ListT2sDomainsRequest, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): ListT2sDomainsRequest;
-    static deserializeBinaryFromReader(message: ListT2sDomainsRequest, reader: jspb.BinaryReader): ListT2sDomainsRequest;
-}
-
-export namespace ListT2sDomainsRequest {
-    export type AsObject = {
-        speakerSexesList: Array<string>,
-        pipelineOwnersList: Array<string>,
-        speakerNamesList: Array<string>,
-        languagesList: Array<string>,
-    }
-}
-
-export class ListT2sDomainsResponse extends jspb.Message { 
-    clearDomainsList(): void;
-    getDomainsList(): Array<string>;
-    setDomainsList(value: Array<string>): ListT2sDomainsResponse;
-    addDomains(value: string, index?: number): string;
-
-    serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): ListT2sDomainsResponse.AsObject;
-    static toObject(includeInstance: boolean, msg: ListT2sDomainsResponse): ListT2sDomainsResponse.AsObject;
-    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
-    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-    static serializeBinaryToWriter(message: ListT2sDomainsResponse, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): ListT2sDomainsResponse;
-    static deserializeBinaryFromReader(message: ListT2sDomainsResponse, reader: jspb.BinaryReader): ListT2sDomainsResponse;
-}
-
-export namespace ListT2sDomainsResponse {
-    export type AsObject = {
-        domainsList: Array<string>,
-    }
-}
-
 export class T2sPipelineId extends jspb.Message { 
     getId(): string;
     setId(value: string): T2sPipelineId;
@@ -720,8 +602,6 @@ export class Normalization extends jspb.Message {
     getPipelineList(): Array<string>;
     setPipelineList(value: Array<string>): Normalization;
     addPipeline(value: string, index?: number): string;
-    getCustomPhonemizerId(): string;
-    setCustomPhonemizerId(value: string): Normalization;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): Normalization.AsObject;
@@ -737,7 +617,6 @@ export namespace Normalization {
     export type AsObject = {
         language: string,
         pipelineList: Array<string>,
-        customPhonemizerId: string,
     }
 }
 

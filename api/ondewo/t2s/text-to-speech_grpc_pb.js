@@ -2,18 +2,15 @@
 
 // Original file comments:
 // Copyright 2020 ONDEWO GmbH
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
+// Licensed under the ONDEWO GmbH license, Version 1.0 (the "License");
+// you must not use this file except in compliance with the License.
+// You must obtain a copy of the License at
+// office@ondewo.com
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
-// limitations under the License.https://ondewo.slack.com/archives/CAWPP61NY
+// limitations under the License.
 //
 'use strict';
 var grpc = require('@grpc/grpc-js');
@@ -29,50 +26,6 @@ function serialize_google_protobuf_Empty(arg) {
 
 function deserialize_google_protobuf_Empty(buffer_arg) {
   return google_protobuf_empty_pb.Empty.deserializeBinary(new Uint8Array(buffer_arg));
-}
-
-function serialize_ondewo_t2s_ListT2sDomainsRequest(arg) {
-  if (!(arg instanceof ondewo_t2s_text$to$speech_pb.ListT2sDomainsRequest)) {
-    throw new Error('Expected argument of type ondewo.t2s.ListT2sDomainsRequest');
-  }
-  return Buffer.from(arg.serializeBinary());
-}
-
-function deserialize_ondewo_t2s_ListT2sDomainsRequest(buffer_arg) {
-  return ondewo_t2s_text$to$speech_pb.ListT2sDomainsRequest.deserializeBinary(new Uint8Array(buffer_arg));
-}
-
-function serialize_ondewo_t2s_ListT2sDomainsResponse(arg) {
-  if (!(arg instanceof ondewo_t2s_text$to$speech_pb.ListT2sDomainsResponse)) {
-    throw new Error('Expected argument of type ondewo.t2s.ListT2sDomainsResponse');
-  }
-  return Buffer.from(arg.serializeBinary());
-}
-
-function deserialize_ondewo_t2s_ListT2sDomainsResponse(buffer_arg) {
-  return ondewo_t2s_text$to$speech_pb.ListT2sDomainsResponse.deserializeBinary(new Uint8Array(buffer_arg));
-}
-
-function serialize_ondewo_t2s_ListT2sLanguagesRequest(arg) {
-  if (!(arg instanceof ondewo_t2s_text$to$speech_pb.ListT2sLanguagesRequest)) {
-    throw new Error('Expected argument of type ondewo.t2s.ListT2sLanguagesRequest');
-  }
-  return Buffer.from(arg.serializeBinary());
-}
-
-function deserialize_ondewo_t2s_ListT2sLanguagesRequest(buffer_arg) {
-  return ondewo_t2s_text$to$speech_pb.ListT2sLanguagesRequest.deserializeBinary(new Uint8Array(buffer_arg));
-}
-
-function serialize_ondewo_t2s_ListT2sLanguagesResponse(arg) {
-  if (!(arg instanceof ondewo_t2s_text$to$speech_pb.ListT2sLanguagesResponse)) {
-    throw new Error('Expected argument of type ondewo.t2s.ListT2sLanguagesResponse');
-  }
-  return Buffer.from(arg.serializeBinary());
-}
-
-function deserialize_ondewo_t2s_ListT2sLanguagesResponse(buffer_arg) {
-  return ondewo_t2s_text$to$speech_pb.ListT2sLanguagesResponse.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
 function serialize_ondewo_t2s_ListT2sPipelinesRequest(arg) {
@@ -209,28 +162,6 @@ var Text2SpeechService = exports.Text2SpeechService = {
     requestDeserialize: deserialize_ondewo_t2s_ListT2sPipelinesRequest,
     responseSerialize: serialize_ondewo_t2s_ListT2sPipelinesResponse,
     responseDeserialize: deserialize_ondewo_t2s_ListT2sPipelinesResponse,
-  },
-  listT2sLanguages: {
-    path: '/ondewo.t2s.Text2Speech/ListT2sLanguages',
-    requestStream: false,
-    responseStream: false,
-    requestType: ondewo_t2s_text$to$speech_pb.ListT2sLanguagesRequest,
-    responseType: ondewo_t2s_text$to$speech_pb.ListT2sLanguagesResponse,
-    requestSerialize: serialize_ondewo_t2s_ListT2sLanguagesRequest,
-    requestDeserialize: deserialize_ondewo_t2s_ListT2sLanguagesRequest,
-    responseSerialize: serialize_ondewo_t2s_ListT2sLanguagesResponse,
-    responseDeserialize: deserialize_ondewo_t2s_ListT2sLanguagesResponse,
-  },
-  listT2sDomains: {
-    path: '/ondewo.t2s.Text2Speech/ListT2sDomains',
-    requestStream: false,
-    responseStream: false,
-    requestType: ondewo_t2s_text$to$speech_pb.ListT2sDomainsRequest,
-    responseType: ondewo_t2s_text$to$speech_pb.ListT2sDomainsResponse,
-    requestSerialize: serialize_ondewo_t2s_ListT2sDomainsRequest,
-    requestDeserialize: deserialize_ondewo_t2s_ListT2sDomainsRequest,
-    responseSerialize: serialize_ondewo_t2s_ListT2sDomainsResponse,
-    responseDeserialize: deserialize_ondewo_t2s_ListT2sDomainsResponse,
   },
 };
 
