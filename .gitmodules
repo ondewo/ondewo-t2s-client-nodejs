@@ -1,0 +1,4 @@
+[submodule "src/ondewo-t2s-api"]
+	path = src/ondewo-t2s-api
+	url = https://github.com/ondewo/ondewo-t2s-api.git
+	branch = release/1.4.0

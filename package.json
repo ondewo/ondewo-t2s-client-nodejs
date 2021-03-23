@@ -1,0 +1,18 @@
+{
+  "name": "@ondewo/t2s-client-nodejs",
+  "version": "1.4.0",
+  "description": "Ondewo text to speech client library for nodejs as a commonjs module",
+  "main": "public-api.js",
+  "typings": "public-api.d.ts",
+  "scripts": {
+    "start": "npm run build",
+    "build": "git submodule update --init --recursive --remote && docker run -it -v ${PWD}:/input-volume -v ${PWD}/..:/output-volume ondewo-nodejs-proto-compiler ondewo-t2s-api ondewo",
+    "predebug": "mv ondewo-t2s-api/googleapis/google ondewo-t2s-api/google",
+    "debug": "docker run -it --entrypoint /bin/bash -v ${PWD}:/input-volume -v ${PWD}/..:/output-volume ondewo-nodejs-proto-compiler"
+  },
+  "author": "Philipp Schweiger @ Ondewo",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "google-protobuf": "^3.15.5"
+  }
+}
