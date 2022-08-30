@@ -2,10 +2,13 @@
 
 // Original file comments:
 // Copyright 2020 ONDEWO GmbH
-// Licensed under the ONDEWO GmbH license, Version 1.0 (the "License");
-// you must not use this file except in compliance with the License.
-// You must obtain a copy of the License at
-// office@ondewo.com
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,6 +29,116 @@ function serialize_google_protobuf_Empty(arg) {
 
 function deserialize_google_protobuf_Empty(buffer_arg) {
   return google_protobuf_empty_pb.Empty.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_ondewo_t2s_BatchSynthesizeRequest(arg) {
+  if (!(arg instanceof ondewo_t2s_text$to$speech_pb.BatchSynthesizeRequest)) {
+    throw new Error('Expected argument of type ondewo.t2s.BatchSynthesizeRequest');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_ondewo_t2s_BatchSynthesizeRequest(buffer_arg) {
+  return ondewo_t2s_text$to$speech_pb.BatchSynthesizeRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_ondewo_t2s_BatchSynthesizeResponse(arg) {
+  if (!(arg instanceof ondewo_t2s_text$to$speech_pb.BatchSynthesizeResponse)) {
+    throw new Error('Expected argument of type ondewo.t2s.BatchSynthesizeResponse');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_ondewo_t2s_BatchSynthesizeResponse(buffer_arg) {
+  return ondewo_t2s_text$to$speech_pb.BatchSynthesizeResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_ondewo_t2s_CreateCustomPhonemizerRequest(arg) {
+  if (!(arg instanceof ondewo_t2s_text$to$speech_pb.CreateCustomPhonemizerRequest)) {
+    throw new Error('Expected argument of type ondewo.t2s.CreateCustomPhonemizerRequest');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_ondewo_t2s_CreateCustomPhonemizerRequest(buffer_arg) {
+  return ondewo_t2s_text$to$speech_pb.CreateCustomPhonemizerRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_ondewo_t2s_CustomPhonemizerProto(arg) {
+  if (!(arg instanceof ondewo_t2s_text$to$speech_pb.CustomPhonemizerProto)) {
+    throw new Error('Expected argument of type ondewo.t2s.CustomPhonemizerProto');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_ondewo_t2s_CustomPhonemizerProto(buffer_arg) {
+  return ondewo_t2s_text$to$speech_pb.CustomPhonemizerProto.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_ondewo_t2s_ListCustomPhonemizerRequest(arg) {
+  if (!(arg instanceof ondewo_t2s_text$to$speech_pb.ListCustomPhonemizerRequest)) {
+    throw new Error('Expected argument of type ondewo.t2s.ListCustomPhonemizerRequest');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_ondewo_t2s_ListCustomPhonemizerRequest(buffer_arg) {
+  return ondewo_t2s_text$to$speech_pb.ListCustomPhonemizerRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_ondewo_t2s_ListCustomPhonemizerResponse(arg) {
+  if (!(arg instanceof ondewo_t2s_text$to$speech_pb.ListCustomPhonemizerResponse)) {
+    throw new Error('Expected argument of type ondewo.t2s.ListCustomPhonemizerResponse');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_ondewo_t2s_ListCustomPhonemizerResponse(buffer_arg) {
+  return ondewo_t2s_text$to$speech_pb.ListCustomPhonemizerResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_ondewo_t2s_ListT2sDomainsRequest(arg) {
+  if (!(arg instanceof ondewo_t2s_text$to$speech_pb.ListT2sDomainsRequest)) {
+    throw new Error('Expected argument of type ondewo.t2s.ListT2sDomainsRequest');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_ondewo_t2s_ListT2sDomainsRequest(buffer_arg) {
+  return ondewo_t2s_text$to$speech_pb.ListT2sDomainsRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_ondewo_t2s_ListT2sDomainsResponse(arg) {
+  if (!(arg instanceof ondewo_t2s_text$to$speech_pb.ListT2sDomainsResponse)) {
+    throw new Error('Expected argument of type ondewo.t2s.ListT2sDomainsResponse');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_ondewo_t2s_ListT2sDomainsResponse(buffer_arg) {
+  return ondewo_t2s_text$to$speech_pb.ListT2sDomainsResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_ondewo_t2s_ListT2sLanguagesRequest(arg) {
+  if (!(arg instanceof ondewo_t2s_text$to$speech_pb.ListT2sLanguagesRequest)) {
+    throw new Error('Expected argument of type ondewo.t2s.ListT2sLanguagesRequest');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_ondewo_t2s_ListT2sLanguagesRequest(buffer_arg) {
+  return ondewo_t2s_text$to$speech_pb.ListT2sLanguagesRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_ondewo_t2s_ListT2sLanguagesResponse(arg) {
+  if (!(arg instanceof ondewo_t2s_text$to$speech_pb.ListT2sLanguagesResponse)) {
+    throw new Error('Expected argument of type ondewo.t2s.ListT2sLanguagesResponse');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_ondewo_t2s_ListT2sLanguagesResponse(buffer_arg) {
+  return ondewo_t2s_text$to$speech_pb.ListT2sLanguagesResponse.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
 function serialize_ondewo_t2s_ListT2sPipelinesRequest(arg) {
@@ -50,6 +163,39 @@ function deserialize_ondewo_t2s_ListT2sPipelinesResponse(buffer_arg) {
   return ondewo_t2s_text$to$speech_pb.ListT2sPipelinesResponse.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_ondewo_t2s_NormalizeTextRequest(arg) {
+  if (!(arg instanceof ondewo_t2s_text$to$speech_pb.NormalizeTextRequest)) {
+    throw new Error('Expected argument of type ondewo.t2s.NormalizeTextRequest');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_ondewo_t2s_NormalizeTextRequest(buffer_arg) {
+  return ondewo_t2s_text$to$speech_pb.NormalizeTextRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_ondewo_t2s_NormalizeTextResponse(arg) {
+  if (!(arg instanceof ondewo_t2s_text$to$speech_pb.NormalizeTextResponse)) {
+    throw new Error('Expected argument of type ondewo.t2s.NormalizeTextResponse');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_ondewo_t2s_NormalizeTextResponse(buffer_arg) {
+  return ondewo_t2s_text$to$speech_pb.NormalizeTextResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_ondewo_t2s_PhonemizerId(arg) {
+  if (!(arg instanceof ondewo_t2s_text$to$speech_pb.PhonemizerId)) {
+    throw new Error('Expected argument of type ondewo.t2s.PhonemizerId');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_ondewo_t2s_PhonemizerId(buffer_arg) {
+  return ondewo_t2s_text$to$speech_pb.PhonemizerId.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_ondewo_t2s_SynthesizeRequest(arg) {
   if (!(arg instanceof ondewo_t2s_text$to$speech_pb.SynthesizeRequest)) {
     throw new Error('Expected argument of type ondewo.t2s.SynthesizeRequest');
@@ -70,6 +216,17 @@ function serialize_ondewo_t2s_SynthesizeResponse(arg) {
 
 function deserialize_ondewo_t2s_SynthesizeResponse(buffer_arg) {
   return ondewo_t2s_text$to$speech_pb.SynthesizeResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_ondewo_t2s_T2SGetServiceInfoResponse(arg) {
+  if (!(arg instanceof ondewo_t2s_text$to$speech_pb.T2SGetServiceInfoResponse)) {
+    throw new Error('Expected argument of type ondewo.t2s.T2SGetServiceInfoResponse');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_ondewo_t2s_T2SGetServiceInfoResponse(buffer_arg) {
+  return ondewo_t2s_text$to$speech_pb.T2SGetServiceInfoResponse.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
 function serialize_ondewo_t2s_T2sPipelineId(arg) {
@@ -94,10 +251,23 @@ function deserialize_ondewo_t2s_Text2SpeechConfig(buffer_arg) {
   return ondewo_t2s_text$to$speech_pb.Text2SpeechConfig.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_ondewo_t2s_UpdateCustomPhonemizerRequest(arg) {
+  if (!(arg instanceof ondewo_t2s_text$to$speech_pb.UpdateCustomPhonemizerRequest)) {
+    throw new Error('Expected argument of type ondewo.t2s.UpdateCustomPhonemizerRequest');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_ondewo_t2s_UpdateCustomPhonemizerRequest(buffer_arg) {
+  return ondewo_t2s_text$to$speech_pb.UpdateCustomPhonemizerRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 
 // endpoints of t2s generate service
 var Text2SpeechService = exports.Text2SpeechService = {
-  synthesize: {
+  // Synthesizes an specific text sent in the request with the configuration requirements and retrieves a response
+// that includes the synthesized text to audio and the configuration wanted.
+synthesize: {
     path: '/ondewo.t2s.Text2Speech/Synthesize',
     requestStream: false,
     responseStream: false,
@@ -108,7 +278,32 @@ var Text2SpeechService = exports.Text2SpeechService = {
     responseSerialize: serialize_ondewo_t2s_SynthesizeResponse,
     responseDeserialize: deserialize_ondewo_t2s_SynthesizeResponse,
   },
-  getT2sPipeline: {
+  // will this safe time when doing batch predict on the AI model?
+batchSynthesize: {
+    path: '/ondewo.t2s.Text2Speech/BatchSynthesize',
+    requestStream: false,
+    responseStream: false,
+    requestType: ondewo_t2s_text$to$speech_pb.BatchSynthesizeRequest,
+    responseType: ondewo_t2s_text$to$speech_pb.BatchSynthesizeResponse,
+    requestSerialize: serialize_ondewo_t2s_BatchSynthesizeRequest,
+    requestDeserialize: deserialize_ondewo_t2s_BatchSynthesizeRequest,
+    responseSerialize: serialize_ondewo_t2s_BatchSynthesizeResponse,
+    responseDeserialize: deserialize_ondewo_t2s_BatchSynthesizeResponse,
+  },
+  // Normalize a text according to a specific pipeline normalization rules.
+normalizeText: {
+    path: '/ondewo.t2s.Text2Speech/NormalizeText',
+    requestStream: false,
+    responseStream: false,
+    requestType: ondewo_t2s_text$to$speech_pb.NormalizeTextRequest,
+    responseType: ondewo_t2s_text$to$speech_pb.NormalizeTextResponse,
+    requestSerialize: serialize_ondewo_t2s_NormalizeTextRequest,
+    requestDeserialize: deserialize_ondewo_t2s_NormalizeTextRequest,
+    responseSerialize: serialize_ondewo_t2s_NormalizeTextResponse,
+    responseDeserialize: deserialize_ondewo_t2s_NormalizeTextResponse,
+  },
+  // Retrieves the configuration of the specified pipeline.
+getT2sPipeline: {
     path: '/ondewo.t2s.Text2Speech/GetT2sPipeline',
     requestStream: false,
     responseStream: false,
@@ -119,7 +314,8 @@ var Text2SpeechService = exports.Text2SpeechService = {
     responseSerialize: serialize_ondewo_t2s_Text2SpeechConfig,
     responseDeserialize: deserialize_ondewo_t2s_Text2SpeechConfig,
   },
-  createT2sPipeline: {
+  // Creates a pipeline with the specified configuration and retrieves its id.
+createT2sPipeline: {
     path: '/ondewo.t2s.Text2Speech/CreateT2sPipeline',
     requestStream: false,
     responseStream: false,
@@ -130,7 +326,8 @@ var Text2SpeechService = exports.Text2SpeechService = {
     responseSerialize: serialize_ondewo_t2s_T2sPipelineId,
     responseDeserialize: deserialize_ondewo_t2s_T2sPipelineId,
   },
-  deleteT2sPipeline: {
+  // Deletes the specified pipeline.
+deleteT2sPipeline: {
     path: '/ondewo.t2s.Text2Speech/DeleteT2sPipeline',
     requestStream: false,
     responseStream: false,
@@ -141,7 +338,8 @@ var Text2SpeechService = exports.Text2SpeechService = {
     responseSerialize: serialize_google_protobuf_Empty,
     responseDeserialize: deserialize_google_protobuf_Empty,
   },
-  updateT2sPipeline: {
+  // Update a specified pipeline with certain configuration.
+updateT2sPipeline: {
     path: '/ondewo.t2s.Text2Speech/UpdateT2sPipeline',
     requestStream: false,
     responseStream: false,
@@ -152,7 +350,8 @@ var Text2SpeechService = exports.Text2SpeechService = {
     responseSerialize: serialize_google_protobuf_Empty,
     responseDeserialize: deserialize_google_protobuf_Empty,
   },
-  listT2sPipelines: {
+  // Retrieve the list of pipelines with an specific requirement.
+listT2sPipelines: {
     path: '/ondewo.t2s.Text2Speech/ListT2sPipelines',
     requestStream: false,
     responseStream: false,
@@ -163,6 +362,102 @@ var Text2SpeechService = exports.Text2SpeechService = {
     responseSerialize: serialize_ondewo_t2s_ListT2sPipelinesResponse,
     responseDeserialize: deserialize_ondewo_t2s_ListT2sPipelinesResponse,
   },
+  // Retrieve the list of languages given a specific config request.
+listT2sLanguages: {
+    path: '/ondewo.t2s.Text2Speech/ListT2sLanguages',
+    requestStream: false,
+    responseStream: false,
+    requestType: ondewo_t2s_text$to$speech_pb.ListT2sLanguagesRequest,
+    responseType: ondewo_t2s_text$to$speech_pb.ListT2sLanguagesResponse,
+    requestSerialize: serialize_ondewo_t2s_ListT2sLanguagesRequest,
+    requestDeserialize: deserialize_ondewo_t2s_ListT2sLanguagesRequest,
+    responseSerialize: serialize_ondewo_t2s_ListT2sLanguagesResponse,
+    responseDeserialize: deserialize_ondewo_t2s_ListT2sLanguagesResponse,
+  },
+  // Retrieve the list of domains given a specific config request.
+listT2sDomains: {
+    path: '/ondewo.t2s.Text2Speech/ListT2sDomains',
+    requestStream: false,
+    responseStream: false,
+    requestType: ondewo_t2s_text$to$speech_pb.ListT2sDomainsRequest,
+    responseType: ondewo_t2s_text$to$speech_pb.ListT2sDomainsResponse,
+    requestSerialize: serialize_ondewo_t2s_ListT2sDomainsRequest,
+    requestDeserialize: deserialize_ondewo_t2s_ListT2sDomainsRequest,
+    responseSerialize: serialize_ondewo_t2s_ListT2sDomainsResponse,
+    responseDeserialize: deserialize_ondewo_t2s_ListT2sDomainsResponse,
+  },
+  // Returns a message containing the version of the running text to speech server.
+getServiceInfo: {
+    path: '/ondewo.t2s.Text2Speech/GetServiceInfo',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_empty_pb.Empty,
+    responseType: ondewo_t2s_text$to$speech_pb.T2SGetServiceInfoResponse,
+    requestSerialize: serialize_google_protobuf_Empty,
+    requestDeserialize: deserialize_google_protobuf_Empty,
+    responseSerialize: serialize_ondewo_t2s_T2SGetServiceInfoResponse,
+    responseDeserialize: deserialize_ondewo_t2s_T2SGetServiceInfoResponse,
+  },
 };
 
 exports.Text2SpeechClient = grpc.makeGenericClientConstructor(Text2SpeechService);
+// endpoints of custom phonemizer
+var CustomPhonemizersService = exports.CustomPhonemizersService = {
+  getCustomPhonemizer: {
+    path: '/ondewo.t2s.CustomPhonemizers/GetCustomPhonemizer',
+    requestStream: false,
+    responseStream: false,
+    requestType: ondewo_t2s_text$to$speech_pb.PhonemizerId,
+    responseType: ondewo_t2s_text$to$speech_pb.CustomPhonemizerProto,
+    requestSerialize: serialize_ondewo_t2s_PhonemizerId,
+    requestDeserialize: deserialize_ondewo_t2s_PhonemizerId,
+    responseSerialize: serialize_ondewo_t2s_CustomPhonemizerProto,
+    responseDeserialize: deserialize_ondewo_t2s_CustomPhonemizerProto,
+  },
+  createCustomPhonemizer: {
+    path: '/ondewo.t2s.CustomPhonemizers/CreateCustomPhonemizer',
+    requestStream: false,
+    responseStream: false,
+    requestType: ondewo_t2s_text$to$speech_pb.CreateCustomPhonemizerRequest,
+    responseType: ondewo_t2s_text$to$speech_pb.PhonemizerId,
+    requestSerialize: serialize_ondewo_t2s_CreateCustomPhonemizerRequest,
+    requestDeserialize: deserialize_ondewo_t2s_CreateCustomPhonemizerRequest,
+    responseSerialize: serialize_ondewo_t2s_PhonemizerId,
+    responseDeserialize: deserialize_ondewo_t2s_PhonemizerId,
+  },
+  deleteCustomPhonemizer: {
+    path: '/ondewo.t2s.CustomPhonemizers/DeleteCustomPhonemizer',
+    requestStream: false,
+    responseStream: false,
+    requestType: ondewo_t2s_text$to$speech_pb.PhonemizerId,
+    responseType: google_protobuf_empty_pb.Empty,
+    requestSerialize: serialize_ondewo_t2s_PhonemizerId,
+    requestDeserialize: deserialize_ondewo_t2s_PhonemizerId,
+    responseSerialize: serialize_google_protobuf_Empty,
+    responseDeserialize: deserialize_google_protobuf_Empty,
+  },
+  updateCustomPhonemizer: {
+    path: '/ondewo.t2s.CustomPhonemizers/UpdateCustomPhonemizer',
+    requestStream: false,
+    responseStream: false,
+    requestType: ondewo_t2s_text$to$speech_pb.UpdateCustomPhonemizerRequest,
+    responseType: ondewo_t2s_text$to$speech_pb.CustomPhonemizerProto,
+    requestSerialize: serialize_ondewo_t2s_UpdateCustomPhonemizerRequest,
+    requestDeserialize: deserialize_ondewo_t2s_UpdateCustomPhonemizerRequest,
+    responseSerialize: serialize_ondewo_t2s_CustomPhonemizerProto,
+    responseDeserialize: deserialize_ondewo_t2s_CustomPhonemizerProto,
+  },
+  listCustomPhonemizer: {
+    path: '/ondewo.t2s.CustomPhonemizers/ListCustomPhonemizer',
+    requestStream: false,
+    responseStream: false,
+    requestType: ondewo_t2s_text$to$speech_pb.ListCustomPhonemizerRequest,
+    responseType: ondewo_t2s_text$to$speech_pb.ListCustomPhonemizerResponse,
+    requestSerialize: serialize_ondewo_t2s_ListCustomPhonemizerRequest,
+    requestDeserialize: deserialize_ondewo_t2s_ListCustomPhonemizerRequest,
+    responseSerialize: serialize_ondewo_t2s_ListCustomPhonemizerResponse,
+    responseDeserialize: deserialize_ondewo_t2s_ListCustomPhonemizerResponse,
+  },
+};
+
+exports.CustomPhonemizersClient = grpc.makeGenericClientConstructor(CustomPhonemizersService);
