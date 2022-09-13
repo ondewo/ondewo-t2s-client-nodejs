@@ -1,14 +1,14 @@
 # Release History
 
-***************** 
-## Release ONDEWO T2S Nodejs Client 4.3.0 
- 
-### Improvements 
- * Tracking API Version 4.3.0 
+*****************
+## Release ONDEWO T2S Nodejs Client 4.3.0
+
+### Improvements
+ * Tracking API Version 4.3.0
 
 *****************
 
-## Release ONDEWO T2S Node.js Client 4.2.0
+## Release ONDEWO T2S Nodejs Client 4.2.0
 
 ### New Features
 * Track version 4.3.0 of [ONDEWO T2S API](https://github.com/ondewo/ondewo-t2s-api/releases/4.3.0)

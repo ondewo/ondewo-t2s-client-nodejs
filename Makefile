@@ -30,7 +30,7 @@ IMAGE_UTILS_NAME=ondewo-t2s-client-utils-nodejs:${ONDEWO_T2S_VERSION}
 PRETTIER_WRITE?=
 
 CURRENT_RELEASE_NOTES=`cat RELEASE.md \
-	| sed -n '/Release ONDEWO T2S Node.js Client ${ONDEWO_T2S_VERSION}/,/\*\*/p'`
+	| sed -n '/Release ONDEWO T2S Nodejs Client ${ONDEWO_T2S_VERSION}/,/\*\*/p'`
 
 
 GH_REPO="https://github.com/ondewo/ondewo-t2s-client-nodejs"
@@ -48,6 +48,9 @@ install_packages: ## Install npm packages
 
 install_precommit_hooks: ## Install precommit hooks
 	npx husky install
+
+run_precommit_hooks:
+	.husky/pre-commit
 
 prettier: ## Checks formatting with Prettier - Use PRETTIER_WRITE=-w to also automatically apply corrections where needed
 	node_modules/.bin/prettier --config .prettierrc --check --ignore-path .prettierignore $(PRETTIER_WRITE) ./
@@ -91,10 +94,26 @@ check_build: ## Checks if proto-code was generated correctly
 
 release: ## Create Github and NPM Release
 	@echo "Start Release"
-	make build_and_publish_npm_via_docker
-	make create_release_branch
-	make create_release_tag
-	make release_to_github_via_docker_image
+	make install_precommit_hooks
+	make build
+	make check_build
+	make run_precommit_hooks
+	git status
+	git add api
+	git add Makefile
+	git add src
+	git add RELEASE.md
+	git add package.json
+	git add package-lock.json
+	git add ${ONDEWO_PROTO_COMPILER_DIR}
+	git status
+# git commit -m "Preparing for Release ${ONDEWO_NLU_VERSION}"
+# git push
+# make publish_npm_via_docker
+# make create_release_branch
+# make create_release_tag
+# make release_to_github_via_docker_image
+	@echo "Finished Release"
 
 gh_release: build_utils_docker_image release_to_github_via_docker_image ## Builds Utils Image and Releases to Github
 
@@ -163,8 +182,8 @@ run_release_with_devops: ## Runs the make release target with credentials from d
 spc: ## Checks if the Release Branch, Tag and Pypi version already exist
 	$(eval filtered_branches:= $(shell git branch --all | grep "release/${ONDEWO_T2S_VERSION}"))
 	$(eval filtered_tags:= $(shell git tag --list | grep "${ONDEWO_T2S_VERSION}"))
-	@if test "$(filtered_branches)" != ""; then echo "-- Test 1: Branch exists!!" & exit 1; else echo "-- Test 1: Branch is fine";fi
-	@if test "$(filtered_tags)" != ""; then echo "-- Test 2: Tag exists!!" & exit 1; else echo "-- Test 2: Tag is fine";fi
+# @if test "$(filtered_branches)" != ""; then echo "-- Test 1: Branch exists!!" & exit 1; else echo "-- Test 1: Branch is fine";fi
+# @if test "$(filtered_tags)" != ""; then echo "-- Test 2: Tag exists!!" & exit 1; else echo "-- Test 2: Tag is fine";fi
 
 
 ########################################################
@@ -186,13 +205,13 @@ build: check_out_correct_submodule_versions build_compiler update_package npm_ru
 	make install_dependencies
 
 
-remove_npm_script:
+remove_npm_script: ## Removes Script section from package.json
 	$(eval script_lines:= $(shell cat package.json | sed -n '/\"scripts\"/,/\}\,/='))
 	$(eval start:= $(shell echo $(script_lines) | cut -c 1-2))
 	$(eval end:= $(shell echo $(script_lines) | rev | cut -c 1-3 | rev))
 	@sed -i '$(start),$(end)d' package.json
 
-create_npm_package:
+create_npm_package: ## Create NPM Package for Release
 	rm -rf npm
 	mkdir npm
 	cp -R api npm
@@ -201,7 +220,7 @@ create_npm_package:
 	cp LICENSE npm
 	cp README.md npm
 
-install_dependencies:
+install_dependencies: ## Installs Dev-Dependencies
 	npm i eslint --save-dev
 	npm i prettier --save-dev
 	npm i @typescript-eslint/eslint-plugin --save-dev
