@@ -1,6 +1,6 @@
 {
 	"name": "@ondewo/t2s-client-nodejs",
-	"version": "4.3.0",
+	"version": "5.0.0",
 	"description": "ONDEWO Text to Speech (T2S) Platfrom client library for Nodejs",
 	"main": "public-api.js",
 	"typings": "public-api.d.ts",
