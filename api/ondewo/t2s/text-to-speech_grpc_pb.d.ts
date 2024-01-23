@@ -20,6 +20,11 @@ interface IText2SpeechService extends grpc.ServiceDefinition<grpc.UntypedService
 	listT2sLanguages: IText2SpeechService_IListT2sLanguages;
 	listT2sDomains: IText2SpeechService_IListT2sDomains;
 	getServiceInfo: IText2SpeechService_IGetServiceInfo;
+	getCustomPhonemizer: IText2SpeechService_IGetCustomPhonemizer;
+	createCustomPhonemizer: IText2SpeechService_ICreateCustomPhonemizer;
+	deleteCustomPhonemizer: IText2SpeechService_IDeleteCustomPhonemizer;
+	updateCustomPhonemizer: IText2SpeechService_IUpdateCustomPhonemizer;
+	listCustomPhonemizer: IText2SpeechService_IListCustomPhonemizer;
 }
 
 interface IText2SpeechService_ISynthesize
@@ -159,6 +164,68 @@ interface IText2SpeechService_IGetServiceInfo
 	responseSerialize: grpc.serialize<ondewo_t2s_text_to_speech_pb.T2SGetServiceInfoResponse>;
 	responseDeserialize: grpc.deserialize<ondewo_t2s_text_to_speech_pb.T2SGetServiceInfoResponse>;
 }
+interface IText2SpeechService_IGetCustomPhonemizer
+	extends grpc.MethodDefinition<
+		ondewo_t2s_text_to_speech_pb.PhonemizerId,
+		ondewo_t2s_text_to_speech_pb.CustomPhonemizerProto
+	> {
+	path: '/ondewo.t2s.Text2Speech/GetCustomPhonemizer';
+	requestStream: false;
+	responseStream: false;
+	requestSerialize: grpc.serialize<ondewo_t2s_text_to_speech_pb.PhonemizerId>;
+	requestDeserialize: grpc.deserialize<ondewo_t2s_text_to_speech_pb.PhonemizerId>;
+	responseSerialize: grpc.serialize<ondewo_t2s_text_to_speech_pb.CustomPhonemizerProto>;
+	responseDeserialize: grpc.deserialize<ondewo_t2s_text_to_speech_pb.CustomPhonemizerProto>;
+}
+interface IText2SpeechService_ICreateCustomPhonemizer
+	extends grpc.MethodDefinition<
+		ondewo_t2s_text_to_speech_pb.CreateCustomPhonemizerRequest,
+		ondewo_t2s_text_to_speech_pb.PhonemizerId
+	> {
+	path: '/ondewo.t2s.Text2Speech/CreateCustomPhonemizer';
+	requestStream: false;
+	responseStream: false;
+	requestSerialize: grpc.serialize<ondewo_t2s_text_to_speech_pb.CreateCustomPhonemizerRequest>;
+	requestDeserialize: grpc.deserialize<ondewo_t2s_text_to_speech_pb.CreateCustomPhonemizerRequest>;
+	responseSerialize: grpc.serialize<ondewo_t2s_text_to_speech_pb.PhonemizerId>;
+	responseDeserialize: grpc.deserialize<ondewo_t2s_text_to_speech_pb.PhonemizerId>;
+}
+interface IText2SpeechService_IDeleteCustomPhonemizer
+	extends grpc.MethodDefinition<ondewo_t2s_text_to_speech_pb.PhonemizerId, google_protobuf_empty_pb.Empty> {
+	path: '/ondewo.t2s.Text2Speech/DeleteCustomPhonemizer';
+	requestStream: false;
+	responseStream: false;
+	requestSerialize: grpc.serialize<ondewo_t2s_text_to_speech_pb.PhonemizerId>;
+	requestDeserialize: grpc.deserialize<ondewo_t2s_text_to_speech_pb.PhonemizerId>;
+	responseSerialize: grpc.serialize<google_protobuf_empty_pb.Empty>;
+	responseDeserialize: grpc.deserialize<google_protobuf_empty_pb.Empty>;
+}
+interface IText2SpeechService_IUpdateCustomPhonemizer
+	extends grpc.MethodDefinition<
+		ondewo_t2s_text_to_speech_pb.UpdateCustomPhonemizerRequest,
+		ondewo_t2s_text_to_speech_pb.CustomPhonemizerProto
+	> {
+	path: '/ondewo.t2s.Text2Speech/UpdateCustomPhonemizer';
+	requestStream: false;
+	responseStream: false;
+	requestSerialize: grpc.serialize<ondewo_t2s_text_to_speech_pb.UpdateCustomPhonemizerRequest>;
+	requestDeserialize: grpc.deserialize<ondewo_t2s_text_to_speech_pb.UpdateCustomPhonemizerRequest>;
+	responseSerialize: grpc.serialize<ondewo_t2s_text_to_speech_pb.CustomPhonemizerProto>;
+	responseDeserialize: grpc.deserialize<ondewo_t2s_text_to_speech_pb.CustomPhonemizerProto>;
+}
+interface IText2SpeechService_IListCustomPhonemizer
+	extends grpc.MethodDefinition<
+		ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerRequest,
+		ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerResponse
+	> {
+	path: '/ondewo.t2s.Text2Speech/ListCustomPhonemizer';
+	requestStream: false;
+	responseStream: false;
+	requestSerialize: grpc.serialize<ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerRequest>;
+	requestDeserialize: grpc.deserialize<ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerRequest>;
+	responseSerialize: grpc.serialize<ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerResponse>;
+	responseDeserialize: grpc.deserialize<ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerResponse>;
+}
 
 export const Text2SpeechService: IText2SpeechService;
 
@@ -203,6 +270,26 @@ export interface IText2SpeechServer {
 	getServiceInfo: grpc.handleUnaryCall<
 		google_protobuf_empty_pb.Empty,
 		ondewo_t2s_text_to_speech_pb.T2SGetServiceInfoResponse
+	>;
+	getCustomPhonemizer: grpc.handleUnaryCall<
+		ondewo_t2s_text_to_speech_pb.PhonemizerId,
+		ondewo_t2s_text_to_speech_pb.CustomPhonemizerProto
+	>;
+	createCustomPhonemizer: grpc.handleUnaryCall<
+		ondewo_t2s_text_to_speech_pb.CreateCustomPhonemizerRequest,
+		ondewo_t2s_text_to_speech_pb.PhonemizerId
+	>;
+	deleteCustomPhonemizer: grpc.handleUnaryCall<
+		ondewo_t2s_text_to_speech_pb.PhonemizerId,
+		google_protobuf_empty_pb.Empty
+	>;
+	updateCustomPhonemizer: grpc.handleUnaryCall<
+		ondewo_t2s_text_to_speech_pb.UpdateCustomPhonemizerRequest,
+		ondewo_t2s_text_to_speech_pb.CustomPhonemizerProto
+	>;
+	listCustomPhonemizer: grpc.handleUnaryCall<
+		ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerRequest,
+		ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerResponse
 	>;
 }
 
@@ -379,6 +466,90 @@ export interface IText2SpeechClient {
 		callback: (
 			error: grpc.ServiceError | null,
 			response: ondewo_t2s_text_to_speech_pb.T2SGetServiceInfoResponse
+		) => void
+	): grpc.ClientUnaryCall;
+	getCustomPhonemizer(
+		request: ondewo_t2s_text_to_speech_pb.PhonemizerId,
+		callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.CustomPhonemizerProto) => void
+	): grpc.ClientUnaryCall;
+	getCustomPhonemizer(
+		request: ondewo_t2s_text_to_speech_pb.PhonemizerId,
+		metadata: grpc.Metadata,
+		callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.CustomPhonemizerProto) => void
+	): grpc.ClientUnaryCall;
+	getCustomPhonemizer(
+		request: ondewo_t2s_text_to_speech_pb.PhonemizerId,
+		metadata: grpc.Metadata,
+		options: Partial<grpc.CallOptions>,
+		callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.CustomPhonemizerProto) => void
+	): grpc.ClientUnaryCall;
+	createCustomPhonemizer(
+		request: ondewo_t2s_text_to_speech_pb.CreateCustomPhonemizerRequest,
+		callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.PhonemizerId) => void
+	): grpc.ClientUnaryCall;
+	createCustomPhonemizer(
+		request: ondewo_t2s_text_to_speech_pb.CreateCustomPhonemizerRequest,
+		metadata: grpc.Metadata,
+		callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.PhonemizerId) => void
+	): grpc.ClientUnaryCall;
+	createCustomPhonemizer(
+		request: ondewo_t2s_text_to_speech_pb.CreateCustomPhonemizerRequest,
+		metadata: grpc.Metadata,
+		options: Partial<grpc.CallOptions>,
+		callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.PhonemizerId) => void
+	): grpc.ClientUnaryCall;
+	deleteCustomPhonemizer(
+		request: ondewo_t2s_text_to_speech_pb.PhonemizerId,
+		callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void
+	): grpc.ClientUnaryCall;
+	deleteCustomPhonemizer(
+		request: ondewo_t2s_text_to_speech_pb.PhonemizerId,
+		metadata: grpc.Metadata,
+		callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void
+	): grpc.ClientUnaryCall;
+	deleteCustomPhonemizer(
+		request: ondewo_t2s_text_to_speech_pb.PhonemizerId,
+		metadata: grpc.Metadata,
+		options: Partial<grpc.CallOptions>,
+		callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void
+	): grpc.ClientUnaryCall;
+	updateCustomPhonemizer(
+		request: ondewo_t2s_text_to_speech_pb.UpdateCustomPhonemizerRequest,
+		callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.CustomPhonemizerProto) => void
+	): grpc.ClientUnaryCall;
+	updateCustomPhonemizer(
+		request: ondewo_t2s_text_to_speech_pb.UpdateCustomPhonemizerRequest,
+		metadata: grpc.Metadata,
+		callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.CustomPhonemizerProto) => void
+	): grpc.ClientUnaryCall;
+	updateCustomPhonemizer(
+		request: ondewo_t2s_text_to_speech_pb.UpdateCustomPhonemizerRequest,
+		metadata: grpc.Metadata,
+		options: Partial<grpc.CallOptions>,
+		callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.CustomPhonemizerProto) => void
+	): grpc.ClientUnaryCall;
+	listCustomPhonemizer(
+		request: ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerRequest,
+		callback: (
+			error: grpc.ServiceError | null,
+			response: ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerResponse
+		) => void
+	): grpc.ClientUnaryCall;
+	listCustomPhonemizer(
+		request: ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerRequest,
+		metadata: grpc.Metadata,
+		callback: (
+			error: grpc.ServiceError | null,
+			response: ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerResponse
+		) => void
+	): grpc.ClientUnaryCall;
+	listCustomPhonemizer(
+		request: ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerRequest,
+		metadata: grpc.Metadata,
+		options: Partial<grpc.CallOptions>,
+		callback: (
+			error: grpc.ServiceError | null,
+			response: ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerResponse
 		) => void
 	): grpc.ClientUnaryCall;
 }
@@ -559,193 +730,6 @@ export class Text2SpeechClient extends grpc.Client implements IText2SpeechClient
 			response: ondewo_t2s_text_to_speech_pb.T2SGetServiceInfoResponse
 		) => void
 	): grpc.ClientUnaryCall;
-}
-
-interface ICustomPhonemizersService extends grpc.ServiceDefinition<grpc.UntypedServiceImplementation> {
-	getCustomPhonemizer: ICustomPhonemizersService_IGetCustomPhonemizer;
-	createCustomPhonemizer: ICustomPhonemizersService_ICreateCustomPhonemizer;
-	deleteCustomPhonemizer: ICustomPhonemizersService_IDeleteCustomPhonemizer;
-	updateCustomPhonemizer: ICustomPhonemizersService_IUpdateCustomPhonemizer;
-	listCustomPhonemizer: ICustomPhonemizersService_IListCustomPhonemizer;
-}
-
-interface ICustomPhonemizersService_IGetCustomPhonemizer
-	extends grpc.MethodDefinition<
-		ondewo_t2s_text_to_speech_pb.PhonemizerId,
-		ondewo_t2s_text_to_speech_pb.CustomPhonemizerProto
-	> {
-	path: '/ondewo.t2s.CustomPhonemizers/GetCustomPhonemizer';
-	requestStream: false;
-	responseStream: false;
-	requestSerialize: grpc.serialize<ondewo_t2s_text_to_speech_pb.PhonemizerId>;
-	requestDeserialize: grpc.deserialize<ondewo_t2s_text_to_speech_pb.PhonemizerId>;
-	responseSerialize: grpc.serialize<ondewo_t2s_text_to_speech_pb.CustomPhonemizerProto>;
-	responseDeserialize: grpc.deserialize<ondewo_t2s_text_to_speech_pb.CustomPhonemizerProto>;
-}
-interface ICustomPhonemizersService_ICreateCustomPhonemizer
-	extends grpc.MethodDefinition<
-		ondewo_t2s_text_to_speech_pb.CreateCustomPhonemizerRequest,
-		ondewo_t2s_text_to_speech_pb.PhonemizerId
-	> {
-	path: '/ondewo.t2s.CustomPhonemizers/CreateCustomPhonemizer';
-	requestStream: false;
-	responseStream: false;
-	requestSerialize: grpc.serialize<ondewo_t2s_text_to_speech_pb.CreateCustomPhonemizerRequest>;
-	requestDeserialize: grpc.deserialize<ondewo_t2s_text_to_speech_pb.CreateCustomPhonemizerRequest>;
-	responseSerialize: grpc.serialize<ondewo_t2s_text_to_speech_pb.PhonemizerId>;
-	responseDeserialize: grpc.deserialize<ondewo_t2s_text_to_speech_pb.PhonemizerId>;
-}
-interface ICustomPhonemizersService_IDeleteCustomPhonemizer
-	extends grpc.MethodDefinition<ondewo_t2s_text_to_speech_pb.PhonemizerId, google_protobuf_empty_pb.Empty> {
-	path: '/ondewo.t2s.CustomPhonemizers/DeleteCustomPhonemizer';
-	requestStream: false;
-	responseStream: false;
-	requestSerialize: grpc.serialize<ondewo_t2s_text_to_speech_pb.PhonemizerId>;
-	requestDeserialize: grpc.deserialize<ondewo_t2s_text_to_speech_pb.PhonemizerId>;
-	responseSerialize: grpc.serialize<google_protobuf_empty_pb.Empty>;
-	responseDeserialize: grpc.deserialize<google_protobuf_empty_pb.Empty>;
-}
-interface ICustomPhonemizersService_IUpdateCustomPhonemizer
-	extends grpc.MethodDefinition<
-		ondewo_t2s_text_to_speech_pb.UpdateCustomPhonemizerRequest,
-		ondewo_t2s_text_to_speech_pb.CustomPhonemizerProto
-	> {
-	path: '/ondewo.t2s.CustomPhonemizers/UpdateCustomPhonemizer';
-	requestStream: false;
-	responseStream: false;
-	requestSerialize: grpc.serialize<ondewo_t2s_text_to_speech_pb.UpdateCustomPhonemizerRequest>;
-	requestDeserialize: grpc.deserialize<ondewo_t2s_text_to_speech_pb.UpdateCustomPhonemizerRequest>;
-	responseSerialize: grpc.serialize<ondewo_t2s_text_to_speech_pb.CustomPhonemizerProto>;
-	responseDeserialize: grpc.deserialize<ondewo_t2s_text_to_speech_pb.CustomPhonemizerProto>;
-}
-interface ICustomPhonemizersService_IListCustomPhonemizer
-	extends grpc.MethodDefinition<
-		ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerRequest,
-		ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerResponse
-	> {
-	path: '/ondewo.t2s.CustomPhonemizers/ListCustomPhonemizer';
-	requestStream: false;
-	responseStream: false;
-	requestSerialize: grpc.serialize<ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerRequest>;
-	requestDeserialize: grpc.deserialize<ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerRequest>;
-	responseSerialize: grpc.serialize<ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerResponse>;
-	responseDeserialize: grpc.deserialize<ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerResponse>;
-}
-
-export const CustomPhonemizersService: ICustomPhonemizersService;
-
-export interface ICustomPhonemizersServer {
-	getCustomPhonemizer: grpc.handleUnaryCall<
-		ondewo_t2s_text_to_speech_pb.PhonemizerId,
-		ondewo_t2s_text_to_speech_pb.CustomPhonemizerProto
-	>;
-	createCustomPhonemizer: grpc.handleUnaryCall<
-		ondewo_t2s_text_to_speech_pb.CreateCustomPhonemizerRequest,
-		ondewo_t2s_text_to_speech_pb.PhonemizerId
-	>;
-	deleteCustomPhonemizer: grpc.handleUnaryCall<
-		ondewo_t2s_text_to_speech_pb.PhonemizerId,
-		google_protobuf_empty_pb.Empty
-	>;
-	updateCustomPhonemizer: grpc.handleUnaryCall<
-		ondewo_t2s_text_to_speech_pb.UpdateCustomPhonemizerRequest,
-		ondewo_t2s_text_to_speech_pb.CustomPhonemizerProto
-	>;
-	listCustomPhonemizer: grpc.handleUnaryCall<
-		ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerRequest,
-		ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerResponse
-	>;
-}
-
-export interface ICustomPhonemizersClient {
-	getCustomPhonemizer(
-		request: ondewo_t2s_text_to_speech_pb.PhonemizerId,
-		callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.CustomPhonemizerProto) => void
-	): grpc.ClientUnaryCall;
-	getCustomPhonemizer(
-		request: ondewo_t2s_text_to_speech_pb.PhonemizerId,
-		metadata: grpc.Metadata,
-		callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.CustomPhonemizerProto) => void
-	): grpc.ClientUnaryCall;
-	getCustomPhonemizer(
-		request: ondewo_t2s_text_to_speech_pb.PhonemizerId,
-		metadata: grpc.Metadata,
-		options: Partial<grpc.CallOptions>,
-		callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.CustomPhonemizerProto) => void
-	): grpc.ClientUnaryCall;
-	createCustomPhonemizer(
-		request: ondewo_t2s_text_to_speech_pb.CreateCustomPhonemizerRequest,
-		callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.PhonemizerId) => void
-	): grpc.ClientUnaryCall;
-	createCustomPhonemizer(
-		request: ondewo_t2s_text_to_speech_pb.CreateCustomPhonemizerRequest,
-		metadata: grpc.Metadata,
-		callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.PhonemizerId) => void
-	): grpc.ClientUnaryCall;
-	createCustomPhonemizer(
-		request: ondewo_t2s_text_to_speech_pb.CreateCustomPhonemizerRequest,
-		metadata: grpc.Metadata,
-		options: Partial<grpc.CallOptions>,
-		callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.PhonemizerId) => void
-	): grpc.ClientUnaryCall;
-	deleteCustomPhonemizer(
-		request: ondewo_t2s_text_to_speech_pb.PhonemizerId,
-		callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void
-	): grpc.ClientUnaryCall;
-	deleteCustomPhonemizer(
-		request: ondewo_t2s_text_to_speech_pb.PhonemizerId,
-		metadata: grpc.Metadata,
-		callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void
-	): grpc.ClientUnaryCall;
-	deleteCustomPhonemizer(
-		request: ondewo_t2s_text_to_speech_pb.PhonemizerId,
-		metadata: grpc.Metadata,
-		options: Partial<grpc.CallOptions>,
-		callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void
-	): grpc.ClientUnaryCall;
-	updateCustomPhonemizer(
-		request: ondewo_t2s_text_to_speech_pb.UpdateCustomPhonemizerRequest,
-		callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.CustomPhonemizerProto) => void
-	): grpc.ClientUnaryCall;
-	updateCustomPhonemizer(
-		request: ondewo_t2s_text_to_speech_pb.UpdateCustomPhonemizerRequest,
-		metadata: grpc.Metadata,
-		callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.CustomPhonemizerProto) => void
-	): grpc.ClientUnaryCall;
-	updateCustomPhonemizer(
-		request: ondewo_t2s_text_to_speech_pb.UpdateCustomPhonemizerRequest,
-		metadata: grpc.Metadata,
-		options: Partial<grpc.CallOptions>,
-		callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.CustomPhonemizerProto) => void
-	): grpc.ClientUnaryCall;
-	listCustomPhonemizer(
-		request: ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerRequest,
-		callback: (
-			error: grpc.ServiceError | null,
-			response: ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerResponse
-		) => void
-	): grpc.ClientUnaryCall;
-	listCustomPhonemizer(
-		request: ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerRequest,
-		metadata: grpc.Metadata,
-		callback: (
-			error: grpc.ServiceError | null,
-			response: ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerResponse
-		) => void
-	): grpc.ClientUnaryCall;
-	listCustomPhonemizer(
-		request: ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerRequest,
-		metadata: grpc.Metadata,
-		options: Partial<grpc.CallOptions>,
-		callback: (
-			error: grpc.ServiceError | null,
-			response: ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerResponse
-		) => void
-	): grpc.ClientUnaryCall;
-}
-
-export class CustomPhonemizersClient extends grpc.Client implements ICustomPhonemizersClient {
-	constructor(address: string, credentials: grpc.ChannelCredentials, options?: object);
 	public getCustomPhonemizer(
 		request: ondewo_t2s_text_to_speech_pb.PhonemizerId,
 		callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.CustomPhonemizerProto) => void

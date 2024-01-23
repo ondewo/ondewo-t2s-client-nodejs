@@ -262,10 +262,12 @@ function deserialize_ondewo_t2s_UpdateCustomPhonemizerRequest(buffer_arg) {
 	return ondewo_t2s_text$to$speech_pb.UpdateCustomPhonemizerRequest.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
-// endpoints of t2s generate service
+// Text2Speech service provides endpoints for text-to-speech generation.
 var Text2SpeechService = (exports.Text2SpeechService = {
-	// Synthesizes an specific text sent in the request with the configuration requirements and retrieves a response
-	// that includes the synthesized text to audio and the configuration wanted.
+	// Synthesize RPC
+	//
+	// Synthesizes a specific text sent in the request with the provided configuration requirements
+	// and retrieves a response that includes the synthesized text as audio and the requested configuration.
 	synthesize: {
 		path: '/ondewo.t2s.Text2Speech/Synthesize',
 		requestStream: false,
@@ -277,7 +279,10 @@ var Text2SpeechService = (exports.Text2SpeechService = {
 		responseSerialize: serialize_ondewo_t2s_SynthesizeResponse,
 		responseDeserialize: deserialize_ondewo_t2s_SynthesizeResponse
 	},
-	// will this safe time when doing batch predict on the AI model?
+	// BatchSynthesize RPC
+	//
+	// Performs batch synthesis by accepting a batch of synthesis requests and returning a batch response.
+	// This can be more efficient for generating predictions on the AI model in bulk.
 	batchSynthesize: {
 		path: '/ondewo.t2s.Text2Speech/BatchSynthesize',
 		requestStream: false,
@@ -289,7 +294,9 @@ var Text2SpeechService = (exports.Text2SpeechService = {
 		responseSerialize: serialize_ondewo_t2s_BatchSynthesizeResponse,
 		responseDeserialize: deserialize_ondewo_t2s_BatchSynthesizeResponse
 	},
-	// Normalize a text according to a specific pipeline normalization rules.
+	// NormalizeText RPC
+	//
+	// Normalizes a text according to the specific pipeline's normalization rules.
 	normalizeText: {
 		path: '/ondewo.t2s.Text2Speech/NormalizeText',
 		requestStream: false,
@@ -301,7 +308,9 @@ var Text2SpeechService = (exports.Text2SpeechService = {
 		responseSerialize: serialize_ondewo_t2s_NormalizeTextResponse,
 		responseDeserialize: deserialize_ondewo_t2s_NormalizeTextResponse
 	},
-	// Retrieves the configuration of the specified pipeline.
+	// GetT2sPipeline RPC
+	//
+	// Retrieves the configuration of the specified text-to-speech pipeline.
 	getT2sPipeline: {
 		path: '/ondewo.t2s.Text2Speech/GetT2sPipeline',
 		requestStream: false,
@@ -313,7 +322,9 @@ var Text2SpeechService = (exports.Text2SpeechService = {
 		responseSerialize: serialize_ondewo_t2s_Text2SpeechConfig,
 		responseDeserialize: deserialize_ondewo_t2s_Text2SpeechConfig
 	},
-	// Creates a pipeline with the specified configuration and retrieves its id.
+	// CreateT2sPipeline RPC
+	//
+	// Creates a new text-to-speech pipeline with the provided configuration and returns its pipeline ID.
 	createT2sPipeline: {
 		path: '/ondewo.t2s.Text2Speech/CreateT2sPipeline',
 		requestStream: false,
@@ -325,7 +336,9 @@ var Text2SpeechService = (exports.Text2SpeechService = {
 		responseSerialize: serialize_ondewo_t2s_T2sPipelineId,
 		responseDeserialize: deserialize_ondewo_t2s_T2sPipelineId
 	},
-	// Deletes the specified pipeline.
+	// DeleteT2sPipeline RPC
+	//
+	// Deletes the specified text-to-speech pipeline.
 	deleteT2sPipeline: {
 		path: '/ondewo.t2s.Text2Speech/DeleteT2sPipeline',
 		requestStream: false,
@@ -337,7 +350,9 @@ var Text2SpeechService = (exports.Text2SpeechService = {
 		responseSerialize: serialize_google_protobuf_Empty,
 		responseDeserialize: deserialize_google_protobuf_Empty
 	},
-	// Update a specified pipeline with certain configuration.
+	// UpdateT2sPipeline RPC
+	//
+	// Updates the specified text-to-speech pipeline with the given configuration.
 	updateT2sPipeline: {
 		path: '/ondewo.t2s.Text2Speech/UpdateT2sPipeline',
 		requestStream: false,
@@ -349,7 +364,9 @@ var Text2SpeechService = (exports.Text2SpeechService = {
 		responseSerialize: serialize_google_protobuf_Empty,
 		responseDeserialize: deserialize_google_protobuf_Empty
 	},
-	// Retrieve the list of pipelines with an specific requirement.
+	// ListT2sPipelines RPC
+	//
+	// Retrieves a list of text-to-speech pipelines based on specific requirements.
 	listT2sPipelines: {
 		path: '/ondewo.t2s.Text2Speech/ListT2sPipelines',
 		requestStream: false,
@@ -361,7 +378,9 @@ var Text2SpeechService = (exports.Text2SpeechService = {
 		responseSerialize: serialize_ondewo_t2s_ListT2sPipelinesResponse,
 		responseDeserialize: deserialize_ondewo_t2s_ListT2sPipelinesResponse
 	},
-	// Retrieve the list of languages given a specific config request.
+	// ListT2sLanguages RPC
+	//
+	// Retrieves a list of languages available based on specific configuration requirements.
 	listT2sLanguages: {
 		path: '/ondewo.t2s.Text2Speech/ListT2sLanguages',
 		requestStream: false,
@@ -373,7 +392,9 @@ var Text2SpeechService = (exports.Text2SpeechService = {
 		responseSerialize: serialize_ondewo_t2s_ListT2sLanguagesResponse,
 		responseDeserialize: deserialize_ondewo_t2s_ListT2sLanguagesResponse
 	},
-	// Retrieve the list of domains given a specific config request.
+	// ListT2sDomains RPC
+	//
+	// Retrieves a list of domains available based on specific configuration requirements.
 	listT2sDomains: {
 		path: '/ondewo.t2s.Text2Speech/ListT2sDomains',
 		requestStream: false,
@@ -385,7 +406,9 @@ var Text2SpeechService = (exports.Text2SpeechService = {
 		responseSerialize: serialize_ondewo_t2s_ListT2sDomainsResponse,
 		responseDeserialize: deserialize_ondewo_t2s_ListT2sDomainsResponse
 	},
-	// Returns a message containing the version of the running text to speech server.
+	// GetServiceInfo RPC
+	//
+	// Retrieves the version information of the running text-to-speech server.
 	getServiceInfo: {
 		path: '/ondewo.t2s.Text2Speech/GetServiceInfo',
 		requestStream: false,
@@ -396,14 +419,12 @@ var Text2SpeechService = (exports.Text2SpeechService = {
 		requestDeserialize: deserialize_google_protobuf_Empty,
 		responseSerialize: serialize_ondewo_t2s_T2SGetServiceInfoResponse,
 		responseDeserialize: deserialize_ondewo_t2s_T2SGetServiceInfoResponse
-	}
-});
-
-exports.Text2SpeechClient = grpc.makeGenericClientConstructor(Text2SpeechService);
-// endpoints of custom phonemizer
-var CustomPhonemizersService = (exports.CustomPhonemizersService = {
+	},
+	// GetCustomPhonemizer RPC
+	//
+	// Retrieves a custom phonemizer based on the provided PhonemizerId.
 	getCustomPhonemizer: {
-		path: '/ondewo.t2s.CustomPhonemizers/GetCustomPhonemizer',
+		path: '/ondewo.t2s.Text2Speech/GetCustomPhonemizer',
 		requestStream: false,
 		responseStream: false,
 		requestType: ondewo_t2s_text$to$speech_pb.PhonemizerId,
@@ -413,8 +434,12 @@ var CustomPhonemizersService = (exports.CustomPhonemizersService = {
 		responseSerialize: serialize_ondewo_t2s_CustomPhonemizerProto,
 		responseDeserialize: deserialize_ondewo_t2s_CustomPhonemizerProto
 	},
+	// CreateCustomPhonemizer RPC
+	//
+	// Creates a custom phonemizer based on the provided CreateCustomPhonemizerRequest.
+	// Returns the PhonemizerId associated with the created custom phonemizer.
 	createCustomPhonemizer: {
-		path: '/ondewo.t2s.CustomPhonemizers/CreateCustomPhonemizer',
+		path: '/ondewo.t2s.Text2Speech/CreateCustomPhonemizer',
 		requestStream: false,
 		responseStream: false,
 		requestType: ondewo_t2s_text$to$speech_pb.CreateCustomPhonemizerRequest,
@@ -424,8 +449,12 @@ var CustomPhonemizersService = (exports.CustomPhonemizersService = {
 		responseSerialize: serialize_ondewo_t2s_PhonemizerId,
 		responseDeserialize: deserialize_ondewo_t2s_PhonemizerId
 	},
+	// DeleteCustomPhonemizer RPC
+	//
+	// Deletes a custom phonemizer based on the provided PhonemizerId.
+	// Returns an Empty response upon successful deletion.
 	deleteCustomPhonemizer: {
-		path: '/ondewo.t2s.CustomPhonemizers/DeleteCustomPhonemizer',
+		path: '/ondewo.t2s.Text2Speech/DeleteCustomPhonemizer',
 		requestStream: false,
 		responseStream: false,
 		requestType: ondewo_t2s_text$to$speech_pb.PhonemizerId,
@@ -435,8 +464,11 @@ var CustomPhonemizersService = (exports.CustomPhonemizersService = {
 		responseSerialize: serialize_google_protobuf_Empty,
 		responseDeserialize: deserialize_google_protobuf_Empty
 	},
+	// UpdateCustomPhonemizer RPC
+	//
+	// Updates the specified custom phonemizer with the provided configuration.
 	updateCustomPhonemizer: {
-		path: '/ondewo.t2s.CustomPhonemizers/UpdateCustomPhonemizer',
+		path: '/ondewo.t2s.Text2Speech/UpdateCustomPhonemizer',
 		requestStream: false,
 		responseStream: false,
 		requestType: ondewo_t2s_text$to$speech_pb.UpdateCustomPhonemizerRequest,
@@ -446,8 +478,11 @@ var CustomPhonemizersService = (exports.CustomPhonemizersService = {
 		responseSerialize: serialize_ondewo_t2s_CustomPhonemizerProto,
 		responseDeserialize: deserialize_ondewo_t2s_CustomPhonemizerProto
 	},
+	// ListCustomPhonemizer RPC
+	//
+	// Retrieves a list of custom phonemizers based on specific requirements.
 	listCustomPhonemizer: {
-		path: '/ondewo.t2s.CustomPhonemizers/ListCustomPhonemizer',
+		path: '/ondewo.t2s.Text2Speech/ListCustomPhonemizer',
 		requestStream: false,
 		responseStream: false,
 		requestType: ondewo_t2s_text$to$speech_pb.ListCustomPhonemizerRequest,
@@ -459,4 +494,4 @@ var CustomPhonemizersService = (exports.CustomPhonemizersService = {
 	}
 });
 
-exports.CustomPhonemizersClient = grpc.makeGenericClientConstructor(CustomPhonemizersService);
+exports.Text2SpeechClient = grpc.makeGenericClientConstructor(Text2SpeechService);

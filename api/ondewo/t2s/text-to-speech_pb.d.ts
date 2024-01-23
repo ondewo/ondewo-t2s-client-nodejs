@@ -745,6 +745,10 @@ export class GlowTTSTriton extends jspb.Message {
 	setParamConfigPath(value: string): GlowTTSTriton;
 	getTritonModelName(): string;
 	setTritonModelName(value: string): GlowTTSTriton;
+	getTritonServerHost(): string;
+	setTritonServerHost(value: string): GlowTTSTriton;
+	getTritonServerPort(): number;
+	setTritonServerPort(value: number): GlowTTSTriton;
 
 	serializeBinary(): Uint8Array;
 	toObject(includeInstance?: boolean): GlowTTSTriton.AsObject;
@@ -765,6 +769,8 @@ export namespace GlowTTSTriton {
 		maxTextLength: number;
 		paramConfigPath: string;
 		tritonModelName: string;
+		tritonServerHost: string;
+		tritonServerPort: number;
 	};
 }
 
@@ -840,6 +846,10 @@ export class HiFiGanTriton extends jspb.Message {
 	setConfigPath(value: string): HiFiGanTriton;
 	getTritonModelName(): string;
 	setTritonModelName(value: string): HiFiGanTriton;
+	getTritonServerHost(): string;
+	setTritonServerHost(value: string): HiFiGanTriton;
+	getTritonServerPort(): number;
+	setTritonServerPort(value: number): HiFiGanTriton;
 
 	serializeBinary(): Uint8Array;
 	toObject(includeInstance?: boolean): HiFiGanTriton.AsObject;
@@ -855,6 +865,8 @@ export namespace HiFiGanTriton {
 	export type AsObject = {
 		configPath: string;
 		tritonModelName: string;
+		tritonServerHost: string;
+		tritonServerPort: number;
 	};
 }
 
@@ -865,8 +877,10 @@ export class MbMelganTriton extends jspb.Message {
 	setStatsPath(value: string): MbMelganTriton;
 	getTritonModelName(): string;
 	setTritonModelName(value: string): MbMelganTriton;
-	getTritonUrl(): string;
-	setTritonUrl(value: string): MbMelganTriton;
+	getTritonServerHost(): string;
+	setTritonServerHost(value: string): MbMelganTriton;
+	getTritonServerPort(): number;
+	setTritonServerPort(value: number): MbMelganTriton;
 
 	serializeBinary(): Uint8Array;
 	toObject(includeInstance?: boolean): MbMelganTriton.AsObject;
@@ -883,7 +897,8 @@ export namespace MbMelganTriton {
 		configPath: string;
 		statsPath: string;
 		tritonModelName: string;
-		tritonUrl: string;
+		tritonServerHost: string;
+		tritonServerPort: number;
 	};
 }
 
