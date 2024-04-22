@@ -18,7 +18,7 @@ export
 ONDEWO_T2S_VERSION = 5.2.0
 
 T2S_API_GIT_BRANCH=tags/5.2.0
-ONDEWO_PROTO_COMPILER_GIT_BRANCH=tags/4.7.0
+ONDEWO_PROTO_COMPILER_GIT_BRANCH=tags/4.8.0
 ONDEWO_PROTO_COMPILER_DIR=ondewo-proto-compiler
 T2S_APIS_DIR=src/ondewo-t2s-api
 T2S_PROTOS_DIR=${T2S_APIS_DIR}/ondewo
@@ -76,6 +76,7 @@ check_build: ## Checks if proto-code was generated correctly
 	@for proto in `find src/ondewo-t2s-api/ondewo -iname "*.proto*"`; \
 	do \
 		echo $${proto} | cut -d "/" -f 5 | cut -d "." -f 1 >> build_check.txt; \
+		sed -i 's/import.*//g' build_check.txt; \
 	done
 	@echo "`sort build_check.txt | uniq`" > build_check.txt
 	@for file in `cat build_check.txt`;\
@@ -225,10 +226,11 @@ create_npm_package: ## Create NPM Package for Release
 	cp README.md npm
 
 install_dependencies: ## Installs Dev-Dependencies
-	npm i eslint --save-dev
-	npm i prettier --save-dev
-	npm i @typescript-eslint/eslint-plugin --save-dev
-	npm i husky --save-dev
+	npm i @typescript-eslint/eslint-plugin \
+		  eslint \
+		  prettier \
+		  husky \
+		  --save-dev
 
 check_out_correct_submodule_versions: ## Fetches all Submodules and checksout specified branch
 	@echo "START checking out correct submodule versions ..."
