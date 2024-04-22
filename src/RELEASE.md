@@ -1,6 +1,13 @@
 # Release History
 
 ***************** 
+## Release ONDEWO T2S Nodejs Client 5.3.0 
+ 
+### Improvements 
+ * Tracking API Version [5.3.0](https://github.com/ondewo/ondewo-t2s-api/releases/tag/5.3.0) ( [Documentation](https://ondewo.github.io/ondewo-t2s-api/) ) 
+
+
+***************** 
 ## Release ONDEWO T2S Nodejs Client 5.2.0 
  
 ### Improvements 

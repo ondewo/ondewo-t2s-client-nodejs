@@ -1,21 +1,21 @@
 {
-  "name": "@ondewo/t2s-client-nodejs",
-  "version": "5.2.0",
-  "description": "ONDEWO Text to Speech (T2S) Platform client library for Nodejs",
-  "main": "public-api.js",
-  "typings": "public-api.d.ts",
-  "author": "ONDEWO GmbH <office@ondewo.com>",
-  "license": "Apache-2.0",
-  "dependencies": {
-    "@grpc/grpc-js": "^1.10.6",
-    "@types/node": "^18.18.0",
-    "dotenv": "^16.4.5",
-    "google-protobuf": "^3.21.2"
-  },
-  "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^7.7.0",
-    "eslint": "^8.57.0",
-    "husky": "^9.0.11",
-    "prettier": "^3.2.5"
-  }
+	"name": "@ondewo/t2s-client-nodejs",
+	"version": "5.3.0",
+	"description": "ONDEWO Text to Speech (T2S) Platform client library for Nodejs",
+	"main": "public-api.js",
+	"typings": "public-api.d.ts",
+	"author": "ONDEWO GmbH <office@ondewo.com>",
+	"license": "Apache-2.0",
+	"dependencies": {
+		"@grpc/grpc-js": "^1.10.6",
+		"@types/node": "^18.18.0",
+		"dotenv": "^16.4.5",
+		"google-protobuf": "^3.21.2"
+	},
+	"devDependencies": {
+		"@typescript-eslint/eslint-plugin": "^7.7.0",
+		"eslint": "^8.57.0",
+		"husky": "^9.0.11",
+		"prettier": "^3.2.5"
+	}
 }
