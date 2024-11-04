@@ -1,6 +1,13 @@
+.idea/
+.vscode/
+api/
+esm2022/
+fesm2022/
+node_modules
+npm
 RELEASE.md
 src/
+
 ondewo-proto-compiler
+
 ondewo-t2s-api
-npm
-.vscode
