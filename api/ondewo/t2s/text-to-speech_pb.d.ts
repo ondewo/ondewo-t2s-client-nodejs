@@ -6,6 +6,7 @@
 
 import * as jspb from "google-protobuf";
 import * as google_protobuf_empty_pb from "google-protobuf/google/protobuf/empty_pb";
+import * as google_protobuf_struct_pb from "google-protobuf/google/protobuf/struct_pb";
 
 export class SynthesizeRequest extends jspb.Message { 
     getText(): string;
@@ -116,6 +117,16 @@ export class RequestConfig extends jspb.Message {
     getNormalizer(): string;
     setNormalizer(value: string): RequestConfig;
 
+    hasT2sServiceConfig(): boolean;
+    clearT2sServiceConfig(): void;
+    getT2sServiceConfig(): google_protobuf_struct_pb.Struct | undefined;
+    setT2sServiceConfig(value?: google_protobuf_struct_pb.Struct): RequestConfig;
+
+    hasT2sCloudProviderConfig(): boolean;
+    clearT2sCloudProviderConfig(): void;
+    getT2sCloudProviderConfig(): T2sCloudProviderConfig | undefined;
+    setT2sCloudProviderConfig(value?: T2sCloudProviderConfig): RequestConfig;
+
     getOneofLengthScaleCase(): RequestConfig.OneofLengthScaleCase;
     getOneofNoiseScaleCase(): RequestConfig.OneofNoiseScaleCase;
     getOneofSampleRateCase(): RequestConfig.OneofSampleRateCase;
@@ -144,6 +155,8 @@ export namespace RequestConfig {
         audioFormat: AudioFormat,
         useCache: boolean,
         normalizer: string,
+        t2sServiceConfig?: google_protobuf_struct_pb.Struct.AsObject,
+        t2sCloudProviderConfig?: T2sCloudProviderConfig.AsObject,
     }
 
     export enum OneofLengthScaleCase {
@@ -181,6 +194,119 @@ export namespace RequestConfig {
         NORMALIZER = 8,
     }
 
+}
+
+export class T2sCloudProviderConfig extends jspb.Message { 
+
+    hasT2sCloudProviderConfigElevenlabs(): boolean;
+    clearT2sCloudProviderConfigElevenlabs(): void;
+    getT2sCloudProviderConfigElevenlabs(): T2sCloudProviderConfigElevenLabs | undefined;
+    setT2sCloudProviderConfigElevenlabs(value?: T2sCloudProviderConfigElevenLabs): T2sCloudProviderConfig;
+
+    hasT2sCloudProviderConfigGoogle(): boolean;
+    clearT2sCloudProviderConfigGoogle(): void;
+    getT2sCloudProviderConfigGoogle(): T2sCloudProviderConfigGoogle | undefined;
+    setT2sCloudProviderConfigGoogle(value?: T2sCloudProviderConfigGoogle): T2sCloudProviderConfig;
+
+    hasT2sCloudProviderConfigMicrosoft(): boolean;
+    clearT2sCloudProviderConfigMicrosoft(): void;
+    getT2sCloudProviderConfigMicrosoft(): T2sCloudProviderConfigMicrosoft | undefined;
+    setT2sCloudProviderConfigMicrosoft(value?: T2sCloudProviderConfigMicrosoft): T2sCloudProviderConfig;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): T2sCloudProviderConfig.AsObject;
+    static toObject(includeInstance: boolean, msg: T2sCloudProviderConfig): T2sCloudProviderConfig.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: T2sCloudProviderConfig, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): T2sCloudProviderConfig;
+    static deserializeBinaryFromReader(message: T2sCloudProviderConfig, reader: jspb.BinaryReader): T2sCloudProviderConfig;
+}
+
+export namespace T2sCloudProviderConfig {
+    export type AsObject = {
+        t2sCloudProviderConfigElevenlabs?: T2sCloudProviderConfigElevenLabs.AsObject,
+        t2sCloudProviderConfigGoogle?: T2sCloudProviderConfigGoogle.AsObject,
+        t2sCloudProviderConfigMicrosoft?: T2sCloudProviderConfigMicrosoft.AsObject,
+    }
+}
+
+export class T2sCloudProviderConfigElevenLabs extends jspb.Message { 
+    getStability(): number;
+    setStability(value: number): T2sCloudProviderConfigElevenLabs;
+    getSimilarityBoost(): number;
+    setSimilarityBoost(value: number): T2sCloudProviderConfigElevenLabs;
+    getStyle(): number;
+    setStyle(value: number): T2sCloudProviderConfigElevenLabs;
+    getUseSpeakerBoost(): boolean;
+    setUseSpeakerBoost(value: boolean): T2sCloudProviderConfigElevenLabs;
+    getApplyTextNormalization(): string;
+    setApplyTextNormalization(value: string): T2sCloudProviderConfigElevenLabs;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): T2sCloudProviderConfigElevenLabs.AsObject;
+    static toObject(includeInstance: boolean, msg: T2sCloudProviderConfigElevenLabs): T2sCloudProviderConfigElevenLabs.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: T2sCloudProviderConfigElevenLabs, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): T2sCloudProviderConfigElevenLabs;
+    static deserializeBinaryFromReader(message: T2sCloudProviderConfigElevenLabs, reader: jspb.BinaryReader): T2sCloudProviderConfigElevenLabs;
+}
+
+export namespace T2sCloudProviderConfigElevenLabs {
+    export type AsObject = {
+        stability: number,
+        similarityBoost: number,
+        style: number,
+        useSpeakerBoost: boolean,
+        applyTextNormalization: string,
+    }
+}
+
+export class T2sCloudProviderConfigMicrosoft extends jspb.Message { 
+    getUseDefaultSpeaker(): boolean;
+    setUseDefaultSpeaker(value: boolean): T2sCloudProviderConfigMicrosoft;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): T2sCloudProviderConfigMicrosoft.AsObject;
+    static toObject(includeInstance: boolean, msg: T2sCloudProviderConfigMicrosoft): T2sCloudProviderConfigMicrosoft.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: T2sCloudProviderConfigMicrosoft, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): T2sCloudProviderConfigMicrosoft;
+    static deserializeBinaryFromReader(message: T2sCloudProviderConfigMicrosoft, reader: jspb.BinaryReader): T2sCloudProviderConfigMicrosoft;
+}
+
+export namespace T2sCloudProviderConfigMicrosoft {
+    export type AsObject = {
+        useDefaultSpeaker: boolean,
+    }
+}
+
+export class T2sCloudProviderConfigGoogle extends jspb.Message { 
+    getSpeakingRate(): number;
+    setSpeakingRate(value: number): T2sCloudProviderConfigGoogle;
+    getVolumeGainDb(): number;
+    setVolumeGainDb(value: number): T2sCloudProviderConfigGoogle;
+    getPitch(): number;
+    setPitch(value: number): T2sCloudProviderConfigGoogle;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): T2sCloudProviderConfigGoogle.AsObject;
+    static toObject(includeInstance: boolean, msg: T2sCloudProviderConfigGoogle): T2sCloudProviderConfigGoogle.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: T2sCloudProviderConfigGoogle, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): T2sCloudProviderConfigGoogle;
+    static deserializeBinaryFromReader(message: T2sCloudProviderConfigGoogle, reader: jspb.BinaryReader): T2sCloudProviderConfigGoogle;
+}
+
+export namespace T2sCloudProviderConfigGoogle {
+    export type AsObject = {
+        speakingRate: number,
+        volumeGainDb: number,
+        pitch: number,
+    }
 }
 
 export class SynthesizeResponse extends jspb.Message { 
@@ -709,6 +835,26 @@ export class Text2Audio extends jspb.Message {
     getVitsTriton(): VitsTriton | undefined;
     setVitsTriton(value?: VitsTriton): Text2Audio;
 
+    hasT2sCloudServiceElevenlabs(): boolean;
+    clearT2sCloudServiceElevenlabs(): void;
+    getT2sCloudServiceElevenlabs(): T2sCloudServiceElevenLabs | undefined;
+    setT2sCloudServiceElevenlabs(value?: T2sCloudServiceElevenLabs): Text2Audio;
+
+    hasT2sCloudServiceAmazon(): boolean;
+    clearT2sCloudServiceAmazon(): void;
+    getT2sCloudServiceAmazon(): T2sCloudServiceAmazon | undefined;
+    setT2sCloudServiceAmazon(value?: T2sCloudServiceAmazon): Text2Audio;
+
+    hasT2sCloudServiceGoogle(): boolean;
+    clearT2sCloudServiceGoogle(): void;
+    getT2sCloudServiceGoogle(): T2sCloudServiceGoogle | undefined;
+    setT2sCloudServiceGoogle(value?: T2sCloudServiceGoogle): Text2Audio;
+
+    hasT2sCloudServiceMicrosoft(): boolean;
+    clearT2sCloudServiceMicrosoft(): void;
+    getT2sCloudServiceMicrosoft(): T2sCloudServiceMicrosoft | undefined;
+    setT2sCloudServiceMicrosoft(value?: T2sCloudServiceMicrosoft): Text2Audio;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): Text2Audio.AsObject;
     static toObject(includeInstance: boolean, msg: Text2Audio): Text2Audio.AsObject;
@@ -724,6 +870,10 @@ export namespace Text2Audio {
         type: string,
         vits?: Vits.AsObject,
         vitsTriton?: VitsTriton.AsObject,
+        t2sCloudServiceElevenlabs?: T2sCloudServiceElevenLabs.AsObject,
+        t2sCloudServiceAmazon?: T2sCloudServiceAmazon.AsObject,
+        t2sCloudServiceGoogle?: T2sCloudServiceGoogle.AsObject,
+        t2sCloudServiceMicrosoft?: T2sCloudServiceMicrosoft.AsObject,
     }
 }
 
@@ -896,6 +1046,145 @@ export namespace VitsTriton {
         tritonModelName: string,
         tritonServerHost: string,
         tritonServerPort: number,
+    }
+}
+
+export class T2sCloudServiceElevenLabs extends jspb.Message { 
+    getLanguageCode(): string;
+    setLanguageCode(value: string): T2sCloudServiceElevenLabs;
+    getModelId(): string;
+    setModelId(value: string): T2sCloudServiceElevenLabs;
+    getVoiceId(): string;
+    setVoiceId(value: string): T2sCloudServiceElevenLabs;
+
+    hasVoiceSettings(): boolean;
+    clearVoiceSettings(): void;
+    getVoiceSettings(): VoiceSettings | undefined;
+    setVoiceSettings(value?: VoiceSettings): T2sCloudServiceElevenLabs;
+    getApplyTextNormalization(): string;
+    setApplyTextNormalization(value: string): T2sCloudServiceElevenLabs;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): T2sCloudServiceElevenLabs.AsObject;
+    static toObject(includeInstance: boolean, msg: T2sCloudServiceElevenLabs): T2sCloudServiceElevenLabs.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: T2sCloudServiceElevenLabs, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): T2sCloudServiceElevenLabs;
+    static deserializeBinaryFromReader(message: T2sCloudServiceElevenLabs, reader: jspb.BinaryReader): T2sCloudServiceElevenLabs;
+}
+
+export namespace T2sCloudServiceElevenLabs {
+    export type AsObject = {
+        languageCode: string,
+        modelId: string,
+        voiceId: string,
+        voiceSettings?: VoiceSettings.AsObject,
+        applyTextNormalization: string,
+    }
+}
+
+export class VoiceSettings extends jspb.Message { 
+    getStability(): number;
+    setStability(value: number): VoiceSettings;
+    getSimilarityBoost(): number;
+    setSimilarityBoost(value: number): VoiceSettings;
+    getStyle(): number;
+    setStyle(value: number): VoiceSettings;
+    getUseSpeakerBoost(): boolean;
+    setUseSpeakerBoost(value: boolean): VoiceSettings;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): VoiceSettings.AsObject;
+    static toObject(includeInstance: boolean, msg: VoiceSettings): VoiceSettings.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: VoiceSettings, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): VoiceSettings;
+    static deserializeBinaryFromReader(message: VoiceSettings, reader: jspb.BinaryReader): VoiceSettings;
+}
+
+export namespace VoiceSettings {
+    export type AsObject = {
+        stability: number,
+        similarityBoost: number,
+        style: number,
+        useSpeakerBoost: boolean,
+    }
+}
+
+export class T2sCloudServiceAmazon extends jspb.Message { 
+    getVoiceId(): string;
+    setVoiceId(value: string): T2sCloudServiceAmazon;
+    getModelId(): string;
+    setModelId(value: string): T2sCloudServiceAmazon;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): T2sCloudServiceAmazon.AsObject;
+    static toObject(includeInstance: boolean, msg: T2sCloudServiceAmazon): T2sCloudServiceAmazon.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: T2sCloudServiceAmazon, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): T2sCloudServiceAmazon;
+    static deserializeBinaryFromReader(message: T2sCloudServiceAmazon, reader: jspb.BinaryReader): T2sCloudServiceAmazon;
+}
+
+export namespace T2sCloudServiceAmazon {
+    export type AsObject = {
+        voiceId: string,
+        modelId: string,
+    }
+}
+
+export class T2sCloudServiceGoogle extends jspb.Message { 
+    getVoiceId(): string;
+    setVoiceId(value: string): T2sCloudServiceGoogle;
+    getSpeakingRate(): number;
+    setSpeakingRate(value: number): T2sCloudServiceGoogle;
+    getVolumeGainDb(): number;
+    setVolumeGainDb(value: number): T2sCloudServiceGoogle;
+    getPitch(): number;
+    setPitch(value: number): T2sCloudServiceGoogle;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): T2sCloudServiceGoogle.AsObject;
+    static toObject(includeInstance: boolean, msg: T2sCloudServiceGoogle): T2sCloudServiceGoogle.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: T2sCloudServiceGoogle, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): T2sCloudServiceGoogle;
+    static deserializeBinaryFromReader(message: T2sCloudServiceGoogle, reader: jspb.BinaryReader): T2sCloudServiceGoogle;
+}
+
+export namespace T2sCloudServiceGoogle {
+    export type AsObject = {
+        voiceId: string,
+        speakingRate: number,
+        volumeGainDb: number,
+        pitch: number,
+    }
+}
+
+export class T2sCloudServiceMicrosoft extends jspb.Message { 
+    getVoiceId(): string;
+    setVoiceId(value: string): T2sCloudServiceMicrosoft;
+    getUseDefaultSpeaker(): boolean;
+    setUseDefaultSpeaker(value: boolean): T2sCloudServiceMicrosoft;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): T2sCloudServiceMicrosoft.AsObject;
+    static toObject(includeInstance: boolean, msg: T2sCloudServiceMicrosoft): T2sCloudServiceMicrosoft.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: T2sCloudServiceMicrosoft, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): T2sCloudServiceMicrosoft;
+    static deserializeBinaryFromReader(message: T2sCloudServiceMicrosoft, reader: jspb.BinaryReader): T2sCloudServiceMicrosoft;
+}
+
+export namespace T2sCloudServiceMicrosoft {
+    export type AsObject = {
+        voiceId: string,
+        useDefaultSpeaker: boolean,
     }
 }
 
@@ -1082,6 +1371,8 @@ export class T2SNormalization extends jspb.Message {
     setNumericMapping(value: string): T2SNormalization;
     getCallsignsMapping(): string;
     setCallsignsMapping(value: string): T2SNormalization;
+    getPhonemeCorrectionMapping(): string;
+    setPhonemeCorrectionMapping(value: string): T2SNormalization;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): T2SNormalization.AsObject;
@@ -1102,6 +1393,7 @@ export namespace T2SNormalization {
         arpabetMapping: string,
         numericMapping: string,
         callsignsMapping: string,
+        phonemeCorrectionMapping: string,
     }
 }
 

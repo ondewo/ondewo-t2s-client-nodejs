@@ -7,6 +7,7 @@
 import * as grpc from "grpc";
 import * as ondewo_t2s_text_to_speech_pb from "../../ondewo/t2s/text-to-speech_pb";
 import * as google_protobuf_empty_pb from "google-protobuf/google/protobuf/empty_pb";
+import * as google_protobuf_struct_pb from "google-protobuf/google/protobuf/struct_pb";
 
 interface IText2SpeechService extends grpc.ServiceDefinition<grpc.UntypedServiceImplementation> {
     synthesize: IText2SpeechService_ISynthesize;

@@ -19,6 +19,7 @@
 var grpc = require('@grpc/grpc-js');
 var ondewo_t2s_text$to$speech_pb = require('../../ondewo/t2s/text-to-speech_pb.js');
 var google_protobuf_empty_pb = require('google-protobuf/google/protobuf/empty_pb.js');
+var google_protobuf_struct_pb = require('google-protobuf/google/protobuf/struct_pb.js');
 
 function serialize_google_protobuf_Empty(arg) {
   if (!(arg instanceof google_protobuf_empty_pb.Empty)) {
