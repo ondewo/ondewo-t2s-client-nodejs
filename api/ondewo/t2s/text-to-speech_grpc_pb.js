@@ -142,6 +142,28 @@ function deserialize_ondewo_t2s_ListT2sLanguagesResponse(buffer_arg) {
   return ondewo_t2s_text$to$speech_pb.ListT2sLanguagesResponse.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_ondewo_t2s_ListT2sNormalizationPipelinesRequest(arg) {
+  if (!(arg instanceof ondewo_t2s_text$to$speech_pb.ListT2sNormalizationPipelinesRequest)) {
+    throw new Error('Expected argument of type ondewo.t2s.ListT2sNormalizationPipelinesRequest');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_ondewo_t2s_ListT2sNormalizationPipelinesRequest(buffer_arg) {
+  return ondewo_t2s_text$to$speech_pb.ListT2sNormalizationPipelinesRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_ondewo_t2s_ListT2sNormalizationPipelinesResponse(arg) {
+  if (!(arg instanceof ondewo_t2s_text$to$speech_pb.ListT2sNormalizationPipelinesResponse)) {
+    throw new Error('Expected argument of type ondewo.t2s.ListT2sNormalizationPipelinesResponse');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_ondewo_t2s_ListT2sNormalizationPipelinesResponse(buffer_arg) {
+  return ondewo_t2s_text$to$speech_pb.ListT2sNormalizationPipelinesResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_ondewo_t2s_ListT2sPipelinesRequest(arg) {
   if (!(arg instanceof ondewo_t2s_text$to$speech_pb.ListT2sPipelinesRequest)) {
     throw new Error('Expected argument of type ondewo.t2s.ListT2sPipelinesRequest');
@@ -195,6 +217,28 @@ function serialize_ondewo_t2s_PhonemizerId(arg) {
 
 function deserialize_ondewo_t2s_PhonemizerId(buffer_arg) {
   return ondewo_t2s_text$to$speech_pb.PhonemizerId.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_ondewo_t2s_StreamingSynthesizeRequest(arg) {
+  if (!(arg instanceof ondewo_t2s_text$to$speech_pb.StreamingSynthesizeRequest)) {
+    throw new Error('Expected argument of type ondewo.t2s.StreamingSynthesizeRequest');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_ondewo_t2s_StreamingSynthesizeRequest(buffer_arg) {
+  return ondewo_t2s_text$to$speech_pb.StreamingSynthesizeRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_ondewo_t2s_StreamingSynthesizeResponse(arg) {
+  if (!(arg instanceof ondewo_t2s_text$to$speech_pb.StreamingSynthesizeResponse)) {
+    throw new Error('Expected argument of type ondewo.t2s.StreamingSynthesizeResponse');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_ondewo_t2s_StreamingSynthesizeResponse(buffer_arg) {
+  return ondewo_t2s_text$to$speech_pb.StreamingSynthesizeResponse.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
 function serialize_ondewo_t2s_SynthesizeRequest(arg) {
@@ -295,6 +339,18 @@ batchSynthesize: {
     requestDeserialize: deserialize_ondewo_t2s_BatchSynthesizeRequest,
     responseSerialize: serialize_ondewo_t2s_BatchSynthesizeResponse,
     responseDeserialize: deserialize_ondewo_t2s_BatchSynthesizeResponse,
+  },
+  // Performs streaming synthesis by accepting stream of input text and returning a stream of generated audio.
+streamingSynthesize: {
+    path: '/ondewo.t2s.Text2Speech/StreamingSynthesize',
+    requestStream: true,
+    responseStream: true,
+    requestType: ondewo_t2s_text$to$speech_pb.StreamingSynthesizeRequest,
+    responseType: ondewo_t2s_text$to$speech_pb.StreamingSynthesizeResponse,
+    requestSerialize: serialize_ondewo_t2s_StreamingSynthesizeRequest,
+    requestDeserialize: deserialize_ondewo_t2s_StreamingSynthesizeRequest,
+    responseSerialize: serialize_ondewo_t2s_StreamingSynthesizeResponse,
+    responseDeserialize: deserialize_ondewo_t2s_StreamingSynthesizeResponse,
   },
   // NormalizeText RPC
 //
@@ -408,6 +464,20 @@ listT2sDomains: {
     responseSerialize: serialize_ondewo_t2s_ListT2sDomainsResponse,
     responseDeserialize: deserialize_ondewo_t2s_ListT2sDomainsResponse,
   },
+  // ListT2sNormalizationPipelines RPC
+//
+// Retrieves a list of normalization pipelines based on specific requirements.
+listT2sNormalizationPipelines: {
+    path: '/ondewo.t2s.Text2Speech/ListT2sNormalizationPipelines',
+    requestStream: false,
+    responseStream: false,
+    requestType: ondewo_t2s_text$to$speech_pb.ListT2sNormalizationPipelinesRequest,
+    responseType: ondewo_t2s_text$to$speech_pb.ListT2sNormalizationPipelinesResponse,
+    requestSerialize: serialize_ondewo_t2s_ListT2sNormalizationPipelinesRequest,
+    requestDeserialize: deserialize_ondewo_t2s_ListT2sNormalizationPipelinesRequest,
+    responseSerialize: serialize_ondewo_t2s_ListT2sNormalizationPipelinesResponse,
+    responseDeserialize: deserialize_ondewo_t2s_ListT2sNormalizationPipelinesResponse,
+  },
   // GetServiceInfo RPC
 //
 // Retrieves the version information of the running text-to-speech server.
@@ -496,4 +566,4 @@ listCustomPhonemizer: {
   },
 };
 
-exports.Text2SpeechClient = grpc.makeGenericClientConstructor(Text2SpeechService);
+exports.Text2SpeechClient = grpc.makeGenericClientConstructor(Text2SpeechService, 'Text2Speech');

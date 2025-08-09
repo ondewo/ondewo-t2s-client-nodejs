@@ -12,6 +12,7 @@ import * as google_protobuf_struct_pb from "google-protobuf/google/protobuf/stru
 interface IText2SpeechService extends grpc.ServiceDefinition<grpc.UntypedServiceImplementation> {
     synthesize: IText2SpeechService_ISynthesize;
     batchSynthesize: IText2SpeechService_IBatchSynthesize;
+    streamingSynthesize: IText2SpeechService_IStreamingSynthesize;
     normalizeText: IText2SpeechService_INormalizeText;
     getT2sPipeline: IText2SpeechService_IGetT2sPipeline;
     createT2sPipeline: IText2SpeechService_ICreateT2sPipeline;
@@ -20,6 +21,7 @@ interface IText2SpeechService extends grpc.ServiceDefinition<grpc.UntypedService
     listT2sPipelines: IText2SpeechService_IListT2sPipelines;
     listT2sLanguages: IText2SpeechService_IListT2sLanguages;
     listT2sDomains: IText2SpeechService_IListT2sDomains;
+    listT2sNormalizationPipelines: IText2SpeechService_IListT2sNormalizationPipelines;
     getServiceInfo: IText2SpeechService_IGetServiceInfo;
     getCustomPhonemizer: IText2SpeechService_IGetCustomPhonemizer;
     createCustomPhonemizer: IText2SpeechService_ICreateCustomPhonemizer;
@@ -45,6 +47,15 @@ interface IText2SpeechService_IBatchSynthesize extends grpc.MethodDefinition<ond
     requestDeserialize: grpc.deserialize<ondewo_t2s_text_to_speech_pb.BatchSynthesizeRequest>;
     responseSerialize: grpc.serialize<ondewo_t2s_text_to_speech_pb.BatchSynthesizeResponse>;
     responseDeserialize: grpc.deserialize<ondewo_t2s_text_to_speech_pb.BatchSynthesizeResponse>;
+}
+interface IText2SpeechService_IStreamingSynthesize extends grpc.MethodDefinition<ondewo_t2s_text_to_speech_pb.StreamingSynthesizeRequest, ondewo_t2s_text_to_speech_pb.StreamingSynthesizeResponse> {
+    path: "/ondewo.t2s.Text2Speech/StreamingSynthesize";
+    requestStream: true;
+    responseStream: true;
+    requestSerialize: grpc.serialize<ondewo_t2s_text_to_speech_pb.StreamingSynthesizeRequest>;
+    requestDeserialize: grpc.deserialize<ondewo_t2s_text_to_speech_pb.StreamingSynthesizeRequest>;
+    responseSerialize: grpc.serialize<ondewo_t2s_text_to_speech_pb.StreamingSynthesizeResponse>;
+    responseDeserialize: grpc.deserialize<ondewo_t2s_text_to_speech_pb.StreamingSynthesizeResponse>;
 }
 interface IText2SpeechService_INormalizeText extends grpc.MethodDefinition<ondewo_t2s_text_to_speech_pb.NormalizeTextRequest, ondewo_t2s_text_to_speech_pb.NormalizeTextResponse> {
     path: "/ondewo.t2s.Text2Speech/NormalizeText";
@@ -118,6 +129,15 @@ interface IText2SpeechService_IListT2sDomains extends grpc.MethodDefinition<onde
     responseSerialize: grpc.serialize<ondewo_t2s_text_to_speech_pb.ListT2sDomainsResponse>;
     responseDeserialize: grpc.deserialize<ondewo_t2s_text_to_speech_pb.ListT2sDomainsResponse>;
 }
+interface IText2SpeechService_IListT2sNormalizationPipelines extends grpc.MethodDefinition<ondewo_t2s_text_to_speech_pb.ListT2sNormalizationPipelinesRequest, ondewo_t2s_text_to_speech_pb.ListT2sNormalizationPipelinesResponse> {
+    path: "/ondewo.t2s.Text2Speech/ListT2sNormalizationPipelines";
+    requestStream: false;
+    responseStream: false;
+    requestSerialize: grpc.serialize<ondewo_t2s_text_to_speech_pb.ListT2sNormalizationPipelinesRequest>;
+    requestDeserialize: grpc.deserialize<ondewo_t2s_text_to_speech_pb.ListT2sNormalizationPipelinesRequest>;
+    responseSerialize: grpc.serialize<ondewo_t2s_text_to_speech_pb.ListT2sNormalizationPipelinesResponse>;
+    responseDeserialize: grpc.deserialize<ondewo_t2s_text_to_speech_pb.ListT2sNormalizationPipelinesResponse>;
+}
 interface IText2SpeechService_IGetServiceInfo extends grpc.MethodDefinition<google_protobuf_empty_pb.Empty, ondewo_t2s_text_to_speech_pb.T2SGetServiceInfoResponse> {
     path: "/ondewo.t2s.Text2Speech/GetServiceInfo";
     requestStream: false;
@@ -178,6 +198,7 @@ export const Text2SpeechService: IText2SpeechService;
 export interface IText2SpeechServer {
     synthesize: grpc.handleUnaryCall<ondewo_t2s_text_to_speech_pb.SynthesizeRequest, ondewo_t2s_text_to_speech_pb.SynthesizeResponse>;
     batchSynthesize: grpc.handleUnaryCall<ondewo_t2s_text_to_speech_pb.BatchSynthesizeRequest, ondewo_t2s_text_to_speech_pb.BatchSynthesizeResponse>;
+    streamingSynthesize: grpc.handleBidiStreamingCall<ondewo_t2s_text_to_speech_pb.StreamingSynthesizeRequest, ondewo_t2s_text_to_speech_pb.StreamingSynthesizeResponse>;
     normalizeText: grpc.handleUnaryCall<ondewo_t2s_text_to_speech_pb.NormalizeTextRequest, ondewo_t2s_text_to_speech_pb.NormalizeTextResponse>;
     getT2sPipeline: grpc.handleUnaryCall<ondewo_t2s_text_to_speech_pb.T2sPipelineId, ondewo_t2s_text_to_speech_pb.Text2SpeechConfig>;
     createT2sPipeline: grpc.handleUnaryCall<ondewo_t2s_text_to_speech_pb.Text2SpeechConfig, ondewo_t2s_text_to_speech_pb.T2sPipelineId>;
@@ -186,6 +207,7 @@ export interface IText2SpeechServer {
     listT2sPipelines: grpc.handleUnaryCall<ondewo_t2s_text_to_speech_pb.ListT2sPipelinesRequest, ondewo_t2s_text_to_speech_pb.ListT2sPipelinesResponse>;
     listT2sLanguages: grpc.handleUnaryCall<ondewo_t2s_text_to_speech_pb.ListT2sLanguagesRequest, ondewo_t2s_text_to_speech_pb.ListT2sLanguagesResponse>;
     listT2sDomains: grpc.handleUnaryCall<ondewo_t2s_text_to_speech_pb.ListT2sDomainsRequest, ondewo_t2s_text_to_speech_pb.ListT2sDomainsResponse>;
+    listT2sNormalizationPipelines: grpc.handleUnaryCall<ondewo_t2s_text_to_speech_pb.ListT2sNormalizationPipelinesRequest, ondewo_t2s_text_to_speech_pb.ListT2sNormalizationPipelinesResponse>;
     getServiceInfo: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, ondewo_t2s_text_to_speech_pb.T2SGetServiceInfoResponse>;
     getCustomPhonemizer: grpc.handleUnaryCall<ondewo_t2s_text_to_speech_pb.PhonemizerId, ondewo_t2s_text_to_speech_pb.CustomPhonemizerProto>;
     createCustomPhonemizer: grpc.handleUnaryCall<ondewo_t2s_text_to_speech_pb.CreateCustomPhonemizerRequest, ondewo_t2s_text_to_speech_pb.PhonemizerId>;
@@ -201,6 +223,9 @@ export interface IText2SpeechClient {
     batchSynthesize(request: ondewo_t2s_text_to_speech_pb.BatchSynthesizeRequest, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.BatchSynthesizeResponse) => void): grpc.ClientUnaryCall;
     batchSynthesize(request: ondewo_t2s_text_to_speech_pb.BatchSynthesizeRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.BatchSynthesizeResponse) => void): grpc.ClientUnaryCall;
     batchSynthesize(request: ondewo_t2s_text_to_speech_pb.BatchSynthesizeRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.BatchSynthesizeResponse) => void): grpc.ClientUnaryCall;
+    streamingSynthesize(): grpc.ClientDuplexStream<ondewo_t2s_text_to_speech_pb.StreamingSynthesizeRequest, ondewo_t2s_text_to_speech_pb.StreamingSynthesizeResponse>;
+    streamingSynthesize(options: Partial<grpc.CallOptions>): grpc.ClientDuplexStream<ondewo_t2s_text_to_speech_pb.StreamingSynthesizeRequest, ondewo_t2s_text_to_speech_pb.StreamingSynthesizeResponse>;
+    streamingSynthesize(metadata: grpc.Metadata, options?: Partial<grpc.CallOptions>): grpc.ClientDuplexStream<ondewo_t2s_text_to_speech_pb.StreamingSynthesizeRequest, ondewo_t2s_text_to_speech_pb.StreamingSynthesizeResponse>;
     normalizeText(request: ondewo_t2s_text_to_speech_pb.NormalizeTextRequest, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.NormalizeTextResponse) => void): grpc.ClientUnaryCall;
     normalizeText(request: ondewo_t2s_text_to_speech_pb.NormalizeTextRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.NormalizeTextResponse) => void): grpc.ClientUnaryCall;
     normalizeText(request: ondewo_t2s_text_to_speech_pb.NormalizeTextRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.NormalizeTextResponse) => void): grpc.ClientUnaryCall;
@@ -225,6 +250,9 @@ export interface IText2SpeechClient {
     listT2sDomains(request: ondewo_t2s_text_to_speech_pb.ListT2sDomainsRequest, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListT2sDomainsResponse) => void): grpc.ClientUnaryCall;
     listT2sDomains(request: ondewo_t2s_text_to_speech_pb.ListT2sDomainsRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListT2sDomainsResponse) => void): grpc.ClientUnaryCall;
     listT2sDomains(request: ondewo_t2s_text_to_speech_pb.ListT2sDomainsRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListT2sDomainsResponse) => void): grpc.ClientUnaryCall;
+    listT2sNormalizationPipelines(request: ondewo_t2s_text_to_speech_pb.ListT2sNormalizationPipelinesRequest, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListT2sNormalizationPipelinesResponse) => void): grpc.ClientUnaryCall;
+    listT2sNormalizationPipelines(request: ondewo_t2s_text_to_speech_pb.ListT2sNormalizationPipelinesRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListT2sNormalizationPipelinesResponse) => void): grpc.ClientUnaryCall;
+    listT2sNormalizationPipelines(request: ondewo_t2s_text_to_speech_pb.ListT2sNormalizationPipelinesRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListT2sNormalizationPipelinesResponse) => void): grpc.ClientUnaryCall;
     getServiceInfo(request: google_protobuf_empty_pb.Empty, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.T2SGetServiceInfoResponse) => void): grpc.ClientUnaryCall;
     getServiceInfo(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.T2SGetServiceInfoResponse) => void): grpc.ClientUnaryCall;
     getServiceInfo(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.T2SGetServiceInfoResponse) => void): grpc.ClientUnaryCall;
@@ -253,6 +281,8 @@ export class Text2SpeechClient extends grpc.Client implements IText2SpeechClient
     public batchSynthesize(request: ondewo_t2s_text_to_speech_pb.BatchSynthesizeRequest, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.BatchSynthesizeResponse) => void): grpc.ClientUnaryCall;
     public batchSynthesize(request: ondewo_t2s_text_to_speech_pb.BatchSynthesizeRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.BatchSynthesizeResponse) => void): grpc.ClientUnaryCall;
     public batchSynthesize(request: ondewo_t2s_text_to_speech_pb.BatchSynthesizeRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.BatchSynthesizeResponse) => void): grpc.ClientUnaryCall;
+    public streamingSynthesize(options?: Partial<grpc.CallOptions>): grpc.ClientDuplexStream<ondewo_t2s_text_to_speech_pb.StreamingSynthesizeRequest, ondewo_t2s_text_to_speech_pb.StreamingSynthesizeResponse>;
+    public streamingSynthesize(metadata?: grpc.Metadata, options?: Partial<grpc.CallOptions>): grpc.ClientDuplexStream<ondewo_t2s_text_to_speech_pb.StreamingSynthesizeRequest, ondewo_t2s_text_to_speech_pb.StreamingSynthesizeResponse>;
     public normalizeText(request: ondewo_t2s_text_to_speech_pb.NormalizeTextRequest, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.NormalizeTextResponse) => void): grpc.ClientUnaryCall;
     public normalizeText(request: ondewo_t2s_text_to_speech_pb.NormalizeTextRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.NormalizeTextResponse) => void): grpc.ClientUnaryCall;
     public normalizeText(request: ondewo_t2s_text_to_speech_pb.NormalizeTextRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.NormalizeTextResponse) => void): grpc.ClientUnaryCall;
@@ -277,6 +307,9 @@ export class Text2SpeechClient extends grpc.Client implements IText2SpeechClient
     public listT2sDomains(request: ondewo_t2s_text_to_speech_pb.ListT2sDomainsRequest, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListT2sDomainsResponse) => void): grpc.ClientUnaryCall;
     public listT2sDomains(request: ondewo_t2s_text_to_speech_pb.ListT2sDomainsRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListT2sDomainsResponse) => void): grpc.ClientUnaryCall;
     public listT2sDomains(request: ondewo_t2s_text_to_speech_pb.ListT2sDomainsRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListT2sDomainsResponse) => void): grpc.ClientUnaryCall;
+    public listT2sNormalizationPipelines(request: ondewo_t2s_text_to_speech_pb.ListT2sNormalizationPipelinesRequest, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListT2sNormalizationPipelinesResponse) => void): grpc.ClientUnaryCall;
+    public listT2sNormalizationPipelines(request: ondewo_t2s_text_to_speech_pb.ListT2sNormalizationPipelinesRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListT2sNormalizationPipelinesResponse) => void): grpc.ClientUnaryCall;
+    public listT2sNormalizationPipelines(request: ondewo_t2s_text_to_speech_pb.ListT2sNormalizationPipelinesRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListT2sNormalizationPipelinesResponse) => void): grpc.ClientUnaryCall;
     public getServiceInfo(request: google_protobuf_empty_pb.Empty, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.T2SGetServiceInfoResponse) => void): grpc.ClientUnaryCall;
     public getServiceInfo(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.T2SGetServiceInfoResponse) => void): grpc.ClientUnaryCall;
     public getServiceInfo(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.T2SGetServiceInfoResponse) => void): grpc.ClientUnaryCall;

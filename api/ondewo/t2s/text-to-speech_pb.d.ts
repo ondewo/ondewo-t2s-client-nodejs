@@ -56,6 +56,32 @@ export namespace BatchSynthesizeRequest {
     }
 }
 
+export class StreamingSynthesizeRequest extends jspb.Message { 
+    getText(): string;
+    setText(value: string): StreamingSynthesizeRequest;
+
+    hasConfig(): boolean;
+    clearConfig(): void;
+    getConfig(): RequestConfig | undefined;
+    setConfig(value?: RequestConfig): StreamingSynthesizeRequest;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): StreamingSynthesizeRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: StreamingSynthesizeRequest): StreamingSynthesizeRequest.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: StreamingSynthesizeRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): StreamingSynthesizeRequest;
+    static deserializeBinaryFromReader(message: StreamingSynthesizeRequest, reader: jspb.BinaryReader): StreamingSynthesizeRequest;
+}
+
+export namespace StreamingSynthesizeRequest {
+    export type AsObject = {
+        text: string,
+        config?: RequestConfig.AsObject,
+    }
+}
+
 export class BatchSynthesizeResponse extends jspb.Message { 
     clearBatchResponseList(): void;
     getBatchResponseList(): Array<SynthesizeResponse>;
@@ -112,11 +138,6 @@ export class RequestConfig extends jspb.Message {
     getUseCache(): boolean;
     setUseCache(value: boolean): RequestConfig;
 
-    hasNormalizer(): boolean;
-    clearNormalizer(): void;
-    getNormalizer(): string;
-    setNormalizer(value: string): RequestConfig;
-
     hasT2sServiceConfig(): boolean;
     clearT2sServiceConfig(): void;
     getT2sServiceConfig(): google_protobuf_struct_pb.Struct | undefined;
@@ -127,13 +148,23 @@ export class RequestConfig extends jspb.Message {
     getT2sCloudProviderConfig(): T2sCloudProviderConfig | undefined;
     setT2sCloudProviderConfig(value?: T2sCloudProviderConfig): RequestConfig;
 
+    hasT2sNormalization(): boolean;
+    clearT2sNormalization(): void;
+    getT2sNormalization(): T2SNormalization | undefined;
+    setT2sNormalization(value?: T2SNormalization): RequestConfig;
+
+    hasWordToPhonemeMapping(): boolean;
+    clearWordToPhonemeMapping(): void;
+    getWordToPhonemeMapping(): google_protobuf_struct_pb.Struct | undefined;
+    setWordToPhonemeMapping(value?: google_protobuf_struct_pb.Struct): RequestConfig;
+
     getOneofLengthScaleCase(): RequestConfig.OneofLengthScaleCase;
     getOneofNoiseScaleCase(): RequestConfig.OneofNoiseScaleCase;
     getOneofSampleRateCase(): RequestConfig.OneofSampleRateCase;
     getOneofPcmCase(): RequestConfig.OneofPcmCase;
     getOneofAudioformatCase(): RequestConfig.OneofAudioformatCase;
     getOneofUseCacheCase(): RequestConfig.OneofUseCacheCase;
-    getOneofNormalizerCase(): RequestConfig.OneofNormalizerCase;
+    getOneofT2sNormalizationCase(): RequestConfig.OneofT2sNormalizationCase;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): RequestConfig.AsObject;
@@ -154,9 +185,10 @@ export namespace RequestConfig {
         pcm: Pcm,
         audioFormat: AudioFormat,
         useCache: boolean,
-        normalizer: string,
         t2sServiceConfig?: google_protobuf_struct_pb.Struct.AsObject,
         t2sCloudProviderConfig?: T2sCloudProviderConfig.AsObject,
+        t2sNormalization?: T2SNormalization.AsObject,
+        wordToPhonemeMapping?: google_protobuf_struct_pb.Struct.AsObject,
     }
 
     export enum OneofLengthScaleCase {
@@ -189,9 +221,9 @@ export namespace RequestConfig {
         USE_CACHE = 7,
     }
 
-    export enum OneofNormalizerCase {
-        ONEOF_NORMALIZER_NOT_SET = 0,
-        NORMALIZER = 8,
+    export enum OneofT2sNormalizationCase {
+        ONEOF_T2S_NORMALIZATION_NOT_SET = 0,
+        T2S_NORMALIZATION = 11,
     }
 
 }
@@ -329,6 +361,8 @@ export class SynthesizeResponse extends jspb.Message {
     setConfig(value?: RequestConfig): SynthesizeResponse;
     getNormalizedText(): string;
     setNormalizedText(value: string): SynthesizeResponse;
+    getSampleRate(): number;
+    setSampleRate(value: number): SynthesizeResponse;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): SynthesizeResponse.AsObject;
@@ -349,6 +383,53 @@ export namespace SynthesizeResponse {
         text: string,
         config?: RequestConfig.AsObject,
         normalizedText: string,
+        sampleRate: number,
+    }
+}
+
+export class StreamingSynthesizeResponse extends jspb.Message { 
+    getAudioUuid(): string;
+    setAudioUuid(value: string): StreamingSynthesizeResponse;
+    getAudio(): Uint8Array | string;
+    getAudio_asU8(): Uint8Array;
+    getAudio_asB64(): string;
+    setAudio(value: Uint8Array | string): StreamingSynthesizeResponse;
+    getGenerationTime(): number;
+    setGenerationTime(value: number): StreamingSynthesizeResponse;
+    getAudioLength(): number;
+    setAudioLength(value: number): StreamingSynthesizeResponse;
+    getText(): string;
+    setText(value: string): StreamingSynthesizeResponse;
+
+    hasConfig(): boolean;
+    clearConfig(): void;
+    getConfig(): RequestConfig | undefined;
+    setConfig(value?: RequestConfig): StreamingSynthesizeResponse;
+    getNormalizedText(): string;
+    setNormalizedText(value: string): StreamingSynthesizeResponse;
+    getSampleRate(): number;
+    setSampleRate(value: number): StreamingSynthesizeResponse;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): StreamingSynthesizeResponse.AsObject;
+    static toObject(includeInstance: boolean, msg: StreamingSynthesizeResponse): StreamingSynthesizeResponse.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: StreamingSynthesizeResponse, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): StreamingSynthesizeResponse;
+    static deserializeBinaryFromReader(message: StreamingSynthesizeResponse, reader: jspb.BinaryReader): StreamingSynthesizeResponse;
+}
+
+export namespace StreamingSynthesizeResponse {
+    export type AsObject = {
+        audioUuid: string,
+        audio: Uint8Array | string,
+        generationTime: number,
+        audioLength: number,
+        text: string,
+        config?: RequestConfig.AsObject,
+        normalizedText: string,
+        sampleRate: number,
     }
 }
 
@@ -594,6 +675,48 @@ export class ListT2sDomainsResponse extends jspb.Message {
 export namespace ListT2sDomainsResponse {
     export type AsObject = {
         domainsList: Array<string>,
+    }
+}
+
+export class ListT2sNormalizationPipelinesRequest extends jspb.Message { 
+    getLanguage(): string;
+    setLanguage(value: string): ListT2sNormalizationPipelinesRequest;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ListT2sNormalizationPipelinesRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: ListT2sNormalizationPipelinesRequest): ListT2sNormalizationPipelinesRequest.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: ListT2sNormalizationPipelinesRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ListT2sNormalizationPipelinesRequest;
+    static deserializeBinaryFromReader(message: ListT2sNormalizationPipelinesRequest, reader: jspb.BinaryReader): ListT2sNormalizationPipelinesRequest;
+}
+
+export namespace ListT2sNormalizationPipelinesRequest {
+    export type AsObject = {
+        language: string,
+    }
+}
+
+export class ListT2sNormalizationPipelinesResponse extends jspb.Message { 
+    clearT2sNormalizationPipelinesList(): void;
+    getT2sNormalizationPipelinesList(): Array<string>;
+    setT2sNormalizationPipelinesList(value: Array<string>): ListT2sNormalizationPipelinesResponse;
+    addT2sNormalizationPipelines(value: string, index?: number): string;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ListT2sNormalizationPipelinesResponse.AsObject;
+    static toObject(includeInstance: boolean, msg: ListT2sNormalizationPipelinesResponse): ListT2sNormalizationPipelinesResponse.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: ListT2sNormalizationPipelinesResponse, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ListT2sNormalizationPipelinesResponse;
+    static deserializeBinaryFromReader(message: ListT2sNormalizationPipelinesResponse, reader: jspb.BinaryReader): ListT2sNormalizationPipelinesResponse;
+}
+
+export namespace ListT2sNormalizationPipelinesResponse {
+    export type AsObject = {
+        t2sNormalizationPipelinesList: Array<string>,
     }
 }
 
