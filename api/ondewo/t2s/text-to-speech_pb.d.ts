@@ -158,6 +158,11 @@ export class RequestConfig extends jspb.Message {
     getWordToPhonemeMapping(): google_protobuf_struct_pb.Struct | undefined;
     setWordToPhonemeMapping(value?: google_protobuf_struct_pb.Struct): RequestConfig;
 
+    hasInstruction(): boolean;
+    clearInstruction(): void;
+    getInstruction(): string | undefined;
+    setInstruction(value: string): RequestConfig;
+
     getOneofLengthScaleCase(): RequestConfig.OneofLengthScaleCase;
     getOneofNoiseScaleCase(): RequestConfig.OneofNoiseScaleCase;
     getOneofSampleRateCase(): RequestConfig.OneofSampleRateCase;
@@ -189,6 +194,7 @@ export namespace RequestConfig {
         t2sCloudProviderConfig?: T2sCloudProviderConfig.AsObject,
         t2sNormalization?: T2SNormalization.AsObject,
         wordToPhonemeMapping?: google_protobuf_struct_pb.Struct.AsObject,
+        instruction?: string,
     }
 
     export enum OneofLengthScaleCase {
@@ -978,6 +984,16 @@ export class Text2Audio extends jspb.Message {
     getT2sCloudServiceMicrosoft(): T2sCloudServiceMicrosoft | undefined;
     setT2sCloudServiceMicrosoft(value?: T2sCloudServiceMicrosoft): Text2Audio;
 
+    hasQwen3TtsCustomVoice(): boolean;
+    clearQwen3TtsCustomVoice(): void;
+    getQwen3TtsCustomVoice(): Qwen3TtsCustomVoice | undefined;
+    setQwen3TtsCustomVoice(value?: Qwen3TtsCustomVoice): Text2Audio;
+
+    hasQwen3TtsBase(): boolean;
+    clearQwen3TtsBase(): void;
+    getQwen3TtsBase(): Qwen3TtsBase | undefined;
+    setQwen3TtsBase(value?: Qwen3TtsBase): Text2Audio;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): Text2Audio.AsObject;
     static toObject(includeInstance: boolean, msg: Text2Audio): Text2Audio.AsObject;
@@ -997,6 +1013,8 @@ export namespace Text2Audio {
         t2sCloudServiceAmazon?: T2sCloudServiceAmazon.AsObject,
         t2sCloudServiceGoogle?: T2sCloudServiceGoogle.AsObject,
         t2sCloudServiceMicrosoft?: T2sCloudServiceMicrosoft.AsObject,
+        qwen3TtsCustomVoice?: Qwen3TtsCustomVoice.AsObject,
+        qwen3TtsBase?: Qwen3TtsBase.AsObject,
     }
 }
 
@@ -1308,6 +1326,82 @@ export namespace T2sCloudServiceMicrosoft {
     export type AsObject = {
         voiceId: string,
         useDefaultSpeaker: boolean,
+    }
+}
+
+export class Qwen3TtsCustomVoice extends jspb.Message { 
+    getVoiceId(): string;
+    setVoiceId(value: string): Qwen3TtsCustomVoice;
+    getModelName(): string;
+    setModelName(value: string): Qwen3TtsCustomVoice;
+    getLanguage(): string;
+    setLanguage(value: string): Qwen3TtsCustomVoice;
+    getQwen3TtsServerHost(): string;
+    setQwen3TtsServerHost(value: string): Qwen3TtsCustomVoice;
+    getQwen3TtsServerPort(): number;
+    setQwen3TtsServerPort(value: number): Qwen3TtsCustomVoice;
+
+    hasQwen3TtsServerHeader(): boolean;
+    clearQwen3TtsServerHeader(): void;
+    getQwen3TtsServerHeader(): google_protobuf_struct_pb.Struct | undefined;
+    setQwen3TtsServerHeader(value?: google_protobuf_struct_pb.Struct): Qwen3TtsCustomVoice;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): Qwen3TtsCustomVoice.AsObject;
+    static toObject(includeInstance: boolean, msg: Qwen3TtsCustomVoice): Qwen3TtsCustomVoice.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: Qwen3TtsCustomVoice, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): Qwen3TtsCustomVoice;
+    static deserializeBinaryFromReader(message: Qwen3TtsCustomVoice, reader: jspb.BinaryReader): Qwen3TtsCustomVoice;
+}
+
+export namespace Qwen3TtsCustomVoice {
+    export type AsObject = {
+        voiceId: string,
+        modelName: string,
+        language: string,
+        qwen3TtsServerHost: string,
+        qwen3TtsServerPort: number,
+        qwen3TtsServerHeader?: google_protobuf_struct_pb.Struct.AsObject,
+    }
+}
+
+export class Qwen3TtsBase extends jspb.Message { 
+    getModelName(): string;
+    setModelName(value: string): Qwen3TtsBase;
+    getLanguage(): string;
+    setLanguage(value: string): Qwen3TtsBase;
+    getEmbeddingPath(): string;
+    setEmbeddingPath(value: string): Qwen3TtsBase;
+    getQwen3TtsServerHost(): string;
+    setQwen3TtsServerHost(value: string): Qwen3TtsBase;
+    getQwen3TtsServerPort(): number;
+    setQwen3TtsServerPort(value: number): Qwen3TtsBase;
+
+    hasQwen3TtsServerHeader(): boolean;
+    clearQwen3TtsServerHeader(): void;
+    getQwen3TtsServerHeader(): google_protobuf_struct_pb.Struct | undefined;
+    setQwen3TtsServerHeader(value?: google_protobuf_struct_pb.Struct): Qwen3TtsBase;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): Qwen3TtsBase.AsObject;
+    static toObject(includeInstance: boolean, msg: Qwen3TtsBase): Qwen3TtsBase.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: Qwen3TtsBase, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): Qwen3TtsBase;
+    static deserializeBinaryFromReader(message: Qwen3TtsBase, reader: jspb.BinaryReader): Qwen3TtsBase;
+}
+
+export namespace Qwen3TtsBase {
+    export type AsObject = {
+        modelName: string,
+        language: string,
+        embeddingPath: string,
+        qwen3TtsServerHost: string,
+        qwen3TtsServerPort: number,
+        qwen3TtsServerHeader?: google_protobuf_struct_pb.Struct.AsObject,
     }
 }
 
