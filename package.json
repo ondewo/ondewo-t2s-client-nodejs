@@ -38,6 +38,6 @@
 	},
 	"scripts": {
 		"pretest": "tsc src/auth/offlineTokenProvider.ts src/auth/offlineTokenProvider.spec.ts --ignoreConfig --module commonjs --target es2020 --strict --lib es2020,dom --skipLibCheck --sourceMap --types node --typeRoots ./node_modules/@types --outDir .test-build",
-		"test": "c8 --check-coverage --lines 90 --include '**/offlineTokenProvider.js' --exclude '**/*.spec.js' --reporter text node --test .test-build/offlineTokenProvider.spec.js"
+		"test": "c8 --check-coverage --lines 100 --functions 100 --branches 100 --include '**/offlineTokenProvider.js' --exclude '**/*.spec.js' --reporter text node --test .test-build/offlineTokenProvider.spec.js"
 	}
 }

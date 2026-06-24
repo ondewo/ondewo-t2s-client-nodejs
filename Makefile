@@ -59,6 +59,15 @@ prettier: ## Checks formatting with Prettier - Use PRETTIER_WRITE=-w to also aut
 eslint: ## Checks Code Logic and Typing
 	./node_modules/.bin/eslint --config eslint.config.mjs .
 
+compile_auth: ## Compiles the hand-written auth helper (src/auth) to shippable api/auth JS + d.ts
+	mkdir -p api/auth
+	./node_modules/.bin/tsc src/auth/offlineTokenProvider.ts --declaration --module commonjs \
+		--target es2020 --moduleResolution node --ignoreDeprecations 6.0 --strict --skipLibCheck \
+		--types node --lib es2020 --outDir api/auth --ignoreConfig
+
+test_auth: ## Runs the offline unit tests for the auth helper (no network)
+	node --import tsx --test src/auth/*.spec.ts
+
 TEST: ## Prints some important variables
 	@echo "Release Notes: \n \n$(CURRENT_RELEASE_NOTES)"
 	@echo "GH Token: \t $(GITHUB_GH_TOKEN)"
