@@ -29,9 +29,15 @@
 		"@eslint/eslintrc": "^3.3.5",
 		"@eslint/js": "^9.39.4",
 		"@typescript-eslint/eslint-plugin": "^8.59.0",
+		"c8": "^11.0.0",
 		"eslint": "^9.39.4",
 		"global": "^4.4.0",
 		"husky": "^9.1.7",
-		"prettier": "^3.8.3"
+		"prettier": "^3.8.3",
+		"typescript": "^6.0.3"
+	},
+	"scripts": {
+		"pretest": "tsc src/auth/offlineTokenProvider.ts src/auth/offlineTokenProvider.spec.ts --ignoreConfig --module commonjs --target es2020 --strict --lib es2020,dom --skipLibCheck --sourceMap --types node --typeRoots ./node_modules/@types --outDir .test-build",
+		"test": "c8 --check-coverage --lines 90 --include '**/offlineTokenProvider.js' --exclude '**/*.spec.js' --reporter text node --test .test-build/offlineTokenProvider.spec.js"
 	}
 }
