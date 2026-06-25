@@ -62,7 +62,18 @@ export interface FetchResponseLike {
  * exchange, or returns a malformed payload.
  */
 export declare class OfflineTokenError extends Error {
+    /**
+     * The HTTP status code returned by the Keycloak token endpoint, or `0` when the
+     * failure happened before any HTTP exchange (e.g. no fetch implementation).
+     */
     readonly status: number;
+    /**
+     * Creates a new {@link OfflineTokenError}.
+     *
+     * @param message Human-readable description of the failure.
+     * @param status HTTP status from the token endpoint, or `0` if the failure
+     *   occurred before an HTTP exchange.
+     */
     constructor(message: string, status: number);
 }
 /**
@@ -73,17 +84,42 @@ export declare class OfflineTokenError extends Error {
  * timer (otherwise the process may not exit).
  */
 export declare class OfflineTokenProvider {
+    /** Base Keycloak URL with any trailing slash stripped. */
     private readonly keycloakUrl;
+    /** Realm name the token endpoint is scoped to. */
     private readonly realm;
+    /** Public SDK client id (no secret) used for every token exchange. */
     private readonly clientId;
+    /** Fetch implementation used for token-endpoint requests. */
     private readonly fetchImpl;
+    /** Clock returning the current time in milliseconds since the epoch. */
     private readonly nowMs;
+    /** How many milliseconds before expiry the access token is refreshed. */
     private readonly refreshSkewInMs;
+    /**
+     * Absolute time (ms since epoch) past which no further refresh is scheduled, or
+     * `undefined` to refresh until the offline session itself expires.
+     */
     private readonly deadlineMs;
+    /** The current access token (JWT) exposed for `Authorization: Bearer`. */
     private accessToken;
+    /** The current offline refresh token used for the next token exchange. */
     private refreshToken;
+    /** Handle of the pending auto-refresh timer, or `undefined` when none is armed. */
     private refreshTimer;
+    /** Whether {@link OfflineTokenProvider.stop} has been called. */
     private stopped;
+    /**
+     * Initializes the provider from an already-obtained token and arms the first
+     * auto-refresh. Private: instances are created via
+     * {@link OfflineTokenProvider.create} (or {@link login}).
+     *
+     * @param options Resolved login options (every optional field filled in) except
+     *   `tokenExpirationInS`, which is pre-converted to `deadlineMs`.
+     * @param initial The token payload from the initial ROPC login.
+     * @param deadlineMs Absolute time (ms since epoch) past which refreshes stop, or
+     *   `undefined` for no bound.
+     */
     private constructor();
     /**
      * Performs the one-time ROPC + `offline_access` login against the PUBLIC SDK
@@ -126,9 +162,45 @@ export declare class OfflineTokenProvider {
      * @returns Nothing.
      */
     stop(): void;
+    /**
+     * Arms a single `setTimeout` to refresh the access token `refreshSkewInMs`
+     * before it expires. No-op if the provider is stopped, or if the next refresh
+     * would fall past {@link OfflineTokenProvider.deadlineMs}. The delay is clamped
+     * to at least {@link MIN_REFRESH_DELAY_IN_MS}, and the timer is `unref`-ed so it
+     * does not keep the Node event loop alive on its own.
+     *
+     * @param expiresInS Lifetime of the just-issued access token, in seconds.
+     * @returns Nothing.
+     */
     private scheduleRefresh;
+    /**
+     * Body of the auto-refresh timer: exchanges the refresh token, applies the new
+     * token and arms the next refresh. Background-refresh failures are swallowed
+     * (and logged via `console.warn`) so a transient outage never throws on the hot
+     * path — the current access token stays valid until its own expiry and callers
+     * can still trigger an explicit {@link OfflineTokenProvider.refresh}. No-op if
+     * the provider was stopped before the timer fired.
+     *
+     * @returns A promise that resolves once the refresh attempt has settled.
+     */
     private runScheduledRefresh;
+    /**
+     * Posts `grant_type=refresh_token` (with the current refresh token and the
+     * public client id, no secret) to the Keycloak token endpoint.
+     *
+     * @returns The parsed token payload from the refresh exchange.
+     * @throws {OfflineTokenError} If the endpoint rejects the exchange or returns a
+     *   malformed payload.
+     */
     private exchangeRefreshToken;
+    /**
+     * Stores the new access token and, honoring Keycloak refresh-token rotation,
+     * adopts the rotated refresh token (when the payload carries a non-empty one) so
+     * the next exchange uses the latest refresh token.
+     *
+     * @param token The token payload from a login or refresh exchange.
+     * @returns Nothing.
+     */
     private applyToken;
 }
 /**

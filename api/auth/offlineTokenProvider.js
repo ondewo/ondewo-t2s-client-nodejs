@@ -20,6 +20,13 @@ exports.login = login;
  * exchange, or returns a malformed payload.
  */
 class OfflineTokenError extends Error {
+    /**
+     * Creates a new {@link OfflineTokenError}.
+     *
+     * @param message Human-readable description of the failure.
+     * @param status HTTP status from the token endpoint, or `0` if the failure
+     *   occurred before an HTTP exchange.
+     */
     constructor(message, status) {
         super(message);
         this.name = 'OfflineTokenError';
@@ -27,7 +34,9 @@ class OfflineTokenError extends Error {
     }
 }
 exports.OfflineTokenError = OfflineTokenError;
+/** Default seconds-before-expiry at which the access token is refreshed. */
 const DEFAULT_REFRESH_SKEW_IN_S = 30;
+/** Lower bound (ms) on any scheduled refresh delay, so it never fires immediately. */
 const MIN_REFRESH_DELAY_IN_MS = 1000;
 /**
  * A live offline-token session. Holds the current access token, auto-refreshes it
@@ -37,6 +46,17 @@ const MIN_REFRESH_DELAY_IN_MS = 1000;
  * timer (otherwise the process may not exit).
  */
 class OfflineTokenProvider {
+    /**
+     * Initializes the provider from an already-obtained token and arms the first
+     * auto-refresh. Private: instances are created via
+     * {@link OfflineTokenProvider.create} (or {@link login}).
+     *
+     * @param options Resolved login options (every optional field filled in) except
+     *   `tokenExpirationInS`, which is pre-converted to `deadlineMs`.
+     * @param initial The token payload from the initial ROPC login.
+     * @param deadlineMs Absolute time (ms since epoch) past which refreshes stop, or
+     *   `undefined` for no bound.
+     */
     constructor(options, initial, deadlineMs) {
         this.keycloakUrl = stripTrailingSlash(options.keycloakUrl);
         this.realm = options.realm;
@@ -137,6 +157,16 @@ class OfflineTokenProvider {
             this.refreshTimer = undefined;
         }
     }
+    /**
+     * Arms a single `setTimeout` to refresh the access token `refreshSkewInMs`
+     * before it expires. No-op if the provider is stopped, or if the next refresh
+     * would fall past {@link OfflineTokenProvider.deadlineMs}. The delay is clamped
+     * to at least {@link MIN_REFRESH_DELAY_IN_MS}, and the timer is `unref`-ed so it
+     * does not keep the Node event loop alive on its own.
+     *
+     * @param expiresInS Lifetime of the just-issued access token, in seconds.
+     * @returns Nothing.
+     */
     scheduleRefresh(expiresInS) {
         if (this.stopped) {
             return;
@@ -157,6 +187,16 @@ class OfflineTokenProvider {
             timer.unref();
         }
     }
+    /**
+     * Body of the auto-refresh timer: exchanges the refresh token, applies the new
+     * token and arms the next refresh. Background-refresh failures are swallowed
+     * (and logged via `console.warn`) so a transient outage never throws on the hot
+     * path — the current access token stays valid until its own expiry and callers
+     * can still trigger an explicit {@link OfflineTokenProvider.refresh}. No-op if
+     * the provider was stopped before the timer fired.
+     *
+     * @returns A promise that resolves once the refresh attempt has settled.
+     */
     async runScheduledRefresh() {
         if (this.stopped) {
             return;
@@ -174,6 +214,14 @@ class OfflineTokenProvider {
             }
         }
     }
+    /**
+     * Posts `grant_type=refresh_token` (with the current refresh token and the
+     * public client id, no secret) to the Keycloak token endpoint.
+     *
+     * @returns The parsed token payload from the refresh exchange.
+     * @throws {OfflineTokenError} If the endpoint rejects the exchange or returns a
+     *   malformed payload.
+     */
     async exchangeRefreshToken() {
         const tokenUrl = buildTokenUrl(this.keycloakUrl, this.realm);
         const body = encodeForm({
@@ -183,6 +231,14 @@ class OfflineTokenProvider {
         });
         return postToken(this.fetchImpl, tokenUrl, body);
     }
+    /**
+     * Stores the new access token and, honoring Keycloak refresh-token rotation,
+     * adopts the rotated refresh token (when the payload carries a non-empty one) so
+     * the next exchange uses the latest refresh token.
+     *
+     * @param token The token payload from a login or refresh exchange.
+     * @returns Nothing.
+     */
     applyToken(token) {
         this.accessToken = token.access_token;
         // Keycloak refresh-token rotation: adopt the rotated refresh token so the
@@ -209,9 +265,26 @@ exports.OfflineTokenProvider = OfflineTokenProvider;
 async function login(options) {
     return OfflineTokenProvider.create(options);
 }
+/**
+ * Builds the Keycloak OpenID Connect token-endpoint URL for a realm.
+ *
+ * @param keycloakUrl Base Keycloak URL (a trailing slash is tolerated).
+ * @param realm Realm name (URL-encoded into the path).
+ * @returns The fully-qualified `.../realms/<realm>/protocol/openid-connect/token` URL.
+ */
 function buildTokenUrl(keycloakUrl, realm) {
     return `${stripTrailingSlash(keycloakUrl)}/realms/${encodeURIComponent(realm)}/protocol/openid-connect/token`;
 }
+/**
+ * POSTs a form-encoded body to the token endpoint and parses the success payload.
+ *
+ * @param fetchImpl Fetch implementation to use for the request.
+ * @param tokenUrl The token-endpoint URL (see {@link buildTokenUrl}).
+ * @param body The `application/x-www-form-urlencoded` request body.
+ * @returns The parsed Keycloak token payload.
+ * @throws {OfflineTokenError} If the endpoint returns a non-2xx status or a
+ *   malformed body.
+ */
 async function postToken(fetchImpl, tokenUrl, body) {
     const response = await fetchImpl(tokenUrl, {
         method: 'POST',
@@ -225,6 +298,18 @@ async function postToken(fetchImpl, tokenUrl, body) {
     const parsed = parseTokenResponse(rawBody, response.status);
     return parsed;
 }
+/**
+ * Parses and validates a raw token-endpoint body into a {@link KeycloakTokenResponse}.
+ *
+ * Requires a JSON object carrying a non-empty `access_token` and a non-empty
+ * `refresh_token` (the offline token); a non-finite `expires_in` defaults to `0`.
+ *
+ * @param rawBody The raw response body text.
+ * @param status The HTTP status the body came with, propagated onto any error.
+ * @returns The validated token payload.
+ * @throws {OfflineTokenError} If the body is not JSON, not a JSON object, or is
+ *   missing the required token fields.
+ */
 function parseTokenResponse(rawBody, status) {
     let payload;
     try {
@@ -252,6 +337,12 @@ function parseTokenResponse(rawBody, status) {
     }
     return { access_token: accessToken, refresh_token: refreshToken, expires_in: expiresInS };
 }
+/**
+ * URL-encodes a flat string map as an `application/x-www-form-urlencoded` body.
+ *
+ * @param fields Key/value pairs to encode; both keys and values are escaped.
+ * @returns The `key=value&...` encoded form body.
+ */
 function encodeForm(fields) {
     const parts = [];
     for (const key of Object.keys(fields)) {
@@ -259,18 +350,38 @@ function encodeForm(fields) {
     }
     return parts.join('&');
 }
+/**
+ * Removes a single trailing slash from a URL so path segments can be appended
+ * without producing a double slash.
+ *
+ * @param value The URL (or any string) to normalize.
+ * @returns `value` without its trailing slash, or `value` unchanged if it had none.
+ */
 function stripTrailingSlash(value) {
     if (value.endsWith('/')) {
         return value.slice(0, -1);
     }
     return value;
 }
+/**
+ * Renders an unknown rejection reason as a string for logging: the `message` of an
+ * `Error`, otherwise `String(reason)`.
+ *
+ * @param reason The caught rejection reason.
+ * @returns A human-readable description of `reason`.
+ */
 function stringifyReason(reason) {
     if (reason instanceof Error) {
         return reason.message;
     }
     return String(reason);
 }
+/**
+ * Resolves the global `fetch` (Node >= 18 / browsers) as a {@link FetchLike}, used
+ * as the default when no `fetchImpl` is injected.
+ *
+ * @returns The global `fetch` if present and callable, otherwise `undefined`.
+ */
 function globalFetch() {
     const candidate = globalThis.fetch;
     if (typeof candidate === 'function') {

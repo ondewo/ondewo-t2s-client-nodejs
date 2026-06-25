@@ -89,8 +89,19 @@ interface KeycloakTokenResponse {
  * exchange, or returns a malformed payload.
  */
 export class OfflineTokenError extends Error {
+	/**
+	 * The HTTP status code returned by the Keycloak token endpoint, or `0` when the
+	 * failure happened before any HTTP exchange (e.g. no fetch implementation).
+	 */
 	public readonly status: number;
 
+	/**
+	 * Creates a new {@link OfflineTokenError}.
+	 *
+	 * @param message Human-readable description of the failure.
+	 * @param status HTTP status from the token endpoint, or `0` if the failure
+	 *   occurred before an HTTP exchange.
+	 */
 	public constructor(message: string, status: number) {
 		super(message);
 		this.name = 'OfflineTokenError';
@@ -98,7 +109,9 @@ export class OfflineTokenError extends Error {
 	}
 }
 
+/** Default seconds-before-expiry at which the access token is refreshed. */
 const DEFAULT_REFRESH_SKEW_IN_S: number = 30;
+/** Lower bound (ms) on any scheduled refresh delay, so it never fires immediately. */
 const MIN_REFRESH_DELAY_IN_MS: number = 1000;
 
 /**
@@ -109,19 +122,44 @@ const MIN_REFRESH_DELAY_IN_MS: number = 1000;
  * timer (otherwise the process may not exit).
  */
 export class OfflineTokenProvider {
+	/** Base Keycloak URL with any trailing slash stripped. */
 	private readonly keycloakUrl: string;
+	/** Realm name the token endpoint is scoped to. */
 	private readonly realm: string;
+	/** Public SDK client id (no secret) used for every token exchange. */
 	private readonly clientId: string;
+	/** Fetch implementation used for token-endpoint requests. */
 	private readonly fetchImpl: FetchLike;
+	/** Clock returning the current time in milliseconds since the epoch. */
 	private readonly nowMs: () => number;
+	/** How many milliseconds before expiry the access token is refreshed. */
 	private readonly refreshSkewInMs: number;
+	/**
+	 * Absolute time (ms since epoch) past which no further refresh is scheduled, or
+	 * `undefined` to refresh until the offline session itself expires.
+	 */
 	private readonly deadlineMs: number | undefined;
 
+	/** The current access token (JWT) exposed for `Authorization: Bearer`. */
 	private accessToken: string;
+	/** The current offline refresh token used for the next token exchange. */
 	private refreshToken: string;
+	/** Handle of the pending auto-refresh timer, or `undefined` when none is armed. */
 	private refreshTimer: ReturnType<typeof setTimeout> | undefined;
+	/** Whether {@link OfflineTokenProvider.stop} has been called. */
 	private stopped: boolean;
 
+	/**
+	 * Initializes the provider from an already-obtained token and arms the first
+	 * auto-refresh. Private: instances are created via
+	 * {@link OfflineTokenProvider.create} (or {@link login}).
+	 *
+	 * @param options Resolved login options (every optional field filled in) except
+	 *   `tokenExpirationInS`, which is pre-converted to `deadlineMs`.
+	 * @param initial The token payload from the initial ROPC login.
+	 * @param deadlineMs Absolute time (ms since epoch) past which refreshes stop, or
+	 *   `undefined` for no bound.
+	 */
 	private constructor(options: Required<Omit<OfflineTokenLoginOptions, 'tokenExpirationInS'>>, initial: KeycloakTokenResponse, deadlineMs: number | undefined) {
 		this.keycloakUrl = stripTrailingSlash(options.keycloakUrl);
 		this.realm = options.realm;
@@ -235,6 +273,16 @@ export class OfflineTokenProvider {
 		}
 	}
 
+	/**
+	 * Arms a single `setTimeout` to refresh the access token `refreshSkewInMs`
+	 * before it expires. No-op if the provider is stopped, or if the next refresh
+	 * would fall past {@link OfflineTokenProvider.deadlineMs}. The delay is clamped
+	 * to at least {@link MIN_REFRESH_DELAY_IN_MS}, and the timer is `unref`-ed so it
+	 * does not keep the Node event loop alive on its own.
+	 *
+	 * @param expiresInS Lifetime of the just-issued access token, in seconds.
+	 * @returns Nothing.
+	 */
 	private scheduleRefresh(expiresInS: number): void {
 		if (this.stopped) {
 			return;
@@ -256,6 +304,16 @@ export class OfflineTokenProvider {
 		}
 	}
 
+	/**
+	 * Body of the auto-refresh timer: exchanges the refresh token, applies the new
+	 * token and arms the next refresh. Background-refresh failures are swallowed
+	 * (and logged via `console.warn`) so a transient outage never throws on the hot
+	 * path — the current access token stays valid until its own expiry and callers
+	 * can still trigger an explicit {@link OfflineTokenProvider.refresh}. No-op if
+	 * the provider was stopped before the timer fired.
+	 *
+	 * @returns A promise that resolves once the refresh attempt has settled.
+	 */
 	private async runScheduledRefresh(): Promise<void> {
 		if (this.stopped) {
 			return;
@@ -273,6 +331,14 @@ export class OfflineTokenProvider {
 		}
 	}
 
+	/**
+	 * Posts `grant_type=refresh_token` (with the current refresh token and the
+	 * public client id, no secret) to the Keycloak token endpoint.
+	 *
+	 * @returns The parsed token payload from the refresh exchange.
+	 * @throws {OfflineTokenError} If the endpoint rejects the exchange or returns a
+	 *   malformed payload.
+	 */
 	private async exchangeRefreshToken(): Promise<KeycloakTokenResponse> {
 		const tokenUrl: string = buildTokenUrl(this.keycloakUrl, this.realm);
 		const body: string = encodeForm({
@@ -283,6 +349,14 @@ export class OfflineTokenProvider {
 		return postToken(this.fetchImpl, tokenUrl, body);
 	}
 
+	/**
+	 * Stores the new access token and, honoring Keycloak refresh-token rotation,
+	 * adopts the rotated refresh token (when the payload carries a non-empty one) so
+	 * the next exchange uses the latest refresh token.
+	 *
+	 * @param token The token payload from a login or refresh exchange.
+	 * @returns Nothing.
+	 */
 	private applyToken(token: KeycloakTokenResponse): void {
 		this.accessToken = token.access_token;
 		// Keycloak refresh-token rotation: adopt the rotated refresh token so the
@@ -310,10 +384,27 @@ export async function login(options: OfflineTokenLoginOptions): Promise<OfflineT
 	return OfflineTokenProvider.create(options);
 }
 
+/**
+ * Builds the Keycloak OpenID Connect token-endpoint URL for a realm.
+ *
+ * @param keycloakUrl Base Keycloak URL (a trailing slash is tolerated).
+ * @param realm Realm name (URL-encoded into the path).
+ * @returns The fully-qualified `.../realms/<realm>/protocol/openid-connect/token` URL.
+ */
 function buildTokenUrl(keycloakUrl: string, realm: string): string {
 	return `${stripTrailingSlash(keycloakUrl)}/realms/${encodeURIComponent(realm)}/protocol/openid-connect/token`;
 }
 
+/**
+ * POSTs a form-encoded body to the token endpoint and parses the success payload.
+ *
+ * @param fetchImpl Fetch implementation to use for the request.
+ * @param tokenUrl The token-endpoint URL (see {@link buildTokenUrl}).
+ * @param body The `application/x-www-form-urlencoded` request body.
+ * @returns The parsed Keycloak token payload.
+ * @throws {OfflineTokenError} If the endpoint returns a non-2xx status or a
+ *   malformed body.
+ */
 async function postToken(fetchImpl: FetchLike, tokenUrl: string, body: string): Promise<KeycloakTokenResponse> {
 	const response: FetchResponseLike = await fetchImpl(tokenUrl, {
 		method: 'POST',
@@ -328,6 +419,18 @@ async function postToken(fetchImpl: FetchLike, tokenUrl: string, body: string): 
 	return parsed;
 }
 
+/**
+ * Parses and validates a raw token-endpoint body into a {@link KeycloakTokenResponse}.
+ *
+ * Requires a JSON object carrying a non-empty `access_token` and a non-empty
+ * `refresh_token` (the offline token); a non-finite `expires_in` defaults to `0`.
+ *
+ * @param rawBody The raw response body text.
+ * @param status The HTTP status the body came with, propagated onto any error.
+ * @returns The validated token payload.
+ * @throws {OfflineTokenError} If the body is not JSON, not a JSON object, or is
+ *   missing the required token fields.
+ */
 function parseTokenResponse(rawBody: string, status: number): KeycloakTokenResponse {
 	let payload: unknown;
 	try {
@@ -355,6 +458,12 @@ function parseTokenResponse(rawBody: string, status: number): KeycloakTokenRespo
 	return { access_token: accessToken, refresh_token: refreshToken, expires_in: expiresInS };
 }
 
+/**
+ * URL-encodes a flat string map as an `application/x-www-form-urlencoded` body.
+ *
+ * @param fields Key/value pairs to encode; both keys and values are escaped.
+ * @returns The `key=value&...` encoded form body.
+ */
 function encodeForm(fields: Record<string, string>): string {
 	const parts: string[] = [];
 	for (const key of Object.keys(fields)) {
@@ -363,6 +472,13 @@ function encodeForm(fields: Record<string, string>): string {
 	return parts.join('&');
 }
 
+/**
+ * Removes a single trailing slash from a URL so path segments can be appended
+ * without producing a double slash.
+ *
+ * @param value The URL (or any string) to normalize.
+ * @returns `value` without its trailing slash, or `value` unchanged if it had none.
+ */
 function stripTrailingSlash(value: string): string {
 	if (value.endsWith('/')) {
 		return value.slice(0, -1);
@@ -370,6 +486,13 @@ function stripTrailingSlash(value: string): string {
 	return value;
 }
 
+/**
+ * Renders an unknown rejection reason as a string for logging: the `message` of an
+ * `Error`, otherwise `String(reason)`.
+ *
+ * @param reason The caught rejection reason.
+ * @returns A human-readable description of `reason`.
+ */
 function stringifyReason(reason: unknown): string {
 	if (reason instanceof Error) {
 		return reason.message;
@@ -377,6 +500,12 @@ function stringifyReason(reason: unknown): string {
 	return String(reason);
 }
 
+/**
+ * Resolves the global `fetch` (Node >= 18 / browsers) as a {@link FetchLike}, used
+ * as the default when no `fetchImpl` is injected.
+ *
+ * @returns The global `fetch` if present and callable, otherwise `undefined`.
+ */
 function globalFetch(): FetchLike | undefined {
 	const candidate: unknown = (globalThis as { fetch?: unknown }).fetch;
 	if (typeof candidate === 'function') {

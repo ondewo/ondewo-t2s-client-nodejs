@@ -15,22 +15,49 @@ import {
 	OfflineTokenProvider
 } from './offlineTokenProvider';
 
+/**
+ * A request recorded by the fake fetch: the URL, the raw init it was called with,
+ * and the decoded form fields of its body.
+ */
 interface CapturedRequest {
+	/** The token-endpoint URL the request was sent to. */
 	url: string;
+	/** The raw init (method, headers, body) the fake fetch received. */
 	init: FetchInit;
+	/** The request body decoded back into its form key/value pairs. */
 	form: Record<string, string>;
 }
 
+/**
+ * A canned response for the fake fetch to return for one request.
+ */
 interface StubResponse {
+	/** Whether the response should report success (`2xx`). */
 	ok: boolean;
+	/** The HTTP status code to report. */
 	status: number;
+	/** The raw response body text. */
 	body: string;
 }
 
+/**
+ * Builds a {@link StubResponse} whose body is the JSON serialization of `payload`.
+ *
+ * @param payload The object to serialize into the response body.
+ * @param status The HTTP status to report; `ok` is derived as `2xx`. Defaults to `200`.
+ * @returns The stub response.
+ */
 function jsonResponse(payload: Record<string, unknown>, status: number = 200): StubResponse {
 	return { ok: status >= 200 && status < 300, status, body: JSON.stringify(payload) };
 }
 
+/**
+ * Adapts a {@link StubResponse} into the {@link FetchResponseLike} shape the helper
+ * consumes, resolving `text()` with the stub body.
+ *
+ * @param stub The canned response to adapt.
+ * @returns A fetch-response-like object backed by `stub`.
+ */
 function makeFakeResponse(stub: StubResponse): FetchResponseLike {
 	return {
 		ok: stub.ok,
@@ -39,6 +66,13 @@ function makeFakeResponse(stub: StubResponse): FetchResponseLike {
 	};
 }
 
+/**
+ * Decodes an `application/x-www-form-urlencoded` body back into its key/value
+ * pairs, the inverse of the helper's internal `encodeForm`.
+ *
+ * @param body The form-encoded request body.
+ * @returns The decoded form fields.
+ */
 function parseForm(body: string): Record<string, string> {
 	const result: Record<string, string> = {};
 	for (const pair of body.split('&')) {
@@ -76,6 +110,7 @@ function makeFakeFetch(responses: StubResponse[]): { fetchImpl: FetchLike; reque
 	return { fetchImpl, requests };
 }
 
+/** Shared, valid login options spread into each test's `login(...)` call. */
 const BASE_OPTIONS: { keycloakUrl: string; realm: string; clientId: string; username: string; password: string } = {
 	keycloakUrl: 'https://kc.example.com/auth',
 	realm: 'ondewo-ccai-platform',
@@ -174,7 +209,9 @@ async function captureScheduleKeepAlive(
 	}
 }
 
+/** Covers the initial ROPC + `offline_access` login exchange and its validation. */
 describe('offlineTokenProvider.login (ROPC + offline_access)', () => {
+	/** The login request carries the public-client ROPC fields and no client secret. */
 	it('posts grant_type=password with offline_access scope and no client_secret', async () => {
 		const fake: { fetchImpl: FetchLike; requests: CapturedRequest[] } = makeFakeFetch([
 			jsonResponse({ access_token: 'access-1', refresh_token: 'offline-1', expires_in: 300 })
@@ -198,6 +235,7 @@ describe('offlineTokenProvider.login (ROPC + offline_access)', () => {
 		assert.equal(request.form.client_secret, undefined, 'public client must not send a client_secret');
 	});
 
+	/** The minted access token is exposed both raw and as `Authorization: Bearer` metadata. */
 	it('exposes the access token as Authorization: Bearer metadata', async () => {
 		const fake: { fetchImpl: FetchLike; requests: CapturedRequest[] } = makeFakeFetch([
 			jsonResponse({ access_token: 'access-1', refresh_token: 'offline-1', expires_in: 300 })
@@ -209,6 +247,7 @@ describe('offlineTokenProvider.login (ROPC + offline_access)', () => {
 		assert.deepEqual(provider.getAuthorizationMetadata(), { authorization: 'Bearer access-1' });
 	});
 
+	/** A trailing slash on `keycloakUrl` is stripped so the token URL has no double slash. */
 	it('normalizes a trailing slash in keycloakUrl', async () => {
 		const fake: { fetchImpl: FetchLike; requests: CapturedRequest[] } = makeFakeFetch([
 			jsonResponse({ access_token: 'access-1', refresh_token: 'offline-1', expires_in: 300 })
@@ -226,6 +265,7 @@ describe('offlineTokenProvider.login (ROPC + offline_access)', () => {
 		);
 	});
 
+	/** A rejected credential surfaces as an {@link OfflineTokenError} carrying the HTTP status. */
 	it('throws OfflineTokenError with the status on invalid credentials', async () => {
 		const fake: { fetchImpl: FetchLike; requests: CapturedRequest[] } = makeFakeFetch([
 			{ ok: false, status: 401, body: '{"error":"invalid_grant"}' }
@@ -240,6 +280,7 @@ describe('offlineTokenProvider.login (ROPC + offline_access)', () => {
 		);
 	});
 
+	/** A login response without the offline `refresh_token` is rejected. */
 	it('rejects a response missing the offline refresh_token', async () => {
 		const fake: { fetchImpl: FetchLike; requests: CapturedRequest[] } = makeFakeFetch([
 			jsonResponse({ access_token: 'access-1', expires_in: 300 })
@@ -254,6 +295,7 @@ describe('offlineTokenProvider.login (ROPC + offline_access)', () => {
 		);
 	});
 
+	/** A body that is not valid JSON is rejected as an {@link OfflineTokenError}. */
 	it('rejects a non-JSON token body', async () => {
 		const fake: { fetchImpl: FetchLike; requests: CapturedRequest[] } = makeFakeFetch([
 			{ ok: true, status: 200, body: 'not-json' }
@@ -264,6 +306,7 @@ describe('offlineTokenProvider.login (ROPC + offline_access)', () => {
 		);
 	});
 
+	/** A JSON body that parses to a non-object (a number) is rejected. */
 	it('rejects a JSON body that is not an object (number)', async () => {
 		// JSON.parse('5') -> 5, hitting the `typeof payload !== 'object'` branch.
 		const fake: { fetchImpl: FetchLike; requests: CapturedRequest[] } = makeFakeFetch([{ ok: true, status: 200, body: '5' }]);
@@ -277,6 +320,7 @@ describe('offlineTokenProvider.login (ROPC + offline_access)', () => {
 		);
 	});
 
+	/** A JSON `null` body is rejected via the `payload === null` half of the object guard. */
 	it('rejects a JSON null body', async () => {
 		// JSON.parse('null') -> null, hitting the `payload === null` half of the guard.
 		const fake: { fetchImpl: FetchLike; requests: CapturedRequest[] } = makeFakeFetch([
@@ -292,6 +336,7 @@ describe('offlineTokenProvider.login (ROPC + offline_access)', () => {
 		);
 	});
 
+	/** A response without an `access_token` is rejected. */
 	it('rejects a response missing the access_token', async () => {
 		const fake: { fetchImpl: FetchLike; requests: CapturedRequest[] } = makeFakeFetch([
 			jsonResponse({ refresh_token: 'offline-1', expires_in: 300 })
@@ -306,6 +351,7 @@ describe('offlineTokenProvider.login (ROPC + offline_access)', () => {
 		);
 	});
 
+	/** A non-numeric `expires_in` defaults to a `0` lifetime, clamping the first refresh delay. */
 	it('defaults expires_in to 0 when it is not a finite number', async () => {
 		// A non-number expires_in exercises the false side of the finite-number guard;
 		// the resulting 0 lifetime clamps the first refresh delay to MIN_REFRESH_DELAY.
@@ -322,7 +368,9 @@ describe('offlineTokenProvider.login (ROPC + offline_access)', () => {
 	});
 });
 
+/** Covers the `globalFetch()` fallback when no `fetchImpl` is injected. */
 describe('offlineTokenProvider global fetch fallback', () => {
+	/** With no injected `fetchImpl`, the helper falls back to `globalThis.fetch`. */
 	it('uses globalThis.fetch when no fetchImpl is injected', async () => {
 		const fake: { fetchImpl: FetchLike; requests: CapturedRequest[] } = makeFakeFetch([
 			jsonResponse({ access_token: 'access-1', refresh_token: 'offline-1', expires_in: 300 })
@@ -336,6 +384,7 @@ describe('offlineTokenProvider global fetch fallback', () => {
 		assert.equal(fake.requests.length, 1);
 	});
 
+	/** With no `fetchImpl` and no `globalThis.fetch`, login throws `OfflineTokenError(status=0)`. */
 	it('throws OfflineTokenError(status=0) when no fetch is available', async () => {
 		await withGlobalFetch(undefined, async () => {
 			await assert.rejects(
@@ -351,7 +400,9 @@ describe('offlineTokenProvider global fetch fallback', () => {
 	});
 });
 
+/** Covers explicit {@link OfflineTokenProvider.refresh} calls and refresh-token rotation. */
 describe('offlineTokenProvider.refresh (grant_type=refresh_token)', () => {
+	/** `refresh()` exchanges the offline refresh token for a fresh access token. */
 	it('exchanges the offline refresh token for a new access token', async () => {
 		const fake: { fetchImpl: FetchLike; requests: CapturedRequest[] } = makeFakeFetch([
 			jsonResponse({ access_token: 'access-1', refresh_token: 'offline-1', expires_in: 300 }),
@@ -371,6 +422,7 @@ describe('offlineTokenProvider.refresh (grant_type=refresh_token)', () => {
 		assert.equal(refreshRequest.form.client_secret, undefined);
 	});
 
+	/** Each refresh adopts the rotated refresh token for the subsequent exchange. */
 	it('adopts the rotated refresh token for the next exchange', async () => {
 		const fake: { fetchImpl: FetchLike; requests: CapturedRequest[] } = makeFakeFetch([
 			jsonResponse({ access_token: 'access-1', refresh_token: 'offline-1', expires_in: 300 }),
@@ -386,6 +438,7 @@ describe('offlineTokenProvider.refresh (grant_type=refresh_token)', () => {
 		assert.equal(fake.requests[2].form.refresh_token, 'offline-2');
 	});
 
+	/** Calling `refresh()` after `stop()` still mints a token but arms no new timer. */
 	it('does not reschedule when refresh() is called after stop()', async () => {
 		const fake: { fetchImpl: FetchLike; requests: CapturedRequest[] } = makeFakeFetch([
 			jsonResponse({ access_token: 'access-1', refresh_token: 'offline-1', expires_in: 300 }),
@@ -412,7 +465,9 @@ describe('offlineTokenProvider.refresh (grant_type=refresh_token)', () => {
 	});
 });
 
+/** Covers when (and whether) the background auto-refresh timer is scheduled. */
 describe('offlineTokenProvider auto-refresh scheduling', () => {
+	/** A refresh is scheduled `refreshSkewInS` seconds before the token expires. */
 	it('schedules a refresh before the access token expires', async () => {
 		const fake: { fetchImpl: FetchLike; requests: CapturedRequest[] } = makeFakeFetch([
 			jsonResponse({ access_token: 'access-1', refresh_token: 'offline-1', expires_in: 300 }),
@@ -434,6 +489,7 @@ describe('offlineTokenProvider auto-refresh scheduling', () => {
 		assert.equal(scheduled.delayMs, 270 * 1000);
 	});
 
+	/** No refresh is scheduled when the next one would fall past the `tokenExpirationInS` bound. */
 	it('does NOT schedule past the tokenExpirationInS bound', async () => {
 		const fake: { fetchImpl: FetchLike; requests: CapturedRequest[] } = makeFakeFetch([
 			jsonResponse({ access_token: 'access-1', refresh_token: 'offline-1', expires_in: 300 })
@@ -456,7 +512,9 @@ describe('offlineTokenProvider auto-refresh scheduling', () => {
 	});
 });
 
+/** Covers the body of the scheduled-refresh callback, including its failure handling. */
 describe('offlineTokenProvider scheduled refresh execution', () => {
+	/** Firing the scheduled callback exchanges the refresh token and updates the access token. */
 	it('refreshes the access token when the scheduled callback fires', async () => {
 		const fake: { fetchImpl: FetchLike; requests: CapturedRequest[] } = makeFakeFetch([
 			jsonResponse({ access_token: 'access-1', refresh_token: 'offline-1', expires_in: 300 }),
@@ -478,6 +536,7 @@ describe('offlineTokenProvider scheduled refresh execution', () => {
 		captured.provider.stop();
 	});
 
+	/** A callback that fires after `stop()` hits the stopped guard and exchanges nothing. */
 	it('is a no-op when the provider was stopped before the callback fires', async () => {
 		const fake: { fetchImpl: FetchLike; requests: CapturedRequest[] } = makeFakeFetch([
 			jsonResponse({ access_token: 'access-1', refresh_token: 'offline-1', expires_in: 300 })
@@ -496,6 +555,7 @@ describe('offlineTokenProvider scheduled refresh execution', () => {
 		assert.equal(fake.requests.length, 1, 'a stopped provider must not exchange the refresh token');
 	});
 
+	/** A failing background refresh is swallowed, leaves the token unchanged, and logs a warning. */
 	it('swallows a background-refresh failure and logs a warning (Error reason)', async () => {
 		const fake: { fetchImpl: FetchLike; requests: CapturedRequest[] } = makeFakeFetch([
 			jsonResponse({ access_token: 'access-1', refresh_token: 'offline-1', expires_in: 300 }),
@@ -520,6 +580,7 @@ describe('offlineTokenProvider scheduled refresh execution', () => {
 		captured.provider.stop();
 	});
 
+	/** A non-`Error` rejection reason is rendered via `String(reason)` and logged. */
 	it('swallows a background-refresh failure with a non-Error reason', async () => {
 		// The fake fetch rejects with a plain string, exercising the String(reason)
 		// branch of stringifyReason (reason is not an Error instance).
