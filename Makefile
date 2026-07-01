@@ -68,6 +68,9 @@ compile_auth: ## Compiles the hand-written auth helper (src/auth) to shippable a
 test_auth: ## Runs the offline unit tests for the auth helper (no network)
 	node --import tsx --test src/auth/*.spec.ts
 
+test_examples: ## Runs the offline mock tests for the examples (no server, no network)
+	node --import tsx --test examples/*.spec.ts
+
 TEST: ## Prints some important variables
 	@echo "Release Notes: \n \n$(CURRENT_RELEASE_NOTES)"
 	@echo "GH Token: \t $(GITHUB_GH_TOKEN)"
