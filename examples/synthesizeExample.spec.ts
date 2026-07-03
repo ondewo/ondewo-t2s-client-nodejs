@@ -108,13 +108,13 @@ describe('buildAuthMetadata', () => {
 	it('sets the Authorization header from the token source', () => {
 		const source: AuthorizationMetadataSource = {
 			getAuthorizationMetadata(): Record<string, string> {
-				return { authorization: 'Bearer token-1' };
+				return { Authorization: 'Bearer token-1' };
 			}
 		};
 
 		const metadata: Metadata = buildAuthMetadata(source);
 
-		assert.deepEqual(metadata.get('authorization'), ['Bearer token-1']);
+		assert.deepEqual(metadata.get('Authorization'), ['Bearer token-1']);
 	});
 });
 
@@ -133,7 +133,7 @@ describe('synthesizeUnary', () => {
 			t2sPipelineId: 'pipeline-en-us'
 		});
 		const metadata: Metadata = new Metadata();
-		metadata.set('authorization', 'Bearer token-1');
+		metadata.set('Authorization', 'Bearer token-1');
 
 		const resolved: SynthesizeResponse = await synthesizeUnary(fake.client, request, metadata);
 

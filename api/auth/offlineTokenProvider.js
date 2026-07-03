@@ -128,7 +128,7 @@ class OfflineTokenProvider {
      * @returns The authorization metadata object.
      */
     getAuthorizationMetadata() {
-        return { authorization: `Bearer ${this.accessToken}` };
+        return { Authorization: `Bearer ${this.accessToken}` };
     }
     /**
      * Forces an immediate access-token refresh from the offline refresh token and

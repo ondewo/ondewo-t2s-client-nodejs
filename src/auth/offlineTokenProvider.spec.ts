@@ -244,7 +244,7 @@ describe('offlineTokenProvider.login (ROPC + offline_access)', () => {
 		provider.stop();
 
 		assert.equal(provider.getAccessToken(), 'access-1');
-		assert.deepEqual(provider.getAuthorizationMetadata(), { authorization: 'Bearer access-1' });
+		assert.deepEqual(provider.getAuthorizationMetadata(), { Authorization: 'Bearer access-1' });
 	});
 
 	/** A trailing slash on `keycloakUrl` is stripped so the token URL has no double slash. */

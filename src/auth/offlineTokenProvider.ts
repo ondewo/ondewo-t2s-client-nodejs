@@ -241,7 +241,7 @@ export class OfflineTokenProvider {
 	 * @returns The authorization metadata object.
 	 */
 	public getAuthorizationMetadata(): Record<string, string> {
-		return { authorization: `Bearer ${this.accessToken}` };
+		return { Authorization: `Bearer ${this.accessToken}` };
 	}
 
 	/**
