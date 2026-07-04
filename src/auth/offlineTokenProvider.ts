@@ -199,7 +199,7 @@ export class OfflineTokenProvider {
 			client_id: options.clientId,
 			username: options.username,
 			password: options.password,
-			scope: 'openid offline_access'
+			scope: 'offline_access'
 		});
 		const token: KeycloakTokenResponse = await postToken(resolvedFetch, tokenUrl, body);
 
@@ -236,12 +236,14 @@ export class OfflineTokenProvider {
 
 	/**
 	 * Returns gRPC metadata key/value pairs carrying the current access token, i.e.
-	 * `{ authorization: 'Bearer <jwt>' }`.
+	 * `{ authorization: 'Bearer <jwt>' }`. The key is the lowercase `authorization`
+	 * that native gRPC (grpc-python / @grpc/grpc-js) requires — a capitalized
+	 * `Authorization` key is rejected at call time.
 	 *
 	 * @returns The authorization metadata object.
 	 */
 	public getAuthorizationMetadata(): Record<string, string> {
-		return { Authorization: `Bearer ${this.accessToken}` };
+		return { authorization: `Bearer ${this.accessToken}` };
 	}
 
 	/**

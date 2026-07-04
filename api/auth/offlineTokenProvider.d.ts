@@ -141,7 +141,9 @@ export declare class OfflineTokenProvider {
     getAccessToken(): string;
     /**
      * Returns gRPC metadata key/value pairs carrying the current access token, i.e.
-     * `{ authorization: 'Bearer <jwt>' }`.
+     * `{ authorization: 'Bearer <jwt>' }`. The key is the lowercase `authorization`
+     * that native gRPC (grpc-python / @grpc/grpc-js) requires — a capitalized
+     * `Authorization` key is rejected at call time.
      *
      * @returns The authorization metadata object.
      */

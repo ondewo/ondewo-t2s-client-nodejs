@@ -65,6 +65,10 @@ compile_auth: ## Compiles the hand-written auth helper (src/auth) to shippable a
 		--target es2020 --moduleResolution node --ignoreDeprecations 6.0 --strict --skipLibCheck \
 		--types node --lib es2020 --outDir api/auth --ignoreConfig
 
+ensure_auth_export: ## Re-appends the D18 auth export to public-api after the proto-compiler regenerates it away
+	grep -q 'api/auth/offlineTokenProvider' public-api.js || printf "export * from './api/auth/offlineTokenProvider';\n" >> public-api.js
+	grep -q 'api/auth/offlineTokenProvider' public-api.d.ts || printf "export * from './api/auth/offlineTokenProvider.d';\n" >> public-api.d.ts
+
 test_auth: ## Runs the offline unit tests for the auth helper (no network)
 	node --import tsx --test src/auth/*.spec.ts
 
@@ -217,6 +221,8 @@ build: check_out_correct_submodule_versions build_compiler update_package npm_ru
 	cp src/README.md .
 	cp src/RELEASE.md .
 	make remove_npm_script
+	make compile_auth
+	make ensure_auth_export
 	make create_npm_package
 	@$(eval README_CUT_LINES:=$(shell cat -n src/README.md | sed -n "/START OF GITHUB README/,/END OF GITHUB README/p" | grep -o -E '[0-9]+' | sed -e 's/^0\+//' | awk 'NR==1; END{print}'))
 	@$(eval DELETE_LINES:=$(shell echo ${README_CUT_LINES}| sed -e "s/[[:space:]]/,/"))

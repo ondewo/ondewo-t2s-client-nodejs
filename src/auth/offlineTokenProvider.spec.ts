@@ -231,12 +231,12 @@ describe('offlineTokenProvider.login (ROPC + offline_access)', () => {
 		assert.equal(request.form.client_id, 'ondewo-nlu-cai-sdk-public');
 		assert.equal(request.form.username, 'tech-user@example.com');
 		assert.equal(request.form.password, 's3cr3t');
-		assert.equal(request.form.scope, 'openid offline_access');
+		assert.equal(request.form.scope, 'offline_access');
 		assert.equal(request.form.client_secret, undefined, 'public client must not send a client_secret');
 	});
 
-	/** The minted access token is exposed both raw and as `Authorization: Bearer` metadata. */
-	it('exposes the access token as Authorization: Bearer metadata', async () => {
+	/** The minted access token is exposed both raw and as `authorization: Bearer` metadata. */
+	it('exposes the access token as authorization: Bearer metadata', async () => {
 		const fake: { fetchImpl: FetchLike; requests: CapturedRequest[] } = makeFakeFetch([
 			jsonResponse({ access_token: 'access-1', refresh_token: 'offline-1', expires_in: 300 })
 		]);
@@ -244,7 +244,25 @@ describe('offlineTokenProvider.login (ROPC + offline_access)', () => {
 		provider.stop();
 
 		assert.equal(provider.getAccessToken(), 'access-1');
-		assert.deepEqual(provider.getAuthorizationMetadata(), { Authorization: 'Bearer access-1' });
+		assert.deepEqual(provider.getAuthorizationMetadata(), { authorization: 'Bearer access-1' });
+	});
+
+	/**
+	 * The metadata key must be the lowercase `authorization` that native gRPC
+	 * (grpc-python / @grpc/grpc-js) mandates; a capitalized `Authorization` key is
+	 * rejected at call time, so this locks the casing against regressions.
+	 */
+	it('uses the lowercase authorization metadata key required by native gRPC', async () => {
+		const fake: { fetchImpl: FetchLike; requests: CapturedRequest[] } = makeFakeFetch([
+			jsonResponse({ access_token: 'access-1', refresh_token: 'offline-1', expires_in: 300 })
+		]);
+		const provider: OfflineTokenProvider = await login({ ...BASE_OPTIONS, fetchImpl: fake.fetchImpl });
+		provider.stop();
+
+		const metadata: Record<string, string> = provider.getAuthorizationMetadata();
+		assert.deepEqual(Object.keys(metadata), ['authorization']);
+		assert.equal(metadata.authorization, 'Bearer access-1');
+		assert.equal(metadata.Authorization, undefined, 'the capitalized Authorization key must not be present');
 	});
 
 	/** A trailing slash on `keycloakUrl` is stripped so the token URL has no double slash. */

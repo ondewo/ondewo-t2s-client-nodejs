@@ -94,7 +94,7 @@ class OfflineTokenProvider {
             client_id: options.clientId,
             username: options.username,
             password: options.password,
-            scope: 'openid offline_access'
+            scope: 'offline_access'
         });
         const token = await postToken(resolvedFetch, tokenUrl, body);
         let deadlineMs;
@@ -123,12 +123,14 @@ class OfflineTokenProvider {
     }
     /**
      * Returns gRPC metadata key/value pairs carrying the current access token, i.e.
-     * `{ authorization: 'Bearer <jwt>' }`.
+     * `{ authorization: 'Bearer <jwt>' }`. The key is the lowercase `authorization`
+     * that native gRPC (grpc-python / @grpc/grpc-js) requires — a capitalized
+     * `Authorization` key is rejected at call time.
      *
      * @returns The authorization metadata object.
      */
     getAuthorizationMetadata() {
-        return { Authorization: `Bearer ${this.accessToken}` };
+        return { authorization: `Bearer ${this.accessToken}` };
     }
     /**
      * Forces an immediate access-token refresh from the offline refresh token and
