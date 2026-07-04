@@ -10,7 +10,7 @@ Authentication uses the current bearer convention (post-Keycloak migration): `lo
 [`../src/auth/offlineTokenProvider.ts`](../src/auth/offlineTokenProvider.ts) returns a provider whose
 `getAuthorizationMetadata()` yields the `{ authorization: 'Bearer <token>' }` gRPC metadata pairs
 (unlike the NLU client's `getAuthorizationHeader()`, which returns the header value as a plain string).
-The legacy `cai-token` / HTTP-basic credentials no longer exist.
+The legacy per-request token / HTTP-basic credentials no longer exist.
 
 The flow is factored into small, injectable helpers — `buildAuthMetadata(source)`,
 `buildSynthesizeRequest(options)` and `synthesizeUnary(client, request, metadata)` — so it can be unit
