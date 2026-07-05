@@ -82,9 +82,13 @@ class OfflineTokenProvider {
      *   is malformed.
      */
     static async create(options) {
-        const resolvedFetch = options.fetchImpl ?? globalFetch();
+        let resolvedFetch = options.fetchImpl;
         if (resolvedFetch === undefined) {
-            throw new OfflineTokenError('No fetch implementation available; pass options.fetchImpl or run on Node >= 18.', 0);
+            const baseFetch = globalFetch();
+            if (baseFetch === undefined) {
+                throw new OfflineTokenError('No fetch implementation available; pass options.fetchImpl or run on Node >= 18.', 0);
+            }
+            resolvedFetch = createDefaultFetch(baseFetch, options.keycloakVerifySsl ?? true);
         }
         const now = options.nowMs ?? Date.now;
         const skewInS = options.refreshSkewInS ?? DEFAULT_REFRESH_SKEW_IN_S;
@@ -377,6 +381,31 @@ function stringifyReason(reason) {
         return reason.message;
     }
     return String(reason);
+}
+/**
+ * Builds the default {@link FetchLike} used when no `fetchImpl` is injected.
+ *
+ * With `verifySsl` (the default) the resolved global `fetch` is returned
+ * unchanged, so TLS certificate verification stays ON. When `verifySsl` is
+ * `false`, a cached undici `Agent` with `rejectUnauthorized: false` is attached to
+ * every request as its `dispatcher`, so the Keycloak token call skips TLS
+ * certificate verification (opt-in insecure; Node-only). The dispatcher is built
+ * once here and reused for all requests this transport makes (login + refreshes);
+ * the secure default never loads undici.
+ *
+ * @param baseFetch The resolved global `fetch` to delegate to.
+ * @param verifySsl Whether to verify the Keycloak server's TLS certificate.
+ * @returns A fetch layer bound to the chosen TLS-verification behaviour.
+ */
+function createDefaultFetch(baseFetch, verifySsl) {
+    if (verifySsl) {
+        return baseFetch;
+    }
+    // Lazy require keeps undici out of the default (secure) code path.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const undici = require('undici');
+    const dispatcher = new undici.Agent({ connect: { rejectUnauthorized: false } });
+    return (input, init) => baseFetch(input, { ...init, dispatcher });
 }
 /**
  * Resolves the global `fetch` (Node >= 18 / browsers) as a {@link FetchLike}, used

@@ -24,6 +24,14 @@ export interface OfflineTokenLoginOptions {
      */
     fetchImpl?: FetchLike;
     /**
+     * When `false`, DISABLE TLS certificate verification on the Keycloak token
+     * request (opt-in insecure, for a self-signed local Envoy). Defaults to `true`
+     * (verify — secure, unchanged behaviour). Ignored when a custom `fetchImpl` is
+     * injected. Node-only: implemented via an undici dispatcher, so it is a no-op in
+     * a browser bundle.
+     */
+    keycloakVerifySsl?: boolean;
+    /**
      * Optional clock, for testing. Returns the current time in milliseconds since
      * the epoch. Defaults to `Date.now`.
      */
@@ -48,6 +56,13 @@ export interface FetchInit {
     method: string;
     headers: Record<string, string>;
     body: string;
+    /**
+     * Optional undici dispatcher (Node's non-standard `fetch` extension). Set only
+     * on the default transport when `keycloakVerifySsl` is `false`; carries an
+     * `Agent({ connect: { rejectUnauthorized: false } })` so the token request skips
+     * TLS certificate verification. Left `undefined` on the secure default path.
+     */
+    dispatcher?: unknown;
 }
 /**
  * Minimal structural type for the fetch response this helper consumes.

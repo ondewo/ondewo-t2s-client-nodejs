@@ -418,6 +418,70 @@ describe('offlineTokenProvider global fetch fallback', () => {
 	});
 });
 
+/** Covers the `keycloakVerifySsl` TLS-verification toggle on the default transport. */
+describe('offlineTokenProvider keycloakVerifySsl (TLS verification toggle)', () => {
+	/** By default (flag omitted) the default transport attaches no undici dispatcher, so TLS verification stays ON. */
+	it('attaches no dispatcher by default (TLS verify ON)', async () => {
+		let capturedInit: FetchInit | undefined;
+		const recordingFetch: FetchLike = (url: string, init: FetchInit): Promise<FetchResponseLike> => {
+			capturedInit = init;
+			return Promise.resolve(
+				makeFakeResponse(jsonResponse({ access_token: 'access-secure', refresh_token: 'offline-secure', expires_in: 300 }))
+			);
+		};
+		const provider: OfflineTokenProvider = await withGlobalFetch(recordingFetch, () => login({ ...BASE_OPTIONS }));
+		provider.stop();
+
+		assert.ok(capturedInit !== undefined);
+		// No undici dispatcher => undici's global dispatcher with TLS verification ON.
+		assert.equal(capturedInit.dispatcher, undefined);
+		assert.equal(provider.getAccessToken(), 'access-secure');
+	});
+
+	/** With `keycloakVerifySsl: false` the default transport attaches an undici `Agent` dispatcher, disabling TLS verification for the token call. */
+	it('attaches an undici Agent dispatcher when keycloakVerifySsl is false (TLS verify OFF)', async () => {
+		let capturedInit: FetchInit | undefined;
+		const recordingFetch: FetchLike = (url: string, init: FetchInit): Promise<FetchResponseLike> => {
+			capturedInit = init;
+			return Promise.resolve(
+				makeFakeResponse(jsonResponse({ access_token: 'access-insecure', refresh_token: 'offline-insecure', expires_in: 300 }))
+			);
+		};
+		const provider: OfflineTokenProvider = await withGlobalFetch(recordingFetch, () =>
+			login({ ...BASE_OPTIONS, keycloakVerifySsl: false, nowMs: (): number => 0 })
+		);
+		provider.stop();
+
+		// eslint-disable-next-line @typescript-eslint/no-require-imports
+		const undici: { Agent: new (options: unknown) => unknown } = require('undici') as {
+			Agent: new (options: unknown) => unknown;
+		};
+		assert.ok(capturedInit !== undefined);
+		// The insecure undici Agent (rejectUnauthorized:false) reached the token POST.
+		assert.ok(capturedInit.dispatcher instanceof undici.Agent);
+		assert.equal(provider.getAccessToken(), 'access-insecure');
+	});
+
+	/** An injected `fetchImpl` is used verbatim, so `keycloakVerifySsl: false` is a no-op (no dispatcher) for custom transports. */
+	it('ignores keycloakVerifySsl false when a custom fetchImpl is injected', async () => {
+		const fake: { fetchImpl: FetchLike; requests: CapturedRequest[] } = makeFakeFetch([
+			jsonResponse({ access_token: 'access-1', refresh_token: 'offline-1', expires_in: 300 })
+		]);
+		const provider: OfflineTokenProvider = await login({
+			...BASE_OPTIONS,
+			keycloakVerifySsl: false,
+			fetchImpl: fake.fetchImpl,
+			nowMs: (): number => 0
+		});
+		provider.stop();
+
+		assert.equal(fake.requests.length, 1);
+		// The injected transport receives the request unchanged — the flag never touches it.
+		assert.equal(fake.requests[0].init.dispatcher, undefined);
+		assert.equal(provider.getAccessToken(), 'access-1');
+	});
+});
+
 /** Covers explicit {@link OfflineTokenProvider.refresh} calls and refresh-token rotation. */
 describe('offlineTokenProvider.refresh (grant_type=refresh_token)', () => {
 	/** `refresh()` exchanges the offline refresh token for a fresh access token. */

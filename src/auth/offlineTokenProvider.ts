@@ -38,6 +38,14 @@ export interface OfflineTokenLoginOptions {
 	 */
 	fetchImpl?: FetchLike;
 	/**
+	 * When `false`, DISABLE TLS certificate verification on the Keycloak token
+	 * request (opt-in insecure, for a self-signed local Envoy). Defaults to `true`
+	 * (verify — secure, unchanged behaviour). Ignored when a custom `fetchImpl` is
+	 * injected. Node-only: implemented via an undici dispatcher, so it is a no-op in
+	 * a browser bundle.
+	 */
+	keycloakVerifySsl?: boolean;
+	/**
 	 * Optional clock, for testing. Returns the current time in milliseconds since
 	 * the epoch. Defaults to `Date.now`.
 	 */
@@ -64,6 +72,13 @@ export interface FetchInit {
 	method: string;
 	headers: Record<string, string>;
 	body: string;
+	/**
+	 * Optional undici dispatcher (Node's non-standard `fetch` extension). Set only
+	 * on the default transport when `keycloakVerifySsl` is `false`; carries an
+	 * `Agent({ connect: { rejectUnauthorized: false } })` so the token request skips
+	 * TLS certificate verification. Left `undefined` on the secure default path.
+	 */
+	dispatcher?: unknown;
 }
 
 /**
@@ -160,7 +175,7 @@ export class OfflineTokenProvider {
 	 * @param deadlineMs Absolute time (ms since epoch) past which refreshes stop, or
 	 *   `undefined` for no bound.
 	 */
-	private constructor(options: Required<Omit<OfflineTokenLoginOptions, 'tokenExpirationInS'>>, initial: KeycloakTokenResponse, deadlineMs: number | undefined) {
+	private constructor(options: Required<Omit<OfflineTokenLoginOptions, 'tokenExpirationInS' | 'keycloakVerifySsl'>>, initial: KeycloakTokenResponse, deadlineMs: number | undefined) {
 		this.keycloakUrl = stripTrailingSlash(options.keycloakUrl);
 		this.realm = options.realm;
 		this.clientId = options.clientId;
@@ -186,9 +201,13 @@ export class OfflineTokenProvider {
 	 *   is malformed.
 	 */
 	public static async create(options: OfflineTokenLoginOptions): Promise<OfflineTokenProvider> {
-		const resolvedFetch: FetchLike | undefined = options.fetchImpl ?? globalFetch();
+		let resolvedFetch: FetchLike | undefined = options.fetchImpl;
 		if (resolvedFetch === undefined) {
-			throw new OfflineTokenError('No fetch implementation available; pass options.fetchImpl or run on Node >= 18.', 0);
+			const baseFetch: FetchLike | undefined = globalFetch();
+			if (baseFetch === undefined) {
+				throw new OfflineTokenError('No fetch implementation available; pass options.fetchImpl or run on Node >= 18.', 0);
+			}
+			resolvedFetch = createDefaultFetch(baseFetch, options.keycloakVerifySsl ?? true);
 		}
 		const now: () => number = options.nowMs ?? Date.now;
 		const skewInS: number = options.refreshSkewInS ?? DEFAULT_REFRESH_SKEW_IN_S;
@@ -500,6 +519,34 @@ function stringifyReason(reason: unknown): string {
 		return reason.message;
 	}
 	return String(reason);
+}
+
+/**
+ * Builds the default {@link FetchLike} used when no `fetchImpl` is injected.
+ *
+ * With `verifySsl` (the default) the resolved global `fetch` is returned
+ * unchanged, so TLS certificate verification stays ON. When `verifySsl` is
+ * `false`, a cached undici `Agent` with `rejectUnauthorized: false` is attached to
+ * every request as its `dispatcher`, so the Keycloak token call skips TLS
+ * certificate verification (opt-in insecure; Node-only). The dispatcher is built
+ * once here and reused for all requests this transport makes (login + refreshes);
+ * the secure default never loads undici.
+ *
+ * @param baseFetch The resolved global `fetch` to delegate to.
+ * @param verifySsl Whether to verify the Keycloak server's TLS certificate.
+ * @returns A fetch layer bound to the chosen TLS-verification behaviour.
+ */
+function createDefaultFetch(baseFetch: FetchLike, verifySsl: boolean): FetchLike {
+	if (verifySsl) {
+		return baseFetch;
+	}
+	// Lazy require keeps undici out of the default (secure) code path.
+	// eslint-disable-next-line @typescript-eslint/no-require-imports
+	const undici: { Agent: new (options: unknown) => unknown } = require('undici') as {
+		Agent: new (options: unknown) => unknown;
+	};
+	const dispatcher: unknown = new undici.Agent({ connect: { rejectUnauthorized: false } });
+	return (input: string, init: FetchInit): Promise<FetchResponseLike> => baseFetch(input, { ...init, dispatcher });
 }
 
 /**
