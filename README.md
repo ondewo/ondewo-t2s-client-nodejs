@@ -66,7 +66,7 @@ npm
 └── README.md
 ```
 
-[comment]: <> (START OF GITHUB README)
+[comment]: <> 'START OF GITHUB README'
 
 ## Build
 
@@ -102,7 +102,6 @@ TODO after PR merge:
   ```
 - Adjust `ONDEWO_T2S_VERSION` in the `Makefile` <br><br>
 - Add new Release Notes to `src/RELEASE.md` in following format:
-
   ```
   ## Release ONDEWO T2S Nodejs Client X.X.X    <----- Beginning of Notes
 
@@ -110,13 +109,13 @@ TODO after PR merge:
 
   *****************                             <----- End of Notes
   ```
-
 - release
   ```shell
   make ondewo_release
   ```
-  <br>
-  The release process can be divided into 6 Steps:
+
+<br>
+The release process can be divided into 6 Steps:
 
 1. `build` specified version of the `ondewo-t2s-api`
 2. `commit and push` all changes in code resulting from the `build`
@@ -127,4 +126,4 @@ TODO after PR merge:
 
 > :warning: The Release Automation checks if the build has created all the proto-code files, but it does not check the code-integrity. Please build and test the generated code prior to starting the release process.
 
-[comment]: <> (END OF GITHUB README)
+[comment]: <> 'END OF GITHUB README'
