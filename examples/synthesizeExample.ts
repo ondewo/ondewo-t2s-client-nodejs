@@ -16,8 +16,13 @@
 // against the real generated client and only runs when the file is executed
 // directly (`node --import tsx examples/synthesizeExample.ts`).
 
+import { readFileSync } from 'fs';
+import * as path from 'path';
+
+import * as dotenv from 'dotenv';
+
 import { credentials, Metadata } from '@grpc/grpc-js';
-import type { ServiceError } from '@grpc/grpc-js';
+import type { ChannelCredentials, ServiceError } from '@grpc/grpc-js';
 
 import { SynthesizeRequest, RequestConfig, SynthesizeResponse } from '../api/ondewo/t2s/text-to-speech_pb';
 import { Text2SpeechClient } from '../api/ondewo/t2s/text-to-speech_grpc_pb';
@@ -127,30 +132,108 @@ export function synthesizeUnary(
 }
 
 /**
+ * Reads a required environment variable, throwing a descriptive error when it is
+ * absent or blank so misconfiguration fails fast with actionable context.
+ *
+ * @param name The environment variable name to read.
+ * @returns The variable's value.
+ * @throws {Error} If the variable is unset or empty.
+ */
+function requireEnv(name: string): string {
+	const value: string | undefined = process.env[name];
+	if (value === undefined || value.trim().length === 0) {
+		throw new Error(`Missing required environment variable ${name}; set it in examples/environment.env.`);
+	}
+	return value;
+}
+
+/**
+ * Reads an optional boolean environment variable (`true`/`false`, case-insensitive),
+ * falling back to `fallback` when unset or blank.
+ *
+ * @param name The environment variable name to read.
+ * @param fallback The value to use when the variable is unset or blank.
+ * @returns The parsed boolean.
+ */
+function readBooleanEnv(name: string, fallback: boolean): boolean {
+	const value: string | undefined = process.env[name];
+	if (value === undefined || value.trim().length === 0) {
+		return fallback;
+	}
+	return value.trim().toLowerCase() === 'true';
+}
+
+/**
+ * Builds the gRPC channel credentials from the canonical connection env vars:
+ * insecure unless `ONDEWO_USE_SECURE_CHANNEL` is `true`, in which case TLS is used
+ * with the root certificate at `ONDEWO_GRPC_CERT` (or the system trust store when
+ * that is unset).
+ *
+ * @returns The channel credentials to open the T2S client with.
+ */
+function buildChannelCredentials(): ChannelCredentials {
+	const useSecureChannel: boolean = readBooleanEnv('ONDEWO_USE_SECURE_CHANNEL', false);
+	if (!useSecureChannel) {
+		return credentials.createInsecure();
+	}
+	const certPath: string | undefined = process.env.ONDEWO_GRPC_CERT;
+	if (certPath !== undefined && certPath.trim().length > 0) {
+		const rootCert: Buffer = readFileSync(certPath.trim());
+		return credentials.createSsl(rootCert);
+	}
+	return credentials.createSsl();
+}
+
+/**
+ * Narrows an unknown rejection reason to a gRPC {@link ServiceError} when it carries
+ * the `code`/`details` fields, so RPC failures can be logged with their status.
+ *
+ * @param reason The caught rejection reason.
+ * @returns The reason as a {@link ServiceError}, or `undefined` if it is not one.
+ */
+function asServiceError(reason: unknown): ServiceError | undefined {
+	if (reason !== null && typeof reason === 'object' && 'code' in reason && 'details' in reason) {
+		return reason as ServiceError;
+	}
+	return undefined;
+}
+
+/**
  * Runs the full example against a real T2S server. All endpoints and credentials
- * are read from environment variables so nothing sensitive is hard-coded.
+ * are read from `examples/environment.env` (canonical ONDEWO/KEYCLOAK vars) so
+ * nothing sensitive is hard-coded.
  *
  * @returns Resolves once the audio has been synthesized and logged.
  */
 export async function main(): Promise<void> {
+	dotenv.config({ path: path.join(__dirname, 'environment.env') });
+	console.log('START: ONDEWO T2S synthesize example');
+
+	console.log('Authenticating against Keycloak (ROPC + offline_access)...');
 	const provider: OfflineTokenProvider = await login({
-		keycloakUrl: process.env.ONDEWO_T2S_KEYCLOAK_URL ?? 'https://keycloak.example.com/auth',
-		realm: process.env.ONDEWO_T2S_KEYCLOAK_REALM ?? 'ondewo',
-		clientId: process.env.ONDEWO_T2S_KEYCLOAK_CLIENT_ID ?? 'ondewo-nlu-cai-sdk-public',
-		username: process.env.ONDEWO_T2S_USER_NAME ?? 'tech-user@example.com',
-		password: process.env.ONDEWO_T2S_PASSWORD ?? 'change-me'
+		keycloakUrl: requireEnv('KEYCLOAK_URL'),
+		realm: requireEnv('KEYCLOAK_REALM'),
+		clientId: requireEnv('KEYCLOAK_CLIENT_ID'),
+		username: requireEnv('KEYCLOAK_USER_NAME'),
+		password: requireEnv('KEYCLOAK_PASSWORD'),
+		keycloakVerifySsl: readBooleanEnv('KEYCLOAK_VERIFY_SSL', true)
 	});
+	console.log('Keycloak authentication succeeded; access token acquired.');
 	try {
 		const metadata: Metadata = buildAuthMetadata(provider);
-		const target: string = process.env.ONDEWO_T2S_GRPC_TARGET ?? 'localhost:50055';
-		const client: Text2SpeechClient = new Text2SpeechClient(target, credentials.createInsecure());
+		const target: string = `${requireEnv('ONDEWO_HOST')}:${requireEnv('ONDEWO_PORT')}`;
+		const channelCredentials: ChannelCredentials = buildChannelCredentials();
+		console.log(`Connecting to ONDEWO T2S server at ${target}.`);
+		const client: Text2SpeechClient = new Text2SpeechClient(target, channelCredentials);
+		const pipelineId: string = requireEnv('ONDEWO_T2S_PIPELINE_ID');
 		const request: SynthesizeRequest = buildSynthesizeRequest({
 			text: 'Hello from the ONDEWO T2S NodeJS client.',
-			t2sPipelineId: process.env.ONDEWO_T2S_PIPELINE_ID ?? 'default_pipeline'
+			t2sPipelineId: pipelineId
 		});
+		console.log(`Sending Synthesize RPC (t2sPipelineId=${pipelineId}).`);
 		const response: SynthesizeResponse = await synthesizeUnary(client, request, metadata);
 		console.log(
-			`Synthesized ${response.getAudio_asU8().length} bytes of audio ` +
+			`DONE: synthesized ${response.getAudio_asU8().length} bytes of audio ` +
 				`(uuid=${response.getAudioUuid()}, sampleRate=${response.getSampleRate()}).`
 		);
 	} finally {
@@ -160,7 +243,12 @@ export async function main(): Promise<void> {
 
 if (typeof require !== 'undefined' && require.main === module) {
 	main().catch((reason: unknown): void => {
-		console.error('T2S synthesize example failed:', reason);
-		process.exitCode = 1;
+		const serviceError: ServiceError | undefined = asServiceError(reason);
+		if (serviceError !== undefined) {
+			console.error(`ERROR: T2S Synthesize RPC failed (code=${serviceError.code}, details=${serviceError.details}).`);
+		} else {
+			console.error('ERROR: T2S synthesize example failed:', reason);
+		}
+		process.exit(1);
 	});
 }

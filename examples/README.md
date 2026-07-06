@@ -19,17 +19,25 @@ wires the real `Text2SpeechClient` and `login()` together.
 
 ### Run against a server
 
-Set the connection + technical-user credentials in the environment, then execute the file with `tsx`:
+Configuration is read from [`environment.env`](./environment.env) (loaded via `dotenv`, path resolved
+relative to the script). Fill in the connection details and technical-user credentials there, then run
+the file with `tsx`:
 
 ```sh
-export ONDEWO_T2S_KEYCLOAK_URL=https://auth.example.com/auth
-export ONDEWO_T2S_KEYCLOAK_REALM=ondewo-ccai-platform
-export ONDEWO_T2S_KEYCLOAK_CLIENT_ID=ondewo-nlu-cai-sdk-public
-export ONDEWO_T2S_USER_NAME=tech-user@example.com
-export ONDEWO_T2S_PASSWORD=...
-export ONDEWO_T2S_GRPC_TARGET=localhost:50055
-export ONDEWO_T2S_PIPELINE_ID=default_pipeline
+# examples/environment.env (canonical variable names)
+ONDEWO_HOST=localhost
+ONDEWO_PORT=50055
+ONDEWO_USE_SECURE_CHANNEL=false
+KEYCLOAK_URL=https://auth.example.com/auth
+KEYCLOAK_REALM=ondewo-ccai-platform
+KEYCLOAK_CLIENT_ID=ondewo-nlu-cai-sdk-public
+KEYCLOAK_USER_NAME=tech-user@example.com
+KEYCLOAK_PASSWORD=...
+KEYCLOAK_VERIFY_SSL=true
+ONDEWO_T2S_PIPELINE_ID=default_pipeline
+```
 
+```sh
 node --import tsx examples/synthesizeExample.ts
 ```
 
