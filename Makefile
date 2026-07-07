@@ -17,8 +17,8 @@ export
 
 ONDEWO_T2S_VERSION = 6.2.0
 
-T2S_API_GIT_BRANCH=tags/6.2.0
-ONDEWO_PROTO_COMPILER_GIT_BRANCH=tags/5.9.0
+T2S_API_GIT_BRANCH=OND211-2418-add-keycloak-for-2-fa
+ONDEWO_PROTO_COMPILER_GIT_BRANCH=tags/5.10.0
 ONDEWO_PROTO_COMPILER_DIR=ondewo-proto-compiler
 T2S_APIS_DIR=src/ondewo-t2s-api
 T2S_PROTOS_DIR=${T2S_APIS_DIR}/ondewo
@@ -30,7 +30,7 @@ IMAGE_UTILS_NAME=ondewo-t2s-client-utils-nodejs:${ONDEWO_T2S_VERSION}
 PRETTIER_WRITE?=
 
 CURRENT_RELEASE_NOTES=`cat RELEASE.md \
-	| sed -n '/Release ONDEWO T2S Nodejs Client ${ONDEWO_T2S_VERSION}/,/\*\*/p'`
+	| perl -ne 'print if /Release ONDEWO T2S Nodejs Client ${ONDEWO_T2S_VERSION}/../\*\*/'`
 
 
 GH_REPO="https://github.com/ondewo/ondewo-t2s-client-nodejs"
@@ -59,6 +59,22 @@ prettier: ## Checks formatting with Prettier - Use PRETTIER_WRITE=-w to also aut
 eslint: ## Checks Code Logic and Typing
 	./node_modules/.bin/eslint --config eslint.config.mjs .
 
+compile_auth: ## Compiles the hand-written auth helper (src/auth) to shippable api/auth JS + d.ts
+	mkdir -p api/auth
+	./node_modules/.bin/tsc src/auth/offlineTokenProvider.ts --declaration --module commonjs \
+		--target es2020 --moduleResolution node --ignoreDeprecations 6.0 --strict --skipLibCheck \
+		--types node --lib es2020 --outDir api/auth --ignoreConfig
+
+ensure_auth_export: ## Re-appends the D18 auth export to public-api after the proto-compiler regenerates it away
+	grep -q 'api/auth/offlineTokenProvider' public-api.js || printf "export * from './api/auth/offlineTokenProvider';\n" >> public-api.js
+	grep -q 'api/auth/offlineTokenProvider' public-api.d.ts || printf "export * from './api/auth/offlineTokenProvider.d';\n" >> public-api.d.ts
+
+test_auth: ## Runs the offline unit tests for the auth helper (no network)
+	node --import tsx --test src/auth/*.spec.ts
+
+test_examples: ## Runs the offline mock tests for the examples (no server, no network)
+	node --import tsx --test examples/*.spec.ts
+
 TEST: ## Prints some important variables
 	@echo "Release Notes: \n \n$(CURRENT_RELEASE_NOTES)"
 	@echo "GH Token: \t $(GITHUB_GH_TOKEN)"
@@ -77,7 +93,7 @@ check_build: ## Checks if all built proto-code is there
 	@for proto in `find src/ondewo-t2s-api/ondewo -iname "*.proto*"`; \
 	do \
 		echo $${proto} | cut -d "/" -f 5 | cut -d "." -f 1 >> build_check.txt; \
-		sed -i 's/import.*//g' build_check.txt; \
+		perl -i -pe 's/import.*//g' build_check.txt; \
 	done
 	@echo "`sort build_check.txt | uniq`" > build_check.txt
 	@for file in `cat build_check.txt`;\
@@ -193,7 +209,7 @@ spc: ## Checks if the Release Branch, Tag and Pypi version already exist
 # Build
 
 update_package: ## Updates Package Version in src/package.json
-	@sed -i "s/\"version\": \"[0-9]*.[0-9]*.[0-9]\"/\"version\": \"${ONDEWO_T2S_VERSION}\"/g" src/package.json
+	@perl -i -pe "s/\"version\": \"[0-9]*.[0-9]*.[0-9]\"/\"version\": \"${ONDEWO_T2S_VERSION}\"/g" src/package.json
 
 build: check_out_correct_submodule_versions build_compiler update_package npm_run_build ## Build Code with Proto-Compiler
 	@echo "################### PROMPT FOR CHANGING FILE OWNERSHIP FROM ROOT TO YOU ##########################"
@@ -205,18 +221,20 @@ build: check_out_correct_submodule_versions build_compiler update_package npm_ru
 	cp src/README.md .
 	cp src/RELEASE.md .
 	make remove_npm_script
+	make compile_auth
+	make ensure_auth_export
 	make create_npm_package
-	@$(eval README_CUT_LINES:=$(shell cat -n src/README.md | sed -n "/START OF GITHUB README/,/END OF GITHUB README/p" | grep -o -E '[0-9]+' | sed -e 's/^0\+//' | awk 'NR==1; END{print}'))
-	@$(eval DELETE_LINES:=$(shell echo ${README_CUT_LINES}| sed -e "s/[[:space:]]/,/"))
-	@sed -i "${DELETE_LINES}d" npm/README.md
+	@$(eval README_CUT_LINES:=$(shell cat -n src/README.md | perl -ne 'print if /START OF GITHUB README/../END OF GITHUB README/' | grep -o -E '[0-9]+' | perl -pe 's/^0+//' | awk 'NR==1; END{print}'))
+	@$(eval DELETE_LINES:=$(shell echo ${README_CUT_LINES}| perl -pe "s/[[:space:]]/,/"))
+	@perl -i -ne 'BEGIN{($$s,$$e)=split/,/,"${DELETE_LINES}"} print unless $$. >= $$s && $$. <= $$e' npm/README.md
 	make install_dependencies
 
 
 remove_npm_script: ## Removes Script section from package.json
-	$(eval script_lines:= $(shell cat package.json | sed -n '/\"scripts\"/,/\}\,/='))
+	$(eval script_lines:= $(shell cat package.json | perl -ne 'print "$$.\n" if /\"scripts\"/../\}\,/'))
 	$(eval start:= $(shell echo $(script_lines) | cut -c 1-2))
 	$(eval end:= $(shell echo $(script_lines) | rev | cut -c 1-3 | rev))
-	@sed -i '$(start),$(end)d' package.json
+	@perl -i -ne 'print unless $$. >= $(start) && $$. <= $(end)' package.json
 
 create_npm_package: ## Create NPM Package for Release
 	rm -rf npm

@@ -10859,7 +10859,8 @@ proto.ondewo.t2s.T2sCloudServiceGoogle.toObject = function(includeInstance, msg)
     voiceId: jspb.Message.getFieldWithDefault(msg, 1, ""),
     speakingRate: jspb.Message.getFloatingPointFieldWithDefault(msg, 2, 0.0),
     volumeGainDb: jspb.Message.getFloatingPointFieldWithDefault(msg, 3, 0.0),
-    pitch: jspb.Message.getFloatingPointFieldWithDefault(msg, 4, 0.0)
+    pitch: jspb.Message.getFloatingPointFieldWithDefault(msg, 4, 0.0),
+    speakerLanguage: jspb.Message.getFieldWithDefault(msg, 5, "")
   };
 
   if (includeInstance) {
@@ -10911,6 +10912,10 @@ proto.ondewo.t2s.T2sCloudServiceGoogle.deserializeBinaryFromReader = function(ms
     case 4:
       var value = /** @type {number} */ (reader.readFloat());
       msg.setPitch(value);
+      break;
+    case 5:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setSpeakerLanguage(value);
       break;
     default:
       reader.skipField();
@@ -10966,6 +10971,13 @@ proto.ondewo.t2s.T2sCloudServiceGoogle.serializeBinaryToWriter = function(messag
   if (f !== 0.0) {
     writer.writeFloat(
       4,
+      f
+    );
+  }
+  f = message.getSpeakerLanguage();
+  if (f.length > 0) {
+    writer.writeString(
+      5,
       f
     );
   }
@@ -11041,6 +11053,24 @@ proto.ondewo.t2s.T2sCloudServiceGoogle.prototype.getPitch = function() {
  */
 proto.ondewo.t2s.T2sCloudServiceGoogle.prototype.setPitch = function(value) {
   return jspb.Message.setProto3FloatField(this, 4, value);
+};
+
+
+/**
+ * optional string speaker_language = 5;
+ * @return {string}
+ */
+proto.ondewo.t2s.T2sCloudServiceGoogle.prototype.getSpeakerLanguage = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.ondewo.t2s.T2sCloudServiceGoogle} returns this
+ */
+proto.ondewo.t2s.T2sCloudServiceGoogle.prototype.setSpeakerLanguage = function(value) {
+  return jspb.Message.setProto3StringField(this, 5, value);
 };
 
 
