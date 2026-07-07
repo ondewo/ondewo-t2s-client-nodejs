@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.12.2",
-    "@types/node": "^20.12.14",
+    "@types/node": "^22.15.27",
     "dotenv": "^16.4.5",
     "google-protobuf": "3.21.4"
   },
