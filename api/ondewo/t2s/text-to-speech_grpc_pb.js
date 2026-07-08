@@ -307,6 +307,17 @@ function deserialize_ondewo_t2s_UpdateCustomPhonemizerRequest(buffer_arg) {
   return ondewo_t2s_text$to$speech_pb.UpdateCustomPhonemizerRequest.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_ondewo_t2s_VoiceCloningRequest(arg) {
+  if (!(arg instanceof ondewo_t2s_text$to$speech_pb.VoiceCloningRequest)) {
+    throw new Error('Expected argument of type ondewo.t2s.VoiceCloningRequest');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_ondewo_t2s_VoiceCloningRequest(buffer_arg) {
+  return ondewo_t2s_text$to$speech_pb.VoiceCloningRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 
 // <p>Text2Speech service provides endpoints for text-to-speech generation.</p>
 var Text2SpeechService = exports.Text2SpeechService = {
@@ -529,6 +540,19 @@ listCustomPhonemizer: {
     requestDeserialize: deserialize_ondewo_t2s_ListCustomPhonemizerRequest,
     responseSerialize: serialize_ondewo_t2s_ListCustomPhonemizerResponse,
     responseDeserialize: deserialize_ondewo_t2s_ListCustomPhonemizerResponse,
+  },
+  // <p>Clones a voice based on a sample audio of the speaker and its transcription.
+// The cloned voice can afterwards be used for synthesis by referencing the given speaker name.</p>
+voiceCloning: {
+    path: '/ondewo.t2s.Text2Speech/VoiceCloning',
+    requestStream: false,
+    responseStream: false,
+    requestType: ondewo_t2s_text$to$speech_pb.VoiceCloningRequest,
+    responseType: google_protobuf_empty_pb.Empty,
+    requestSerialize: serialize_ondewo_t2s_VoiceCloningRequest,
+    requestDeserialize: deserialize_ondewo_t2s_VoiceCloningRequest,
+    responseSerialize: serialize_google_protobuf_Empty,
+    responseDeserialize: deserialize_google_protobuf_Empty,
   },
 };
 

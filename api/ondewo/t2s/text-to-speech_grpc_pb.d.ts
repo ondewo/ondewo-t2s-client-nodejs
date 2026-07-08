@@ -28,6 +28,7 @@ interface IText2SpeechService extends grpc.ServiceDefinition<grpc.UntypedService
     deleteCustomPhonemizer: IText2SpeechService_IDeleteCustomPhonemizer;
     updateCustomPhonemizer: IText2SpeechService_IUpdateCustomPhonemizer;
     listCustomPhonemizer: IText2SpeechService_IListCustomPhonemizer;
+    voiceCloning: IText2SpeechService_IVoiceCloning;
 }
 
 interface IText2SpeechService_ISynthesize extends grpc.MethodDefinition<ondewo_t2s_text_to_speech_pb.SynthesizeRequest, ondewo_t2s_text_to_speech_pb.SynthesizeResponse> {
@@ -192,6 +193,15 @@ interface IText2SpeechService_IListCustomPhonemizer extends grpc.MethodDefinitio
     responseSerialize: grpc.serialize<ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerResponse>;
     responseDeserialize: grpc.deserialize<ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerResponse>;
 }
+interface IText2SpeechService_IVoiceCloning extends grpc.MethodDefinition<ondewo_t2s_text_to_speech_pb.VoiceCloningRequest, google_protobuf_empty_pb.Empty> {
+    path: "/ondewo.t2s.Text2Speech/VoiceCloning";
+    requestStream: false;
+    responseStream: false;
+    requestSerialize: grpc.serialize<ondewo_t2s_text_to_speech_pb.VoiceCloningRequest>;
+    requestDeserialize: grpc.deserialize<ondewo_t2s_text_to_speech_pb.VoiceCloningRequest>;
+    responseSerialize: grpc.serialize<google_protobuf_empty_pb.Empty>;
+    responseDeserialize: grpc.deserialize<google_protobuf_empty_pb.Empty>;
+}
 
 export const Text2SpeechService: IText2SpeechService;
 
@@ -214,6 +224,7 @@ export interface IText2SpeechServer {
     deleteCustomPhonemizer: grpc.handleUnaryCall<ondewo_t2s_text_to_speech_pb.PhonemizerId, google_protobuf_empty_pb.Empty>;
     updateCustomPhonemizer: grpc.handleUnaryCall<ondewo_t2s_text_to_speech_pb.UpdateCustomPhonemizerRequest, ondewo_t2s_text_to_speech_pb.CustomPhonemizerProto>;
     listCustomPhonemizer: grpc.handleUnaryCall<ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerRequest, ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerResponse>;
+    voiceCloning: grpc.handleUnaryCall<ondewo_t2s_text_to_speech_pb.VoiceCloningRequest, google_protobuf_empty_pb.Empty>;
 }
 
 export interface IText2SpeechClient {
@@ -271,6 +282,9 @@ export interface IText2SpeechClient {
     listCustomPhonemizer(request: ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerRequest, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerResponse) => void): grpc.ClientUnaryCall;
     listCustomPhonemizer(request: ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerResponse) => void): grpc.ClientUnaryCall;
     listCustomPhonemizer(request: ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerResponse) => void): grpc.ClientUnaryCall;
+    voiceCloning(request: ondewo_t2s_text_to_speech_pb.VoiceCloningRequest, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    voiceCloning(request: ondewo_t2s_text_to_speech_pb.VoiceCloningRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    voiceCloning(request: ondewo_t2s_text_to_speech_pb.VoiceCloningRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
 }
 
 export class Text2SpeechClient extends grpc.Client implements IText2SpeechClient {
@@ -328,4 +342,7 @@ export class Text2SpeechClient extends grpc.Client implements IText2SpeechClient
     public listCustomPhonemizer(request: ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerRequest, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerResponse) => void): grpc.ClientUnaryCall;
     public listCustomPhonemizer(request: ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerResponse) => void): grpc.ClientUnaryCall;
     public listCustomPhonemizer(request: ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: ondewo_t2s_text_to_speech_pb.ListCustomPhonemizerResponse) => void): grpc.ClientUnaryCall;
+    public voiceCloning(request: ondewo_t2s_text_to_speech_pb.VoiceCloningRequest, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    public voiceCloning(request: ondewo_t2s_text_to_speech_pb.VoiceCloningRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    public voiceCloning(request: ondewo_t2s_text_to_speech_pb.VoiceCloningRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
 }
