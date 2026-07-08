@@ -15,19 +15,17 @@
   ],
   "main": "public-api.js",
   "typings": "public-api.d.ts",
-  "scripts": {
-    "start": "npm run build",
-    "build": "docker run -v ${PWD}:/input-volume -v ${PWD}/..:/output-volume ondewo-nodejs-proto-compiler ondewo-t2s-api ondewo",
-    "predebug": "mv ondewo-t2s-api/googleapis/google ondewo-t2s-api/google",
-    "debug": "docker run --entrypoint /bin/bash -v ${PWD}:/input-volume -v ${PWD}/..:/output-volume ondewo-nodejs-proto-compiler"
-  },
   "repository": {
     "type": "git",
     "directory": "https://github.com/ondewo/ondewo-t2s-client-nodejs"
   },
+  "scripts": {
+    "pretest": "tsc src/auth/offlineTokenProvider.ts src/auth/offlineTokenProvider.spec.ts --ignoreConfig --module commonjs --target es2020 --strict --lib es2020,dom --skipLibCheck --sourceMap --types node --typeRoots ./node_modules/@types --outDir .test-build",
+    "test": "c8 --check-coverage --lines 100 --functions 100 --branches 100 --include '**/offlineTokenProvider.js' --exclude '**/*.spec.js' --reporter text node --test .test-build/offlineTokenProvider.spec.js"
+  },
   "dependencies": {
     "@grpc/grpc-js": "^1.12.2",
-    "@types/node": "^22.15.27",
+    "@types/node": "^20.12.14",
     "dotenv": "^16.4.5",
     "google-protobuf": "3.21.4",
     "undici": "^7.28.0"
@@ -35,10 +33,12 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",
     "@eslint/js": "^9.39.4",
-    "@typescript-eslint/eslint-plugin": "^8.63.0",
+    "@typescript-eslint/eslint-plugin": "^8.62.1",
+    "c8": "^11.0.0",
     "eslint": "^9.39.4",
     "global": "^4.4.0",
     "husky": "^9.1.7",
-    "prettier": "^3.9.4"
+    "prettier": "^3.9.4",
+    "typescript": "^6.0.3"
   }
 }
