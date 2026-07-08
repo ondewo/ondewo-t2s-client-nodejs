@@ -77,9 +77,9 @@ test_examples: ## Runs the offline mock tests for the examples (no server, no ne
 
 TEST: ## Prints some important variables
 	@echo "Release Notes: \n \n$(CURRENT_RELEASE_NOTES)"
-	@echo "GH Token: \t $(GITHUB_GH_TOKEN)"
+	@echo "GH Token: \t $(if $(GITHUB_GH_TOKEN),<set>,<unset>)"
 	@echo "NPM Name: \t $(NPM_USERNAME)"
-	@echo "NPM Password: \t $(NPM_PASSWORD)"
+	@echo "NPM Password: \t $(if $(NPM_PASSWORD),<set>,<unset>)"
 
 help: ## Print usage info about help targets
 	# (first comment after target starting with double hashes ##)
