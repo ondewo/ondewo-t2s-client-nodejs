@@ -231,10 +231,10 @@ build: check_out_correct_submodule_versions build_compiler update_package npm_ru
 
 
 remove_npm_script: ## Removes Script section from package.json
-	$(eval script_lines:= $(shell cat package.json | perl -ne 'print "$$.\n" if /\"scripts\"/../\}\,/'))
+	$(eval script_lines:= $(shell cat npm/package.json | perl -ne 'print "$$.\n" if /\"scripts\"/../\}\,/'))
 	$(eval start:= $(shell echo $(script_lines) | cut -c 1-2))
 	$(eval end:= $(shell echo $(script_lines) | rev | cut -c 1-3 | rev))
-	@perl -i -ne 'print unless $$. >= $(start) && $$. <= $(end)' package.json
+	@perl -i -ne 'print unless $$. >= $(start) && $$. <= $(end)' npm/package.json
 
 create_npm_package: ## Create NPM Package for Release
 	rm -rf npm
