@@ -220,21 +220,22 @@ build: check_out_correct_submodule_versions build_compiler update_package npm_ru
 	-cd src/ondewo-t2s-api && git checkout -- '**/*.proto' && cd ../..
 	cp src/README.md .
 	cp src/RELEASE.md .
-	make remove_npm_script
 	make compile_auth
 	make ensure_auth_export
 	make create_npm_package
+	make remove_npm_script
 	@$(eval README_CUT_LINES:=$(shell cat -n src/README.md | perl -ne 'print if /START OF GITHUB README/../END OF GITHUB README/' | grep -o -E '[0-9]+' | perl -pe 's/^0+//' | awk 'NR==1; END{print}'))
 	@$(eval DELETE_LINES:=$(shell echo ${README_CUT_LINES}| perl -pe "s/[[:space:]]/,/"))
 	@perl -i -ne 'BEGIN{($$s,$$e)=split/,/,"${DELETE_LINES}"} print unless $$. >= $$s && $$. <= $$e' npm/README.md
 	make install_dependencies
 
 
-remove_npm_script: ## Removes Script section from package.json
-	$(eval script_lines:= $(shell cat npm/package.json | perl -ne 'print "$$.\n" if /\"scripts\"/../\}\,/'))
-	$(eval start:= $(shell echo $(script_lines) | cut -c 1-2))
-	$(eval end:= $(shell echo $(script_lines) | rev | cut -c 1-3 | rev))
-	@perl -i -ne 'print unless $$. >= $(start) && $$. <= $(end)' npm/package.json
+remove_npm_script: ## Removes the scripts section from the npm/ package.json copy (root package.json is left intact)
+	@test -f npm/package.json || make create_npm_package
+	$(eval script_lines:= $(shell cat npm/package.json 2>/dev/null | perl -ne 'print "$$.\n" if /\"scripts\"/../\}\,/'))
+	$(eval start:= $(shell echo "$(script_lines)" | awk '{print $$1}'))
+	$(eval end:= $(shell echo "$(script_lines)" | awk '{print $$NF}'))
+	@if [ -n "$(start)" ] && [ -n "$(end)" ]; then perl -i -ne 'print unless $$. >= $(start) && $$. <= $(end)' npm/package.json; fi
 
 create_npm_package: ## Create NPM Package for Release
 	rm -rf npm
