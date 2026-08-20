@@ -1,15 +1,5 @@
 # Release History
 
-*****************
-
-## Release ONDEWO T2S Nodejs Client 6.6.1
-
-### Bug Fixes
-
-* [[OND221-2830]](https://ondewo.atlassian.net/browse/OND221-2830) Regenerated with [ondewo-proto-compiler 5.13.0](https://github.com/ondewo/ondewo-proto-compiler/releases/tag/5.13.0).
-* [[OND221-2830]](https://ondewo.atlassian.net/browse/OND221-2830) The hand-written auth helper stays re-exported from the generated public-api barrel across the regeneration, via this repo's own `compile_auth` + `ensure_auth_export` build steps. It keeps `src/auth`, which the compiler's generic re-export does not cover.
-* [[OND221-2830]](https://ondewo.atlassian.net/browse/OND221-2830) Tooling: `conventional-pre-commit` now runs before `giticket` at the commit-msg stage - with giticket first, its `[OND221-2830] fix: ...` rewrite was no longer valid Conventional Commits and every commit on a ticket branch failed. `README.md` is prettier-ignored where `.prettierrc` sets `useTabs` and markdownlint's MD010 de-tabs the same blocks, and the codegen `docker run` invocations no longer pass `-it`, which fails outside a TTY.
-
 ***************** 
 ## Release ONDEWO T2S Nodejs Client 6.6.0 
  
