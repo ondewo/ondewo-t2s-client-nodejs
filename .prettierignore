@@ -17,3 +17,9 @@ npm/
 dist/
 .test-build/
 .test-build-examples/
+# README.md is prettier-ignored: .prettierrc sets useTabs, so prettier re-tabs the fenced
+# code blocks that markdownlint's MD010 then de-tabs, and the husky hook runs prettier -w
+# before pre-commit -- the two fight on every commit that touches the file. Prettier also
+# rewrites the `[comment]: <> (START/END OF GITHUB README)` slice markers the release cuts
+# the published README with.
+README.md
