@@ -20,10 +20,10 @@ config:
   # lines (a comment idiom) that the release Makefile slices on — never strip them.
   MD053: false
 globs:
-  - "*.md"
+  - '*.md'
 ignores:
-  - "node_modules/**"
-  - "api/**"
-  - "src/ondewo-t2s-api/**"
-  - "ondewo-proto-compiler/**"
-  - ".venv/**"
+  - 'node_modules/**'
+  - 'api/**'
+  - 'src/ondewo-t2s-api/**'
+  - 'ondewo-proto-compiler/**'
+  - '.venv/**'
