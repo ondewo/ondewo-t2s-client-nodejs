@@ -17,8 +17,9 @@ const compat = new FlatCompat({
 export default [
 	{
 		ignores: [
-			'.test-build/offlineTokenProvider.js',
-			'.test-build/offlineTokenProvider.spec.js',
+			// tsc output of the hand-written .ts sources, and c8's report — lint the sources, not the build.
+			'.test-build/',
+			'coverage/',
 			'**/api/',
 			'src/ondewo-t2s-api',
 			'**/ondewo-proto-compiler',

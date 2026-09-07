@@ -19,8 +19,25 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      # The repo is ~95% generated gRPC/protobuf stubs; coverage is gated on the HAND-WRITTEN surface
-      # (the D18 Keycloak offline-token auth provider). The test compiles the TS provider + spec and runs
-      # node's built-in test runner under c8 with a >=90% line-coverage gate.
-      - name: Unit tests + >=90% coverage gate on hand-written code
+      # The release codegen REGENERATES the root package.json, wiping its test scripts and test-only
+      # devDependencies; `make restore_ci_test_setup` merges .ci-package.json back in to repair it.
+      # That makes .ci-package.json — not package.json — the copy that survives a release: a script
+      # edited in only one of the two is silently reverted by the next release. This step turns that
+      # drift into a red build on the commit that introduced it, and runs first so it fails fast.
+      - name: Guard the package.json <-> .ci-package.json mirror
+        run: npm run test:drift
+
+      # The repo is ~95% generated gRPC/protobuf stubs; coverage is gated on the HAND-WRITTEN
+      # surface — src/auth/offlineTokenProvider.ts (the D18 Keycloak offline-token auth provider)
+      # and examples/synthesizeExample.ts. `npm test` compiles both plus their specs, runs node's
+      # built-in test runner and enforces 100% statements / lines / branches / functions on both.
+      # c8 runs with --all, so a NEW hand-written file that no test touches shows up at 0% and
+      # fails this step instead of silently disappearing from the report.
+      - name: Unit tests + 100% statement/line/branch/function coverage gate on hand-written code
         run: npm test
+
+      # The example is documentation that has to keep compiling and working against the generated
+      # stubs. `npm test` already covers it; these two scripts are the standalone entry points a
+      # developer uses, so CI proves they are not bit-rotted.
+      - name: Type-check + run the example mock tests
+        run: npm run typecheck:examples && npm run test:examples
