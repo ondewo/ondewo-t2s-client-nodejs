@@ -38,17 +38,26 @@ ONDEWO_T2S_PIPELINE_ID=default_pipeline
 ```
 
 ```sh
-node --import tsx examples/synthesizeExample.ts
+npx tsx examples/synthesizeExample.ts
 ```
+
+> :warning: `tsx` is deliberately NOT a devDependency of this repo — nothing in the test suite or CI
+> needs it — so `npx` fetches it on demand. Everything else here runs on the declared toolchain.
 
 ## Tests (no live server)
 
 The example ships a mock-based unit test (`synthesizeExample.spec.ts`) using Node's built-in test
-runner — the same convention as the auth provider. Both the gRPC client and the token source are
-mocked, so the tests need no network:
+runner — the same convention as the auth provider. The gRPC client, the token source and both of
+`main()`'s outside-world boundaries are mocked, so the tests need no network:
 
 ```sh
-make test_examples
-# or directly:
-node --import tsx --test examples/*.spec.ts
+npm run test:examples      # compile examples/ + src/auth/, then run just this spec
+npm run typecheck:examples # tsc --noEmit over examples/
+make test_examples         # the same, via the Makefile
 ```
+
+`npm test` runs this spec too, under the repo's 100% statement/line/branch/function coverage gate —
+`examples/synthesizeExample.ts` is part of the gated hand-written surface, so an uncovered line here
+fails CI. `main()` is covered by injecting its two boundaries through the optional
+`SynthesizeExampleOverrides` argument (`loginImpl`, `createClient`); the only exclusion is the
+`require.main === module` direct-run block, which cannot execute under the test runner.
