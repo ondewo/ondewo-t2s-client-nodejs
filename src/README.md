@@ -149,7 +149,8 @@ make prettier PRETTIER_WRITE=-w
 `npm test` enforces **100% statements / lines / branches / functions** on
 `src/auth/offlineTokenProvider.ts` and `examples/synthesizeExample.ts`. c8 runs with `--all`, so a
 new hand-written file that no test touches shows up at 0% and fails the gate instead of quietly
-vanishing from the report. `.github/workflows/tests.yml` runs exactly these commands.
+vanishing from the report. `.github/workflows/tests.yml` runs the first four of these commands;
+`make eslint` and `make prettier` run only from `.husky/pre-commit`, never in CI.
 
 `api/auth/offlineTokenProvider.{js,d.ts}` are the tsc output of `src/auth/offlineTokenProvider.ts`
 and are COMMITTED because the npm package ships them — after editing the source, run

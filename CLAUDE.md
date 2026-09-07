@@ -83,15 +83,15 @@ clarifying questions come before implementation rather than after mistakes.
 
 ## What is hand-written and what is generated
 
-| Path | Owner | Rule |
-| --- | --- | --- |
-| `src/auth/offlineTokenProvider.ts` + `.spec.ts` | hand-written | the D18 Keycloak offline-token provider; the gated surface |
-| `examples/synthesizeExample.ts` + `.spec.ts` | hand-written | runnable example; also gated at 100% |
-| `api/ondewo/**`, `api/google/**`, `public-api.{js,d.ts}` | proto compiler | never edit; `make build` rewrites them |
-| `api/auth/offlineTokenProvider.{js,d.ts}` | `tsc` | **committed build output** of `src/auth`; regenerate with `make compile_auth` |
-| `src/ondewo-t2s-api`, `ondewo-proto-compiler` | submodules | move the gitlink, never edit inside |
-| `README.md` | copy | verbatim `cp src/README.md .` inside `make build` — edit `src/README.md`, then copy |
-| `RELEASE.md` | copy | same: `cp src/RELEASE.md .` |
+| Path                                                     | Owner          | Rule                                                                                |
+| -------------------------------------------------------- | -------------- | ----------------------------------------------------------------------------------- |
+| `src/auth/offlineTokenProvider.ts` + `.spec.ts`          | hand-written   | the D18 Keycloak offline-token provider; the gated surface                          |
+| `examples/synthesizeExample.ts` + `.spec.ts`             | hand-written   | runnable example; also gated at 100%                                                |
+| `api/ondewo/**`, `api/google/**`, `public-api.{js,d.ts}` | proto compiler | never edit; `make build` rewrites them                                              |
+| `api/auth/offlineTokenProvider.{js,d.ts}`                | `tsc`          | **committed build output** of `src/auth`; regenerate with `make compile_auth`       |
+| `src/ondewo-t2s-api`, `ondewo-proto-compiler`            | submodules     | move the gitlink, never edit inside                                                 |
+| `README.md`                                              | copy           | verbatim `cp src/README.md .` inside `make build` — edit `src/README.md`, then copy |
+| `RELEASE.md`                                             | copy           | same: `cp src/RELEASE.md .`                                                         |
 
 `api/auth/*` is shipped in the npm package, so after touching `src/auth/offlineTokenProvider.ts` run
 `make compile_auth` and commit the regenerated `.js` + `.d.ts` in the same commit. Nothing in CI catches that drift yet.
@@ -114,10 +114,11 @@ make prettier PRETTIER_WRITE=-w
   prefix of those inputs — the repo root — so the output is `.test-build/src/auth/…` and `.test-build/examples/…`, one
   level deep. `ln -sfn ../api .test-build/api` is what makes the compiled example's `require('../api/…')` resolve.
   The two `test -f` guards at the end fail loudly if a rename silently changed that layout.
-- **The gate is `--statements 100 --lines 100 --branches 100 --functions 100`, and it is real.** It runs with `--all
-  --src .test-build`, so a NEW hand-written file that no test imports is reported at 0% and fails the build instead of
-  disappearing from the table. Verified by dropping an untested `src/auth/probeUntested.ts` in: the run went to 99.66%
-  and exited 1.
+- **The gate is `--statements 100 --lines 100 --branches 100 --functions 100`, and it is real.** c8 also runs with
+  `--all` over `--src .test-build`, so a NEW hand-written file that no test imports is reported at 0% and fails the
+  build instead of disappearing from the table. Verified twice on this base: an untested `src/auth/probeUntested.ts`
+  drops the run to 99.32% and exits 1, and an uncovered function appended to the already-gated
+  `src/auth/offlineTokenProvider.ts` does the same.
 - **The only coverage exclusion is `/* c8 ignore start|stop */` around the `require.main === module` block** at the
   bottom of `examples/synthesizeExample.ts` — it cannot execute under the test runner (the spec imports the module) and
   its `process.exit(1)` cannot run in-process. Do not add blanket ignores anywhere else.
@@ -125,8 +126,6 @@ make prettier PRETTIER_WRITE=-w
   parameters: `main({ loginImpl, createClient })`. One test calls `main()` with NO overrides under an empty
   environment, which both selects the real defaults (covering the `??` branches) and stops at the first `requireEnv`
   before any network call.
-- **`INSECURE_AGENT_OPTIONS` is exported so a test pins it.** `assert.deepEqual(INSECURE_AGENT_OPTIONS, { connect: {
-  rejectUnauthorized: false } })` fails if the literal is flipped to `true`; verified by mutating it (`npm test` exits 1).
 
 ## CI — `.github/workflows/tests.yml`
 
@@ -146,9 +145,9 @@ There is no lint/format step in CI; `make eslint` and prettier run from `.husky/
 The pin is exactly **two** things, and neither of them regenerates code:
 
 1. the `ondewo-proto-compiler` submodule gitlink — `b71f8ed4575ecc4ee8084389a075514acac61ff4` = tag `5.14.0`;
-2. `ONDEWO_PROTO_COMPILER_GIT_BRANCH=tags/5.14.0` in the `Makefile` (line 21 — this Makefile has one extra leading
-   comment line compared with its sibling clients, so anchor edits on `^ONDEWO_PROTO_COMPILER_GIT_BRANCH=`, not on a
-   line number).
+2. `ONDEWO_PROTO_COMPILER_GIT_BRANCH=tags/5.14.0` in the `Makefile`. Anchor every edit on
+   `^ONDEWO_PROTO_COMPILER_GIT_BRANCH=`, never on a line number — the variable block shifts whenever a release edits
+   `ONDEWO_T2S_VERSION` above it.
 
 ```shell
 git submodule update --init --recursive
@@ -158,13 +157,16 @@ git add ondewo-proto-compiler
 perl -i -pe 's|^ONDEWO_PROTO_COMPILER_GIT_BRANCH=.*|ONDEWO_PROTO_COMPILER_GIT_BRANCH=tags/<VERSION>|' Makefile
 ```
 
-- **A pin is not a regeneration.** Everything 5.12.0 → 5.14.0 fixed (Angular proto3 explicit presence, the JS
-  `public-api` self-reference, the nodejs/typescript `append-auth-exports.sh`) is emitted at codegen time. The already
-  committed `api/` stubs and `public-api.*` are untouched until someone runs `make build`. Never write a RELEASE.md
-  line claiming "regenerated with X" for a pin-only bump.
-- Verified no-ops for this repo, so they must NOT appear in a bump diff: `nodejs/image-data/package.json` changes only
-  its `version` field between 5.11.0 and 5.14.0 (the dependency sync only rewrites keys `src/package.json` already
-  has), and `Dockerfile.utils` already declares `ENV NODE_VERSION=24.14.0`, which is what 5.14.0 wants.
+- **A pin is not a regeneration.** The bump carried here is 5.13.0 → 5.14.0 (master had already moved 5.11.0 → 5.12.0
+  → 5.13.0, and 6.6.1 was released off 5.13.0). Everything 5.14.0 adds — the Angular proto3 explicit-presence fix
+  (`angular/image-data/fix-proto3-optional-presence.ts` plus its bats fixtures) — is emitted at codegen time, and it
+  touches the Angular generator only. The already committed `api/` stubs and `public-api.*` are untouched until someone
+  runs `make build`. Never write a RELEASE.md line claiming "regenerated with X" for a pin-only bump; the 6.6.1 entry
+  says "Regenerated with 5.13.0" because that release really did regenerate.
+- Verified no-ops for this repo, so they must NOT appear in a bump diff: between tags 5.13.0 and 5.14.0
+  `nodejs/image-data/package.json` changes only its `version` field (the dependency sync only rewrites keys
+  `src/package.json` already has), and `Dockerfile.utils` already declares `ENV NODE_VERSION=24.14.0`, which is the
+  `NODE_VERSION` the 5.14.0 Makefile ships.
 - `make check_out_correct_submodule_versions` (run by `make build`) checks the submodule out at the Makefile pin, so a
   Makefile that lags the gitlink actively DOWNGRADES the submodule. Keep the two in sync.
 
@@ -173,10 +175,12 @@ perl -i -pe 's|^ONDEWO_PROTO_COMPILER_GIT_BRANCH=.*|ONDEWO_PROTO_COMPILER_GIT_BR
 `uvx pre-commit run --all-files` must pass (`pre-commit` is not on PATH here; use `uvx`).
 
 - **ORDER MATTERS: `conventional-pre-commit` before `giticket`.** Both run at the `commit-msg` stage and pre-commit
-  executes repos in declaration order. giticket rewrites the subject to `[OND231-624] chore: probe`, which is no longer
-  a valid Conventional Commit — with giticket first, every commit on a ticket branch fails and only `--no-verify` gets
-  through. Verified both ways: in the current order a `feature/OND231-624-…` branch produces
-  `[OND231-624] chore: probe` and exits 0; feeding that decorated subject to `conventional-pre-commit` alone exits 1.
+  executes repos in declaration order. giticket rewrites the subject to `[OND221-2830] chore: probe`, which is no
+  longer a valid Conventional Commit — with giticket first, every commit on a ticket branch fails and only
+  `--no-verify` gets through. Master already carries this ordering (`fix(tooling)`, 6.6.1) — never reorder them back.
+  Re-verified both ways on this base: from a `feature/OND221-2830-…` branch the hook chain turns `chore: probe` into
+  `[OND221-2830] chore: probe` and exits 0, while feeding that decorated subject to `conventional-pre-commit` alone
+  exits 1.
 - **`.markdownlint-cli2.yaml` must NOT declare `globs:`.** markdownlint-cli2 ADDS config globs to the filenames it is
   given, and pre-commit shards the file list across parallel processes (128 cores here → 2 shards). With
   `globs: ["*.md"]`, every shard also `--fix`-ed every root `*.md` — two concurrent writers on `RELEASE.md` produced a
@@ -193,13 +197,17 @@ perl -i -pe 's|^ONDEWO_PROTO_COMPILER_GIT_BRANCH=.*|ONDEWO_PROTO_COMPILER_GIT_BR
 
 ## prettier, husky and the release
 
-- **Config files and generated markdown are in `.prettierignore`.** `.husky/pre-commit` runs
-  `make prettier PRETTIER_WRITE=-w` before `pre-commit run`; a prettier rewrite of `.pre-commit-config.yaml` leaves it
-  unstaged and `pre-commit run` then aborts with _"Your pre-commit configuration is unstaged"_. `README.md` is in there
-  for a second reason: prettier rewrites `[comment]: <> (START OF GITHUB README)` into `[comment]: <> 'START OF GITHUB
-  README'`, which breaks the release's README slice — and the root README is only ever a `cp` of the (already ignored)
-  `src/README.md`, so formatting the copy guaranteed drift. Both were true when this was fixed: the committed root
-  README carried the corrupted markers.
+- **Every tracked file must already satisfy `.prettierrc` (`useTabs`, `singleQuote`).** `.husky/pre-commit` runs
+  `make prettier PRETTIER_WRITE=-w` before `pre-commit run`, so anything prettier still wants to rewrite is left
+  unstaged mid-commit; for `.pre-commit-config.yaml` that is fatal — `pre-commit run` aborts with _"Your pre-commit
+  configuration is unstaged"_ and the commit fails. `.ci-package.json`, `.markdownlint-cli2.yaml`,
+  `.pre-commit-config.yaml` and `CLAUDE.md` are therefore kept prettier-clean rather than ignored; run
+  `npx prettier --check .` after editing any of them.
+- **`README.md` and `RELEASE.md` ARE in `.prettierignore`,** for a different reason: prettier re-tabs the fenced code
+  blocks that markdownlint's MD010 de-tabs (the two rewrite the file in opposite directions on every commit), and it
+  rewrites `[comment]: <> (START OF GITHUB README)` into `[comment]: <> 'START OF GITHUB README'`, which breaks the
+  release's README slice. The root `README.md` is only ever a `cp` of `src/README.md`, and `src/` is ignored too, so
+  formatting the copy alone guaranteed drift. `coverage/` and `.nyc_output/` are ignored as machine-generated output.
 - **`.husky/pre-commit` skips `pre-commit run` while `.pre-commit-config.yaml` is unstaged.** `make release` invokes the
   hook DIRECTLY through `make run_precommit_hooks`, not through a git commit.
 - **`.husky/pre-push` runs `npm test`,** and skips itself for the three pushes `make release` performs (recognised by
@@ -228,6 +236,10 @@ The proto-compiler codegen (`cd src && npm run build`, whose output volume is th
 - Runtime deps the shipped auth helper needs (`undici`, `dotenv`) must be declared in `src/package.json`, the codegen's
   source of truth, or the published package loses them.
 - `remove_npm_script` strips scripts from the `npm/` COPY, never from the repo root.
+- **The codegen `docker run` must stay TTY-free.** The `build` script in `package.json` / `src/package.json` runs
+  plain `docker run` — with `-it` the non-interactive release dies with _"cannot attach stdin to a TTY-enabled
+  container because stdin is not a terminal"_. `-it` belongs only on the interactive `--entrypoint /bin/bash`
+  `debug` script.
 
 ## Sharp edges
 
