@@ -30,7 +30,7 @@ IMAGE_UTILS_NAME=ondewo-t2s-client-utils-nodejs:${ONDEWO_T2S_VERSION}
 PRETTIER_WRITE?=
 
 CURRENT_RELEASE_NOTES=`cat RELEASE.md \
-	| perl -ne 'print if /Release ONDEWO T2S Nodejs Client ${ONDEWO_T2S_VERSION}/../\*\*/'`
+	| perl -ne 'print if /Release ONDEWO T2S Nodejs Client ${ONDEWO_T2S_VERSION}/../^\*{5}/'`
 
 
 GH_REPO="https://github.com/ondewo/ondewo-t2s-client-nodejs"
@@ -70,11 +70,11 @@ ensure_auth_export: ## Re-appends the D18 auth export to public-api after the pr
 	grep -q 'api/auth/offlineTokenProvider' public-api.js || printf "export * from './api/auth/offlineTokenProvider';\n" >> public-api.js
 	grep -q 'api/auth/offlineTokenProvider' public-api.d.ts || printf "export * from './api/auth/offlineTokenProvider.d';\n" >> public-api.d.ts
 
-test_auth: ## Runs the offline unit tests for the auth helper (no network)
-	node --import tsx --test src/auth/*.spec.ts
+test_auth: ## Runs the offline unit tests for the hand-written code + the 100% coverage gate (no network)
+	npm test
 
 test_examples: ## Runs the offline mock tests for the examples (no server, no network)
-	node --import tsx --test examples/*.spec.ts
+	npm run test:examples
 
 TEST: ## Prints some important variables
 	@echo "Release Notes: \n \n$(CURRENT_RELEASE_NOTES)"
@@ -127,7 +127,7 @@ release: ## Create Github and NPM Release
 	git add ${ONDEWO_PROTO_COMPILER_DIR}
 	git add ${T2S_APIS_DIR}
 	git status
-	git commit --no-verify -m "Preparing for Release ${ONDEWO_T2S_VERSION}"
+	-git commit --no-verify -m "Preparing for Release ${ONDEWO_T2S_VERSION}"
 	git push
 	make publish_npm_via_docker
 	make create_release_branch
