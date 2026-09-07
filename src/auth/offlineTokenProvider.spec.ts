@@ -10,6 +10,7 @@ import {
 	FetchInit,
 	FetchLike,
 	FetchResponseLike,
+	INSECURE_AGENT_OPTIONS,
 	login,
 	OfflineTokenError,
 	OfflineTokenProvider
@@ -459,6 +460,9 @@ describe('offlineTokenProvider keycloakVerifySsl (TLS verification toggle)', () 
 		assert.ok(capturedInit !== undefined);
 		// The insecure undici Agent (rejectUnauthorized:false) reached the token POST.
 		assert.ok(capturedInit.dispatcher instanceof undici.Agent);
+		// Pin the security-relevant literal itself: flipping it to `true` silently restores TLS
+		// verification, and every other assertion here would still pass.
+		assert.deepEqual(INSECURE_AGENT_OPTIONS, { connect: { rejectUnauthorized: false } });
 		assert.equal(provider.getAccessToken(), 'access-insecure');
 	});
 

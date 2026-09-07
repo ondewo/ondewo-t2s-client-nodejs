@@ -522,6 +522,16 @@ function stringifyReason(reason: unknown): string {
 }
 
 /**
+ * The undici `Agent` options that switch TLS certificate verification OFF for the Keycloak
+ * token request. Exported so the security-relevant `rejectUnauthorized: false` literal is
+ * pinned by a test rather than living as a bare literal that could be flipped without any
+ * test noticing.
+ */
+export const INSECURE_AGENT_OPTIONS: { connect: { rejectUnauthorized: boolean } } = {
+	connect: { rejectUnauthorized: false }
+};
+
+/**
  * Builds the default {@link FetchLike} used when no `fetchImpl` is injected.
  *
  * With `verifySsl` (the default) the resolved global `fetch` is returned
@@ -545,7 +555,7 @@ function createDefaultFetch(baseFetch: FetchLike, verifySsl: boolean): FetchLike
 	const undici: { Agent: new (options: unknown) => unknown } = require('undici') as {
 		Agent: new (options: unknown) => unknown;
 	};
-	const dispatcher: unknown = new undici.Agent({ connect: { rejectUnauthorized: false } });
+	const dispatcher: unknown = new undici.Agent(INSECURE_AGENT_OPTIONS);
 	return (input: string, init: FetchInit): Promise<FetchResponseLike> => baseFetch(input, { ...init, dispatcher });
 }
 

@@ -13,7 +13,7 @@
 // Headless SDKs only (python/nodejs). Browser SDKs must use Auth-Code + PKCE and
 // must never hold an offline token.
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.OfflineTokenProvider = exports.OfflineTokenError = void 0;
+exports.INSECURE_AGENT_OPTIONS = exports.OfflineTokenProvider = exports.OfflineTokenError = void 0;
 exports.login = login;
 /**
  * Raised when the Keycloak token endpoint rejects a credential or refresh-token
@@ -383,6 +383,15 @@ function stringifyReason(reason) {
     return String(reason);
 }
 /**
+ * The undici `Agent` options that switch TLS certificate verification OFF for the Keycloak
+ * token request. Exported so the security-relevant `rejectUnauthorized: false` literal is
+ * pinned by a test rather than living as a bare literal that could be flipped without any
+ * test noticing.
+ */
+exports.INSECURE_AGENT_OPTIONS = {
+    connect: { rejectUnauthorized: false }
+};
+/**
  * Builds the default {@link FetchLike} used when no `fetchImpl` is injected.
  *
  * With `verifySsl` (the default) the resolved global `fetch` is returned
@@ -404,7 +413,7 @@ function createDefaultFetch(baseFetch, verifySsl) {
     // Lazy require keeps undici out of the default (secure) code path.
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const undici = require('undici');
-    const dispatcher = new undici.Agent({ connect: { rejectUnauthorized: false } });
+    const dispatcher = new undici.Agent(exports.INSECURE_AGENT_OPTIONS);
     return (input, init) => baseFetch(input, { ...init, dispatcher });
 }
 /**
