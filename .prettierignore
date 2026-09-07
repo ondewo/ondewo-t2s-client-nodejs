@@ -17,3 +17,21 @@ npm/
 dist/
 .test-build/
 .test-build-examples/
+
+# Coverage output: machine-generated JSON / HTML, rewritten on every `npm test` run.
+coverage/
+.nyc_output/
+
+# Config files prettier would reformat on every `make prettier -w` run. Rewriting
+# .pre-commit-config.yaml mid-commit is fatal: the commit-msg hook then aborts with
+# "Your pre-commit configuration is unstaged" and the commit fails.
+.ci-package.json
+.markdownlint-cli2.yaml
+.pre-commit-config.yaml
+CLAUDE.md
+
+# Release-critical markdown: prettier rewrites `[comment]: <> (START OF GITHUB README)`
+# into `[comment]: <> 'START OF GITHUB README'`. The Makefile slices the published README
+# between those markers. The root README.md is a verbatim `cp` of src/README.md (see the
+# `build` target), and src/ is already ignored here — formatting only the copy guarantees drift.
+README.md
