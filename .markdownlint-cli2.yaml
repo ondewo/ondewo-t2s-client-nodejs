@@ -27,8 +27,8 @@ config:
 # "ONDEW". pre-commit passes the files to lint; that list is authoritative here.
 # To lint by hand, name the files: `npx markdownlint-cli2 "*.md" "src/*.md"`.
 ignores:
-  - "node_modules/**"
-  - "api/**"
-  - "src/ondewo-t2s-api/**"
-  - "ondewo-proto-compiler/**"
-  - ".venv/**"
+  - 'node_modules/**'
+  - 'api/**'
+  - 'src/ondewo-t2s-api/**'
+  - 'ondewo-proto-compiler/**'
+  - '.venv/**'
