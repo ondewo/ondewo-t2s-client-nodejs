@@ -14,7 +14,9 @@
 // exercises with a mocked client and a mocked token source — so the example is
 // proven correct without ever reaching a live T2S server. `main()` wires them
 // against the real generated client and only runs when the file is executed
-// directly (`node --import tsx examples/synthesizeExample.ts`).
+// directly (`npx tsx examples/synthesizeExample.ts`); its two
+// outside-world boundaries (the Keycloak login and the gRPC client factory) are
+// injectable too, so the spec covers `main()` itself without a server.
 
 import { readFileSync } from 'fs';
 import * as path from 'path';
@@ -26,12 +28,18 @@ import type { ChannelCredentials, ServiceError } from '@grpc/grpc-js';
 
 import { SynthesizeRequest, RequestConfig, SynthesizeResponse } from '../api/ondewo/t2s/text-to-speech_pb';
 import { Text2SpeechClient } from '../api/ondewo/t2s/text-to-speech_grpc_pb';
-import { login, OfflineTokenProvider } from '../api/auth/offlineTokenProvider';
+import { login, OfflineTokenLoginOptions } from '../api/auth/offlineTokenProvider';
+
+// Configuration is loaded ONCE, at module load, from the environment.env next to this
+// file (the path is resolved relative to the script, so the working directory does not
+// matter). dotenv never overwrites an already-set variable, so an exported shell value
+// still wins — and a test that scripts `process.env` is not undone by a later `main()`.
+dotenv.config({ path: path.join(__dirname, 'environment.env') });
 
 /**
  * Anything that can supply gRPC authorization headers, e.g. the package's
- * {@link OfflineTokenProvider}. Kept structural so a stub can be injected in
- * tests without a live Keycloak.
+ * `OfflineTokenProvider`. Kept structural so a stub can be injected in tests
+ * without a live Keycloak.
  */
 export interface AuthorizationMetadataSource {
 	/** Returns header key/value pairs, e.g. `{ authorization: 'Bearer <jwt>' }`. */
@@ -56,6 +64,42 @@ export interface SynthesizeUnaryClient {
 		metadata: Metadata,
 		onResult: (error: ServiceError | null, response: SynthesizeResponse) => void
 	): void;
+}
+
+/**
+ * The part of the package's `OfflineTokenProvider` this example depends on: the bearer
+ * metadata for each call, plus the `stop()` that clears the background refresh timer.
+ * Structural, so a test injects a stub instead of a live Keycloak session.
+ */
+export interface SynthesizeTokenProvider extends AuthorizationMetadataSource {
+	/** Stops the provider's background access-token refresh loop. */
+	stop(): void;
+}
+
+/**
+ * The Keycloak-login boundary of {@link main}; defaults to the package's own `login`.
+ */
+export type LoginFunction = (options: OfflineTokenLoginOptions) => Promise<SynthesizeTokenProvider>;
+
+/**
+ * The client-construction boundary of {@link main}; defaults to
+ * {@link createText2SpeechClient}.
+ */
+export type Text2SpeechClientFactory = (
+	address: string,
+	channelCredentials: ChannelCredentials
+) => SynthesizeUnaryClient;
+
+/**
+ * Replacements for the two boundaries of {@link main} that touch the outside world. Both
+ * default to the real implementations, so running this file directly is unaffected; a unit
+ * test injects mocks instead.
+ */
+export interface SynthesizeExampleOverrides {
+	/** Replacement for the Keycloak login. */
+	loginImpl?: LoginFunction;
+	/** Replacement for the generated-gRPC-client factory. */
+	createClient?: Text2SpeechClientFactory;
 }
 
 /**
@@ -139,7 +183,7 @@ export function synthesizeUnary(
  * @returns The variable's value.
  * @throws {Error} If the variable is unset or empty.
  */
-function requireEnv(name: string): string {
+export function requireEnv(name: string): string {
 	const value: string | undefined = process.env[name];
 	if (value === undefined || value.trim().length === 0) {
 		throw new Error(`Missing required environment variable ${name}; set it in examples/environment.env.`);
@@ -155,7 +199,7 @@ function requireEnv(name: string): string {
  * @param fallback The value to use when the variable is unset or blank.
  * @returns The parsed boolean.
  */
-function readBooleanEnv(name: string, fallback: boolean): boolean {
+export function readBooleanEnv(name: string, fallback: boolean): boolean {
 	const value: string | undefined = process.env[name];
 	if (value === undefined || value.trim().length === 0) {
 		return fallback;
@@ -171,7 +215,7 @@ function readBooleanEnv(name: string, fallback: boolean): boolean {
  *
  * @returns The channel credentials to open the T2S client with.
  */
-function buildChannelCredentials(): ChannelCredentials {
+export function buildChannelCredentials(): ChannelCredentials {
 	const useSecureChannel: boolean = readBooleanEnv('ONDEWO_USE_SECURE_CHANNEL', false);
 	if (!useSecureChannel) {
 		return credentials.createInsecure();
@@ -191,7 +235,7 @@ function buildChannelCredentials(): ChannelCredentials {
  * @param reason The caught rejection reason.
  * @returns The reason as a {@link ServiceError}, or `undefined` if it is not one.
  */
-function asServiceError(reason: unknown): ServiceError | undefined {
+export function asServiceError(reason: unknown): ServiceError | undefined {
 	if (reason !== null && typeof reason === 'object' && 'code' in reason && 'details' in reason) {
 		return reason as ServiceError;
 	}
@@ -199,18 +243,39 @@ function asServiceError(reason: unknown): ServiceError | undefined {
 }
 
 /**
+ * Constructs the real generated gRPC client — the default {@link Text2SpeechClientFactory}
+ * of {@link main}. Constructing a client opens no connection: gRPC-js dials lazily, on the
+ * first RPC.
+ *
+ * @param address The `host:port` of the ONDEWO T2S server.
+ * @param channelCredentials The credentials to dial with (see {@link buildChannelCredentials}).
+ * @returns The generated {@link Text2SpeechClient} bound to `address`.
+ */
+export function createText2SpeechClient(
+	address: string,
+	channelCredentials: ChannelCredentials
+): SynthesizeUnaryClient {
+	return new Text2SpeechClient(address, channelCredentials);
+}
+
+/**
  * Runs the full example against a real T2S server. All endpoints and credentials
  * are read from `examples/environment.env` (canonical ONDEWO/KEYCLOAK vars) so
  * nothing sensitive is hard-coded.
  *
+ * @param overrides Optional replacements for the two outside-world boundaries; see
+ *   {@link SynthesizeExampleOverrides}. Both default to the real implementations.
  * @returns Resolves once the audio has been synthesized and logged.
  */
-export async function main(): Promise<void> {
-	dotenv.config({ path: path.join(__dirname, 'environment.env') });
+export async function main(overrides: SynthesizeExampleOverrides = {}): Promise<void> {
 	console.log('START: ONDEWO T2S synthesize example');
 
+	// The two boundaries that touch the outside world; a unit test replaces them, the example does not.
+	const loginImpl: LoginFunction = overrides.loginImpl ?? login;
+	const createClient: Text2SpeechClientFactory = overrides.createClient ?? createText2SpeechClient;
+
 	console.log('Authenticating against Keycloak (ROPC + offline_access)...');
-	const provider: OfflineTokenProvider = await login({
+	const provider: SynthesizeTokenProvider = await loginImpl({
 		keycloakUrl: requireEnv('KEYCLOAK_URL'),
 		realm: requireEnv('KEYCLOAK_REALM'),
 		clientId: requireEnv('KEYCLOAK_CLIENT_ID'),
@@ -224,7 +289,7 @@ export async function main(): Promise<void> {
 		const target: string = `${requireEnv('ONDEWO_HOST')}:${requireEnv('ONDEWO_PORT')}`;
 		const channelCredentials: ChannelCredentials = buildChannelCredentials();
 		console.log(`Connecting to ONDEWO T2S server at ${target}.`);
-		const client: Text2SpeechClient = new Text2SpeechClient(target, channelCredentials);
+		const client: SynthesizeUnaryClient = createClient(target, channelCredentials);
 		const pipelineId: string = requireEnv('ONDEWO_T2S_PIPELINE_ID');
 		const request: SynthesizeRequest = buildSynthesizeRequest({
 			text: 'Hello from the ONDEWO T2S NodeJS client.',
@@ -241,6 +306,7 @@ export async function main(): Promise<void> {
 	}
 }
 
+/* c8 ignore start -- direct-run entrypoint: the spec imports this module, so `require.main === module` is false under the test runner, and `process.exit(1)` cannot run in-process */
 if (typeof require !== 'undefined' && require.main === module) {
 	main().catch((reason: unknown): void => {
 		const serviceError: ServiceError | undefined = asServiceError(reason);
@@ -252,3 +318,4 @@ if (typeof require !== 'undefined' && require.main === module) {
 		process.exit(1);
 	});
 }
+/* c8 ignore stop */
