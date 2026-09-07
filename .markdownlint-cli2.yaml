@@ -19,8 +19,13 @@ config:
   # MD053 link-reference-definitions: the READMEs use `[comment]: <> (...)` marker
   # lines (a comment idiom) that the release Makefile slices on — never strip them.
   MD053: false
-globs:
-  - "*.md"
+# NO `globs:` KEY ON PURPOSE. markdownlint-cli2 ADDS the config globs to the file
+# arguments it is given, so `globs: ["*.md"]` made every parallel pre-commit chunk
+# lint (and, with `fix: true`, REWRITE) every root *.md on top of its own chunk.
+# Two concurrent --fix passes over the same RELEASE.md tore it apart: a dropped
+# changelog bullet, "## Release" demoted to "# Release", and "ONDEWO" truncated to
+# "ONDEW". pre-commit passes the files to lint; that list is authoritative here.
+# To lint by hand, name the files: `npx markdownlint-cli2 "*.md" "src/*.md"`.
 ignores:
   - "node_modules/**"
   - "api/**"
