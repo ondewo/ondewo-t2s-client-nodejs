@@ -157,16 +157,38 @@ git add ondewo-proto-compiler
 perl -i -pe 's|^ONDEWO_PROTO_COMPILER_GIT_BRANCH=.*|ONDEWO_PROTO_COMPILER_GIT_BRANCH=tags/<VERSION>|' Makefile
 ```
 
-- **A pin is not a regeneration.** The bump carried here is 5.13.0 → 5.14.0 (master had already moved 5.11.0 → 5.12.0
-  → 5.13.0, and 6.6.1 was released off 5.13.0). Everything 5.14.0 adds — the Angular proto3 explicit-presence fix
-  (`angular/image-data/fix-proto3-optional-presence.ts` plus its bats fixtures) — is emitted at codegen time, and it
-  touches the Angular generator only. The already committed `api/` stubs and `public-api.*` are untouched until someone
-  runs `make build`. Never write a RELEASE.md line claiming "regenerated with X" for a pin-only bump; the 6.6.1 entry
-  says "Regenerated with 5.13.0" because that release really did regenerate.
-- Verified no-ops for this repo, so they must NOT appear in a bump diff: between tags 5.13.0 and 5.14.0
-  `nodejs/image-data/package.json` changes only its `version` field (the dependency sync only rewrites keys
-  `src/package.json` already has), and `Dockerfile.utils` already declares `ENV NODE_VERSION=24.14.0`, which is the
-  `NODE_VERSION` the 5.14.0 Makefile ships.
+- **A pin is not a regeneration.** The bump carried here is 5.11.0 → 5.14.0 on BOTH halves of the pin. Master's Makefile
+  pin never left `tags/5.11.0` in any of its ten commits, and although master's gitlink did move 5.11.0 → 5.12.0 →
+  5.13.0, the release commit `c8c3de1` ("Preparing for Release 6.6.1") reset it to `2cc55c0` = 5.11.0 — so
+  `origin/master` ships 5.11.0 on both. Never trust a remembered FROM-version; measure it:
+  `for c in origin/master HEAD; do git ls-tree $c ondewo-proto-compiler; git show $c:Makefile | grep ^ONDEWO_PROTO_COMPILER_GIT_BRANCH; done`.
+  The already committed `api/` stubs and `public-api.*` are untouched until someone runs `make build`. Never write a
+  RELEASE.md line claiming "regenerated with X" for a pin-only bump.
+- **This bump is NOT inert for the nodejs generator.** Scope every impact check to the range the pin actually carries —
+  `git -C ondewo-proto-compiler diff --stat 5.11.0 5.14.0` — not to 5.13.0..5.14.0. The Angular proto3
+  explicit-presence fix (`angular/image-data/fix-proto3-optional-presence.ts` plus its bats fixtures) really is
+  Angular-only, but 5.11.0..5.14.0 also changes the generator this repo runs
+  (`cd ondewo-proto-compiler/nodejs && sh build.sh`): `nodejs/image-data/append-auth-exports.sh` is NEW (52 lines)
+  and `compile-proto-2-nodejs.sh` now invokes it unconditionally after the copy step;
+  `nodejs/image-data/make-lib-entry-point.sh` gains 37 lines that append explicit
+  `export { Symbol } from './api/…';` lines disambiguating symbols two stubs both declare; and
+  `js/image-data/make-lib-entry-point.sh` prunes the barrel's self-reference (+8/-5). The barrel is built in a fresh
+  temp dir inside the container, so the `if [ ! -f public-api… ]` guard is always true and the new block DOES run —
+  expect the next `make build` to produce a different `public-api.js` / `public-api.d.ts`, and diff them deliberately.
+- **`append-auth-exports.sh` does NOT replace `ensure_auth_export`.** The compiler's new script re-exports every
+  module in a top-level `auth/` directory **at the output root**. This repo has none: `make compile_auth` emits the
+  helper to `api/auth` and runs AFTER `npm_run_build`, so the script takes its
+  `No auth/ directory … nothing to re-export` path and exits 0. `ensure_auth_export` (which appends
+  `./api/auth/offlineTokenProvider` — a different specifier the compiler's own `grep -Fq "'./auth/…'"` would not
+  match) stays the load-bearing step. Re-check `tail public-api.js public-api.d.ts` after the next `make build`
+  rather than assuming either way.
+- Still no-ops across 5.11.0..5.14.0, so they must NOT appear in a bump diff: `nodejs/image-data/package.json` changes
+  only its `version` field (the dependency sync only rewrites keys `src/package.json` already has), and both tags'
+  Makefiles ship `NODE_VERSION=24.14.0`, which is what this repo's `Dockerfile.utils` already declares.
+- The 6.6.1 RELEASE.md entry says "Regenerated with ondewo-proto-compiler 5.13.0", but `c8c3de1` released with both
+  halves of the pin at 5.11.0, and `make check_out_correct_submodule_versions` checks the submodule out at the MAKEFILE
+  pin — so that codegen ran against 5.11.0. It is a published inaccuracy: do not cite it as evidence for anything, and
+  do not rewrite a released changelog entry to fix it.
 - `make check_out_correct_submodule_versions` (run by `make build`) checks the submodule out at the Makefile pin, so a
   Makefile that lags the gitlink actively DOWNGRADES the submodule. Keep the two in sync.
 
@@ -188,6 +210,12 @@ perl -i -pe 's|^ONDEWO_PROTO_COMPILER_GIT_BRANCH=.*|ONDEWO_PROTO_COMPILER_GIT_BR
   is also the real cause of the `TypeError: Cannot read properties of undefined (reading 'slice')` crash seen in
   `applyFix` under markdownlint-cli2 v0.23.0. Pass filenames explicitly when linting by hand:
   `npx markdownlint-cli2 "*.md" "src/*.md"`.
+- **`RELEASE.md` is the authoritative changelog and the release tag holds the complete history.** A markdownlint /
+  `--all-files` pass rewrites it in place (`fix: true`), and that — or a careless manual dedup — can silently drop
+  `## Release … X.Y.Z` headings. If it happens, restore `RELEASE.md` AND `src/RELEASE.md` from the latest release tag
+  rather than reconstructing them by hand. Re-check after any run that touched it: `grep -c '^## Release' RELEASE.md`
+  and `grep -c '^\*\{5\}' RELEASE.md` are both 14 today, and the two copies must stay byte-identical
+  (`cmp RELEASE.md src/RELEASE.md`).
 - **`MD053` stays disabled.** Its auto-fix deletes the `[comment]: <> (START/END OF GITHUB README)` reference-definition
   markers that `make build` slices the published README with.
 - Hook revs, all at the newest stable release: `markdownlint-cli2 v0.23.2`, `pre-commit-hooks v6.0.0`,
@@ -235,7 +263,10 @@ The proto-compiler codegen (`cd src && npm run build`, whose output volume is th
   edit into a red build instead of a silent revert at the next release.
 - Runtime deps the shipped auth helper needs (`undici`, `dotenv`) must be declared in `src/package.json`, the codegen's
   source of truth, or the published package loses them.
-- `remove_npm_script` strips scripts from the `npm/` COPY, never from the repo root.
+- `remove_npm_script` strips scripts from the `npm/` COPY, never from the repo root, and is guarded against both
+  a missing `npm/` directory (`@test -f npm/package.json || make create_npm_package`) and an empty scripts block
+  (`@if [ -n "$(start)" ] && [ -n "$(end)" ]`). It used to die with `Error 255` when `create_npm_package` had not
+  run yet. Keep both guards.
 - **The codegen `docker run` must stay TTY-free.** The `build` script in `package.json` / `src/package.json` runs
   plain `docker run` — with `-it` the non-interactive release dies with _"cannot attach stdin to a TTY-enabled
   container because stdin is not a terminal"_. `-it` belongs only on the interactive `--entrypoint /bin/bash`
