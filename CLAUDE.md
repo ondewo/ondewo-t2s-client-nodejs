@@ -481,3 +481,11 @@ npm view <pkg> version ; git tag --list <version> ; gh release view <version> --
   30 s, 50 s at 10 s). Do not copy the Python keepalive into `DEFAULT_GRPC_CHANNEL_OPTIONS`.
 - `auth/grpcChannel.spec.ts` builds its PKI with the openssl CLI at test time and runs real handshakes against an
   in-process grpc-js server. `tests/releaseNotes.spec.ts` pins the RELEASE.md heading spelling and separators.
+
+## Committed compiled helpers are checked against their source in CI
+
+- `npm run build:auth` rebuilds BOTH committed tsc outputs: `auth/grpcChannel.{js,d.ts}` and
+  `api/auth/offlineTokenProvider.{js,d.ts}` (from `src/auth/offlineTokenProvider.ts`, `--target es2020`, the
+  flags that reproduce the committed file byte for byte). CI runs it and fails on `git diff -- auth/ api/auth/`, so
+  edit the `.ts`, run `npm run build:auth` and commit the output with it.
+- CI tests on Node 20, 22 and 24 (`npm ci`, matrix like the nlu client).

@@ -7,17 +7,26 @@ on:
 
 jobs:
   unit-tests:
+    name: tests (node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 20 is the floor of the toolchain (c8 11, undici 7), 22 the current LTS, 24 the newest.
+        node-version: ['20', '22', '24']
     steps:
       - uses: actions/checkout@v5
 
-      - name: Set up Node.js 20
+      - name: Set up Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
 
-      - name: Install dependencies
-        run: npm install --no-audit --no-fund
+      # `npm ci`, never `npm install`: installs exactly the lockfile and fails if it disagrees
+      # with package.json, so CI tests what the lockfile pins.
+      - name: Install dependencies from the lockfile
+        run: npm ci --no-audit --no-fund
 
       # The release codegen REGENERATES the root package.json, wiping its test scripts and test-only
       # devDependencies; `make restore_ci_test_setup` merges .ci-package.json back in to repair it.
@@ -42,9 +51,10 @@ jobs:
       - name: Type-check + run the example mock tests
         run: npm run typecheck:examples && npm run test:examples
 
-      # auth/grpcChannel.js and .d.ts are tsc output COMMITTED because the npm package ships them,
-      # while the tests exercise the .ts source. Regenerate them and fail if they drifted.
+      # auth/grpcChannel.* and api/auth/offlineTokenProvider.* (built from src/auth/) are tsc output
+      # COMMITTED because the npm package ships them, while the tests exercise the .ts sources.
+      # Regenerate both and fail if either drifted.
       - name: Committed auth build artifacts match their source
         run: |
           npm run build:auth
-          git diff --exit-code -- auth/
+          git diff --exit-code -- auth/ api/auth/
