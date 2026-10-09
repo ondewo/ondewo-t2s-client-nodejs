@@ -130,6 +130,101 @@ npm
 └── README.md
 ```
 
+## TLS, mutual TLS and certificates
+
+gRPC encrypts with **TLS** ("SSL" in names such as `credentials.createSsl` or `grpc.ssl_target_name_override` is legacy naming). The package ships a channel helper, `auth/grpcChannel`, that builds the `@grpc/grpc-js` credentials and channel options for every generated client:
+
+| Mode                                    | `useSecureChannel` | Config fields                                                   |
+|-----------------------------------------|--------------------|-----------------------------------------------------------------|
+| Plaintext (not for production)          | `false`            | none                                                            |
+| TLS, server verified by the trust store | `true` (default)   | none                                                            |
+| TLS, server verified by your CA         | `true` (default)   | `grpcCert` = PEM of the CA that signed the server certificate   |
+| Mutual TLS                              | `true` (default)   | `grpcCert` (optional) plus `grpcClientCert` and `grpcClientKey` |
+
+Rules the code enforces:
+
+- The three fields hold **PEM content** (`string` or `Buffer`), **not file paths**. Read the files yourself; a value without a PEM header line is refused.
+- `grpcClientCert` and `grpcClientKey` go together: setting only one throws when the `GrpcClientConfig` is built, and `createChannelCredentials` refuses half a pair again before anything reaches gRPC. Empty strings on both mean plain server-authenticated TLS.
+- `useSecureChannel: false` with a client certificate throws instead of silently dropping the identity. A plaintext channel otherwise logs a warning naming `host:port` (through `console.warn`, or the `logger` you pass).
+- Without `grpcCert` the server is verified against Node's default CA store (Node's bundled Mozilla roots plus `NODE_EXTRA_CA_CERTS`; start Node with `--use-system-ca` to use the operating system's store instead).
+- The host you connect to must match a subject alternative name (SAN) of the server certificate. When you connect by IP and the certificate has no IP SAN, pass the name to check as the channel option `'grpc.ssl_target_name_override'`.
+- A bare IPv6 host is bracketed for you (`::1` becomes `[::1]:50051`).
+
+```ts
+import { readFileSync } from 'fs';
+
+import * as grpc from '@grpc/grpc-js';
+import { createChannelCredentials, createGrpcClient, GrpcClientConfig } from '@ondewo/t2s-client-nodejs/auth/grpcChannel';
+import { Text2SpeechClient } from '@ondewo/t2s-client-nodejs/api/ondewo/t2s/text-to-speech_grpc_pb';
+
+const config = new GrpcClientConfig({
+  host: '10.0.0.5',
+  port: 50051,
+  grpcCert: readFileSync('certs/ca.pem'),
+  grpcClientCert: readFileSync('certs/client.pem'), // leave both out for server-authenticated TLS
+  grpcClientKey: readFileSync('certs/client.key')
+});
+
+const client: Text2SpeechClient = createGrpcClient(Text2SpeechClient, config, {
+  channelOptions: { 'grpc.ssl_target_name_override': 't2s.example.internal' } // only when connecting by IP
+});
+```
+
+`createGrpcClient` starts from `DEFAULT_GRPC_CHANNEL_OPTIONS` (maximum message size 2³¹-1 bytes in both directions, reconnect backoff capped at 5 s) and applies your `channelOptions` on top. To build credentials only, call `createChannelCredentials(config, { useSecureChannel })` and pass the result to any generated client constructor.
+
+**One connection for several services.** Clients built with the **same credentials object** (and the same target and options) share one connection, so the TLS handshake happens once:
+
+```ts
+const credentials: grpc.ChannelCredentials = createChannelCredentials(config);
+const first = createGrpcClient(Text2SpeechClient, config, { credentials });
+const second = createGrpcClient(Text2SpeechClient, config, { credentials }); // any other generated client works the same way
+```
+
+**Keepalive is off by default.** `@grpc/grpc-js` has no `grpc.http2.max_pings_without_data`, so with `grpc.keepalive_time_ms` set it keeps pinging a stream that carries no data, and a grpc-core server (as every ONDEWO server is) answers with `GOAWAY too_many_pings`: the call fails with `RESOURCE_EXHAUSTED` (measured: after 150 s at a 30 s keepalive). The Python SDKs' 30 s keepalive therefore is not copied; set `grpc.keepalive_time_ms` yourself only against a server whose `grpc.http2.min_ping_interval_without_data_ms` allows it. `grpc.keepalive_timeout_ms` is preset to 20 s for that case.
+
+### A test PKI with openssl
+
+A CA, a server certificate with SANs and a client certificate with the `clientAuth` extended key usage. For tests only: the keys are unencrypted.
+
+```bash
+openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -nodes -days 365 \
+  -subj "/CN=Test CA" -keyout ca.key -out ca.pem
+
+printf 'subjectAltName=DNS:localhost,IP:127.0.0.1\nextendedKeyUsage=serverAuth\n' > server.ext
+openssl req -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -nodes \
+  -subj "/CN=localhost" -keyout server.key -out server.csr
+openssl x509 -req -in server.csr -CA ca.pem -CAkey ca.key -CAcreateserial -days 365 \
+  -extfile server.ext -out server.pem
+
+printf 'extendedKeyUsage=clientAuth\n' > client.ext
+openssl req -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -nodes \
+  -subj "/CN=my-client" -keyout client.key -out client.csr
+openssl x509 -req -in client.csr -CA ca.pem -CAkey ca.key -CAcreateserial -days 365 \
+  -extfile client.ext -out client.pem
+
+chmod 600 *.key
+openssl verify -CAfile ca.pem server.pem client.pem
+```
+
+The client then uses `ca.pem` / `client.pem` / `client.key`; a server that requires client certificates uses `server.pem` / `server.key` and trusts `ca.pem` for its clients.
+
+### TLS security notes
+
+- Keep the client key out of source control and out of serialized configs: load it from a file (mode `0600`) or a secret store at startup.
+- `GrpcClientConfig` renders the key as `***REDACTED***` in `toString()`, `util.inspect()` / `console.log()` and `JSON.stringify()` (an empty key renders empty). There is no serializer that writes the key, so a config cannot be persisted with it. A plain object you pass instead of a `GrpcClientConfig` has none of this protection: do not log it.
+- No error message of the helper contains a PEM, a key or a whole config; they name the field and `host:port`.
+
+### TLS troubleshooting
+
+A failed handshake surfaces as gRPC status `UNAVAILABLE` (14); the cause is in the error's `details`:
+
+- **`unable to verify the first certificate`**: the server certificate is not signed by `grpcCert` (or, without `grpcCert`, not by a CA Node trusts). Pass the CA that signed the server certificate.
+- **`ERR_TLS_CERT_ALTNAME_INVALID: Hostname/IP does not match certificate's altnames`**: the host you dial is not a SAN of the server certificate. Dial a name in the certificate, or set `'grpc.ssl_target_name_override'`. Some Node releases (seen on 22.23 and 24.18) also reject an IPv6 literal against a matching IP SAN; the override to a DNS SAN works around it.
+- **`tlsv13 alert certificate required`**: the server requires mutual TLS and the client sent no certificate. Set `grpcClientCert` and `grpcClientKey`.
+- **`Failed to connect`** right after the handshake with a client certificate: the server does not trust the CA that signed `grpcClientCert`.
+- **`... grpcCert is not PEM content (no PEM header line)`** (thrown when the config is built): a field holds a file path or other text instead of the file's content. Pass `readFileSync(path)`.
+- **`createChannelCredentials for host:port: gRPC rejected the TLS material: ... key values mismatch`** (thrown, not a call error): `grpcClientKey` is not the key of `grpcClientCert`. Other OpenSSL reasons there mean a damaged PEM block.
+
 [comment]: <> (START OF GITHUB README)
 
 ## Development

@@ -1,6 +1,9 @@
 .idea/
 .vscode/
 api/
+# generated from auth/*.ts by tsc (committed for npm packaging) — format the .ts source, not the build output
+auth/*.js
+auth/*.d.ts
 esm2022/
 fesm2022/
 node_modules
