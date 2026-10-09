@@ -115,3 +115,15 @@
 * Track version 4.3.0 of [ONDEWO T2S API](https://github.com/ondewo/ondewo-t2s-api/releases/4.3.0)
 * [[OND211-2039]](https://ondewo.atlassian.net/browse/OND211-2039) - Implemented automated release for GitHub and NPM
 * [[OND211-2039]](https://ondewo.atlassian.net/browse/OND211-2039) - Added pre-commit hooks and adjusted files to them
+
+*****************
+
+## Release ONDEWO T2S Nodejs Client 1.4.0
+
+### New Features
+
+* Added first public release
+* Javascript and Typescript clients
+* Uses version 1.4.0 from <a href="https://github.com/ondewo/ondewo-t2s-api">ONDEWO T2S APIs</a>
+
+*****************
