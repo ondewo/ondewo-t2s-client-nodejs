@@ -1,6 +1,9 @@
 .idea/
 .vscode/
 api/
+# the generated package entry point (proto compiler output, like api/)
+public-api.js
+public-api.d.ts
 # generated from auth/*.ts by tsc (committed for npm packaging) — format the .ts source, not the build output
 auth/*.js
 auth/*.d.ts

@@ -28,7 +28,7 @@ import type { ChannelCredentials, ServiceError } from '@grpc/grpc-js';
 
 import { SynthesizeRequest, RequestConfig, SynthesizeResponse } from '../api/ondewo/t2s/text-to-speech_pb';
 import { Text2SpeechClient } from '../api/ondewo/t2s/text-to-speech_grpc_pb';
-import { login, OfflineTokenLoginOptions } from '../api/auth/offlineTokenProvider';
+import { login, OfflineTokenLoginOptions } from '../auth/offlineTokenProvider';
 
 // Configuration is loaded ONCE, at module load, from the environment.env next to this
 // file (the path is resolved relative to the script, so the working directory does not

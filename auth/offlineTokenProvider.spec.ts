@@ -1,6 +1,6 @@
 // Unit tests for the D18 offline-token auth helper. Fully offline: the Keycloak
 // token endpoint is replaced by an injected fake fetch, and time is driven by a
-// fake clock. Run with: node --import tsx --test src/auth/offlineTokenProvider.spec.ts
+// fake clock. Run with: node --import tsx --test auth/offlineTokenProvider.spec.ts
 // (or the repo's `make test` target).
 
 import { describe, it } from 'node:test';
@@ -221,10 +221,7 @@ describe('offlineTokenProvider.login (ROPC + offline_access)', () => {
 
 		assert.equal(fake.requests.length, 1);
 		const request: CapturedRequest = fake.requests[0];
-		assert.equal(
-			request.url,
-			'https://kc.example.com/auth/realms/ondewo-ccai-platform/protocol/openid-connect/token'
-		);
+		assert.equal(request.url, 'https://kc.example.com/auth/realms/ondewo-ccai-platform/protocol/openid-connect/token');
 		assert.equal(request.init.method, 'POST');
 		assert.equal(request.init.headers['Content-Type'], 'application/x-www-form-urlencoded');
 		assert.equal(request.form.grant_type, 'password');
@@ -327,7 +324,9 @@ describe('offlineTokenProvider.login (ROPC + offline_access)', () => {
 	/** A JSON body that parses to a non-object (a number) is rejected. */
 	it('rejects a JSON body that is not an object (number)', async () => {
 		// JSON.parse('5') -> 5, hitting the `typeof payload !== 'object'` branch.
-		const fake: { fetchImpl: FetchLike; requests: CapturedRequest[] } = makeFakeFetch([{ ok: true, status: 200, body: '5' }]);
+		const fake: { fetchImpl: FetchLike; requests: CapturedRequest[] } = makeFakeFetch([
+			{ ok: true, status: 200, body: '5' }
+		]);
 		await assert.rejects(
 			() => login({ ...BASE_OPTIONS, fetchImpl: fake.fetchImpl }),
 			(reason: unknown): boolean => {
@@ -374,7 +373,11 @@ describe('offlineTokenProvider.login (ROPC + offline_access)', () => {
 		// A non-number expires_in exercises the false side of the finite-number guard;
 		// the resulting 0 lifetime clamps the first refresh delay to MIN_REFRESH_DELAY.
 		const fake: { fetchImpl: FetchLike; requests: CapturedRequest[] } = makeFakeFetch([
-			{ ok: true, status: 200, body: JSON.stringify({ access_token: 'access-1', refresh_token: 'offline-1', expires_in: 'soon' }) }
+			{
+				ok: true,
+				status: 200,
+				body: JSON.stringify({ access_token: 'access-1', refresh_token: 'offline-1', expires_in: 'soon' })
+			}
 		]);
 		const clock: { value: number } = { value: 0 };
 		const scheduled: { delayMs: number; run: () => void } | undefined = await captureSchedule(async () => {
@@ -393,9 +396,7 @@ describe('offlineTokenProvider global fetch fallback', () => {
 		const fake: { fetchImpl: FetchLike; requests: CapturedRequest[] } = makeFakeFetch([
 			jsonResponse({ access_token: 'access-1', refresh_token: 'offline-1', expires_in: 300 })
 		]);
-		const provider: OfflineTokenProvider = await withGlobalFetch(fake.fetchImpl, () =>
-			login({ ...BASE_OPTIONS })
-		);
+		const provider: OfflineTokenProvider = await withGlobalFetch(fake.fetchImpl, () => login({ ...BASE_OPTIONS }));
 		provider.stop();
 
 		assert.equal(provider.getAccessToken(), 'access-1');
@@ -426,7 +427,9 @@ describe('offlineTokenProvider keycloakVerifySsl (TLS verification toggle)', () 
 		const recordingFetch: FetchLike = (url: string, init: FetchInit): Promise<FetchResponseLike> => {
 			capturedInit = init;
 			return Promise.resolve(
-				makeFakeResponse(jsonResponse({ access_token: 'access-secure', refresh_token: 'offline-secure', expires_in: 300 }))
+				makeFakeResponse(
+					jsonResponse({ access_token: 'access-secure', refresh_token: 'offline-secure', expires_in: 300 })
+				)
 			);
 		};
 		const provider: OfflineTokenProvider = await withGlobalFetch(recordingFetch, () => login({ ...BASE_OPTIONS }));
@@ -444,7 +447,9 @@ describe('offlineTokenProvider keycloakVerifySsl (TLS verification toggle)', () 
 		const recordingFetch: FetchLike = (url: string, init: FetchInit): Promise<FetchResponseLike> => {
 			capturedInit = init;
 			return Promise.resolve(
-				makeFakeResponse(jsonResponse({ access_token: 'access-insecure', refresh_token: 'offline-insecure', expires_in: 300 }))
+				makeFakeResponse(
+					jsonResponse({ access_token: 'access-insecure', refresh_token: 'offline-insecure', expires_in: 300 })
+				)
 			);
 		};
 		const provider: OfflineTokenProvider = await withGlobalFetch(recordingFetch, () =>

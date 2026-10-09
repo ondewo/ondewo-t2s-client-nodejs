@@ -85,16 +85,18 @@ clarifying questions come before implementation rather than after mistakes.
 
 | Path                                                     | Owner          | Rule                                                                                |
 | -------------------------------------------------------- | -------------- | ----------------------------------------------------------------------------------- |
-| `src/auth/offlineTokenProvider.ts` + `.spec.ts`          | hand-written   | the D18 Keycloak offline-token provider; the gated surface                          |
+| `auth/offlineTokenProvider.ts` + `.spec.ts`              | hand-written   | the D18 Keycloak offline-token provider; the gated surface                          |
 | `examples/synthesizeExample.ts` + `.spec.ts`             | hand-written   | runnable example; also gated at 100%                                                |
 | `api/ondewo/**`, `api/google/**`, `public-api.{js,d.ts}` | proto compiler | never edit; `make build` rewrites them                                              |
-| `api/auth/offlineTokenProvider.{js,d.ts}`                | `tsc`          | **committed build output** of `src/auth`; regenerate with `make compile_auth`       |
+| `auth/*.{js,d.ts}`                                       | `tsc`          | **committed build output** of `auth/*.ts`; regenerate with `npm run build:auth`     |
 | `src/ondewo-t2s-api`, `ondewo-proto-compiler`            | submodules     | move the gitlink, never edit inside                                                 |
 | `README.md`                                              | copy           | verbatim `cp src/README.md .` inside `make build` — edit `src/README.md`, then copy |
 | `RELEASE.md`                                             | copy           | same: `cp src/RELEASE.md .`                                                         |
 
-`api/auth/*` is shipped in the npm package, so after touching `src/auth/offlineTokenProvider.ts` run
-`make compile_auth` and commit the regenerated `.js` + `.d.ts` in the same commit. Nothing in CI catches that drift yet.
+`auth/*` is shipped in the npm package, so after touching a `.ts` there run `npm run build:auth` (`make compile_auth`)
+and commit the regenerated `.js` + `.d.ts` in the same commit; CI fails on drift. The Keycloak helper used to live in
+`src/auth/` with its build output in `api/auth/`, but the proto compiler deletes `api/` on every regeneration and its
+barrel only re-exports top-level `auth/`, so it moved to `auth/` (deep path `.../auth/offlineTokenProvider`).
 
 ## Toolchain and tests
 
@@ -110,15 +112,15 @@ make eslint                  # type-aware eslint over the repo
 make prettier PRETTIER_WRITE=-w
 ```
 
-- **`build:tests` compiles `src/auth/*.ts examples/*.ts` into `.test-build/`.** tsc derives the root from the common
-  prefix of those inputs — the repo root — so the output is `.test-build/src/auth/…` and `.test-build/examples/…`, one
+- **`build:tests` compiles `auth/*.ts examples/*.ts tests/*.ts` into `.test-build/`.** tsc derives the root from the common
+  prefix of those inputs — the repo root — so the output is `.test-build/auth/…` and `.test-build/examples/…`, one
   level deep. `ln -sfn ../api .test-build/api` is what makes the compiled example's `require('../api/…')` resolve.
   The two `test -f` guards at the end fail loudly if a rename silently changed that layout.
 - **The gate is `--statements 100 --lines 100 --branches 100 --functions 100`, and it is real.** c8 also runs with
   `--all` over `--src .test-build`, so a NEW hand-written file that no test imports is reported at 0% and fails the
-  build instead of disappearing from the table. Verified twice on this base: an untested `src/auth/probeUntested.ts`
+  build instead of disappearing from the table. Verified twice on this base: an untested `auth/probeUntested.ts`
   drops the run to 99.32% and exits 1, and an uncovered function appended to the already-gated
-  `src/auth/offlineTokenProvider.ts` does the same.
+  `auth/offlineTokenProvider.ts` does the same.
 - **The only coverage exclusion is `/* c8 ignore start|stop */` around the `require.main === module` block** at the
   bottom of `examples/synthesizeExample.ts` — it cannot execute under the test runner (the spec imports the module) and
   its `process.exit(1)` cannot run in-process. Do not add blanket ignores anywhere else.
@@ -175,13 +177,10 @@ perl -i -pe 's|^ONDEWO_PROTO_COMPILER_GIT_BRANCH=.*|ONDEWO_PROTO_COMPILER_GIT_BR
   `js/image-data/make-lib-entry-point.sh` prunes the barrel's self-reference (+8/-5). The barrel is built in a fresh
   temp dir inside the container, so the `if [ ! -f public-api… ]` guard is always true and the new block DOES run —
   expect the next `make build` to produce a different `public-api.js` / `public-api.d.ts`, and diff them deliberately.
-- **`append-auth-exports.sh` does NOT replace `ensure_auth_export`.** The compiler's new script re-exports every
-  module in a top-level `auth/` directory **at the output root**. This repo has none: `make compile_auth` emits the
-  helper to `api/auth` and runs AFTER `npm_run_build`, so the script takes its
-  `No auth/ directory … nothing to re-export` path and exits 0. `ensure_auth_export` (which appends
-  `./api/auth/offlineTokenProvider` — a different specifier the compiler's own `grep -Fq "'./auth/…'"` would not
-  match) stays the load-bearing step. Re-check `tail public-api.js public-api.d.ts` after the next `make build`
-  rather than assuming either way.
+- **`append-auth-exports.sh` re-exports `auth/` (since the helper moved there).** It re-exports every module in the
+  top-level `auth/` **at the output root**, inside the codegen. The Keycloak helper used to be compiled to `api/auth`
+  AFTER `npm_run_build` and appended by a separate `ensure_auth_export` step; both are gone (`compile_auth` now just
+  runs `npm run build:auth`). Re-check `tail public-api.js public-api.d.ts` after the next `make build`.
 - Still no-ops across 5.11.0..5.14.0, so they must NOT appear in a bump diff: `nodejs/image-data/package.json` changes
   only its `version` field (the dependency sync only rewrites keys `src/package.json` already has), and both tags'
   Makefiles ship `NODE_VERSION=24.14.0`, which is what this repo's `Dockerfile.utils` already declares.
@@ -274,11 +273,11 @@ The proto-compiler codegen (`cd src && npm run build`, whose output volume is th
 
 ## Sharp edges
 
-- **`public-api.js` does not work as an entry point.** It is generated with extensionless
-  `export * from './api/…'` — ESM syntax in a CommonJS package — so both `require('@ondewo/t2s-client-nodejs')` and
-  `import` fail with `ERR_MODULE_NOT_FOUND`. The deep paths work:
-  `require('@ondewo/t2s-client-nodejs/api/auth/offlineTokenProvider')`. Fixing the barrel means changing the proto
-  compiler; hand-editing it is pointless because `make build` overwrites it.
+- **`public-api.js` is a CommonJS entry point since ondewo-proto-compiler 5.15.5** (`reexport(require(...))` per
+  stub, first stub keeps a shared name; `public-api.d.ts` keeps `export *`). Up to 5.15.4 it was `export * from` lines
+  and `require('@ondewo/t2s-client-nodejs')` failed with `ERR_MODULE_NOT_FOUND`. `tests/entryPoint.spec.ts` requires
+  the package root on every CI Node version. The compiler's `append-auth-exports.sh` adds `./auth/*` to both barrels;
+  the old `ensure_auth_export` step (an ES line for `./api/auth/...`) was removed - it would break the CommonJS barrel.
 - **The generated `*_grpc_pb.d.ts` imports the LEGACY `grpc` package**, which is not installed, so TypeScript sees no
   inherited members on `Text2SpeechClient` (`getChannel`, `close`, …). Tests that need them cast through a small
   hand-written `InspectableClient` interface.
@@ -472,7 +471,7 @@ npm view <pkg> version ; git tag --list <version> ; gh release view <version> --
   `useSecureChannel: false` with an identity all throw before gRPC sees them; the key is `***REDACTED***` in
   `toString` / `inspect` / `JSON.stringify`; no message renders a PEM. Documented in README "TLS, mutual TLS and
   certificates" (edit `src/README.md`, the root copy is a build output).
-- It lives in the TOP-LEVEL `auth/` (not `src/auth/`, whose compiled copy under `api/auth/` the codegen wipes), so
+- It lives in the TOP-LEVEL `auth/` (like the Keycloak helper; `api/` is wiped by the codegen), so
   the proto-compiler's `append-auth-exports.sh` re-exports it from `public-api.*`, `create_npm_package` copies it
   into `npm/` and `make release` stages it (`git add auth`). `auth/grpcChannel.js` / `.d.ts` are committed
   `npm run build:auth` output; CI fails if they drift from the source.
@@ -484,8 +483,7 @@ npm view <pkg> version ; git tag --list <version> ; gh release view <version> --
 
 ## Committed compiled helpers are checked against their source in CI
 
-- `npm run build:auth` rebuilds BOTH committed tsc outputs: `auth/grpcChannel.{js,d.ts}` and
-  `api/auth/offlineTokenProvider.{js,d.ts}` (from `src/auth/offlineTokenProvider.ts`, `--target es2020`, the
-  flags that reproduce the committed file byte for byte). CI runs it and fails on `git diff -- auth/ api/auth/`, so
+- `npm run build:auth` rebuilds both committed tsc outputs, `auth/grpcChannel.{js,d.ts}` and
+  `auth/offlineTokenProvider.{js,d.ts}` (`--target es2020`). CI runs it and fails on `git diff -- auth/`, so
   edit the `.ts`, run `npm run build:auth` and commit the output with it.
 - CI tests on Node 20, 22 and 24 (`npm ci`, matrix like the nlu client).

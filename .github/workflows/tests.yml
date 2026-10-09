@@ -37,7 +37,7 @@ jobs:
         run: npm run test:drift
 
       # The repo is ~95% generated gRPC/protobuf stubs; coverage is gated on the HAND-WRITTEN
-      # surface — src/auth/offlineTokenProvider.ts (the D18 Keycloak offline-token auth provider)
+      # surface — auth/offlineTokenProvider.ts (the D18 Keycloak offline-token auth provider)
       # and examples/synthesizeExample.ts. `npm test` compiles both plus their specs, runs node's
       # built-in test runner and enforces 100% statements / lines / branches / functions on both.
       # c8 runs with --all, so a NEW hand-written file that no test touches shows up at 0% and
@@ -51,10 +51,10 @@ jobs:
       - name: Type-check + run the example mock tests
         run: npm run typecheck:examples && npm run test:examples
 
-      # auth/grpcChannel.* and api/auth/offlineTokenProvider.* (built from src/auth/) are tsc output
+      # auth/grpcChannel.* and auth/offlineTokenProvider.* are tsc output
       # COMMITTED because the npm package ships them, while the tests exercise the .ts sources.
       # Regenerate both and fail if either drifted.
       - name: Committed auth build artifacts match their source
         run: |
           npm run build:auth
-          git diff --exit-code -- auth/ api/auth/
+          git diff --exit-code -- auth/

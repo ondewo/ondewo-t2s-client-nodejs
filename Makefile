@@ -17,7 +17,7 @@ export
 
 ONDEWO_T2S_VERSION=6.6.1
 T2S_API_GIT_BRANCH=tags/6.6.0
-ONDEWO_PROTO_COMPILER_GIT_BRANCH=tags/5.15.2
+ONDEWO_PROTO_COMPILER_GIT_BRANCH=tags/5.15.5
 ONDEWO_PROTO_COMPILER_DIR=ondewo-proto-compiler
 T2S_APIS_DIR=src/ondewo-t2s-api
 T2S_PROTOS_DIR=${T2S_APIS_DIR}/ondewo
@@ -59,15 +59,8 @@ prettier: ## Checks formatting with Prettier - Use PRETTIER_WRITE=-w to also aut
 eslint: ## Checks Code Logic and Typing
 	./node_modules/.bin/eslint --config eslint.config.mjs .
 
-compile_auth: ## Compiles the hand-written auth helper (src/auth) to shippable api/auth JS + d.ts
-	mkdir -p api/auth
-	./node_modules/.bin/tsc src/auth/offlineTokenProvider.ts --declaration --module commonjs \
-		--target es2020 --moduleResolution node --ignoreDeprecations 6.0 --strict --skipLibCheck \
-		--types node --lib es2020 --outDir api/auth --ignoreConfig
-
-ensure_auth_export: ## Re-appends the D18 auth export to public-api after the proto-compiler regenerates it away
-	grep -q 'api/auth/offlineTokenProvider' public-api.js || printf "export * from './api/auth/offlineTokenProvider';\n" >> public-api.js
-	grep -q 'api/auth/offlineTokenProvider' public-api.d.ts || printf "export * from './api/auth/offlineTokenProvider.d';\n" >> public-api.d.ts
+compile_auth: ## Compiles the hand-written helpers in auth/ (Keycloak provider + TLS channel) to their committed JS + d.ts
+	npm run build:auth
 
 test_auth: ## Runs the offline unit tests for the hand-written code + the 100% coverage gate (no network)
 	npm test
@@ -229,7 +222,6 @@ build: check_out_correct_submodule_versions build_compiler update_package npm_ru
 	cp src/README.md .
 	cp src/RELEASE.md .
 	make compile_auth
-	make ensure_auth_export
 	make restore_ci_test_setup
 	make create_npm_package
 	make remove_npm_script

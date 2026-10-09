@@ -175,7 +175,11 @@ export class OfflineTokenProvider {
 	 * @param deadlineMs Absolute time (ms since epoch) past which refreshes stop, or
 	 *   `undefined` for no bound.
 	 */
-	private constructor(options: Required<Omit<OfflineTokenLoginOptions, 'tokenExpirationInS' | 'keycloakVerifySsl'>>, initial: KeycloakTokenResponse, deadlineMs: number | undefined) {
+	private constructor(
+		options: Required<Omit<OfflineTokenLoginOptions, 'tokenExpirationInS' | 'keycloakVerifySsl'>>,
+		initial: KeycloakTokenResponse,
+		deadlineMs: number | undefined
+	) {
 		this.keycloakUrl = stripTrailingSlash(options.keycloakUrl);
 		this.realm = options.realm;
 		this.clientId = options.clientId;
@@ -205,7 +209,10 @@ export class OfflineTokenProvider {
 		if (resolvedFetch === undefined) {
 			const baseFetch: FetchLike | undefined = globalFetch();
 			if (baseFetch === undefined) {
-				throw new OfflineTokenError('No fetch implementation available; pass options.fetchImpl or run on Node >= 18.', 0);
+				throw new OfflineTokenError(
+					'No fetch implementation available; pass options.fetchImpl or run on Node >= 18.',
+					0
+				);
 			}
 			resolvedFetch = createDefaultFetch(baseFetch, options.keycloakVerifySsl ?? true);
 		}
@@ -224,7 +231,7 @@ export class OfflineTokenProvider {
 
 		let deadlineMs: number | undefined;
 		if (options.tokenExpirationInS !== undefined) {
-			deadlineMs = now() + (options.tokenExpirationInS * 1000);
+			deadlineMs = now() + options.tokenExpirationInS * 1000;
 		}
 
 		return new OfflineTokenProvider(
@@ -434,7 +441,10 @@ async function postToken(fetchImpl: FetchLike, tokenUrl: string, body: string): 
 	});
 	const rawBody: string = await response.text();
 	if (!response.ok) {
-		throw new OfflineTokenError(`Keycloak token endpoint returned HTTP ${response.status}: ${rawBody}`, response.status);
+		throw new OfflineTokenError(
+			`Keycloak token endpoint returned HTTP ${response.status}: ${rawBody}`,
+			response.status
+		);
 	}
 	const parsed: KeycloakTokenResponse = parseTokenResponse(rawBody, response.status);
 	return parsed;
@@ -470,7 +480,10 @@ function parseTokenResponse(rawBody: string, status: number): KeycloakTokenRespo
 		throw new OfflineTokenError('Keycloak token response missing "access_token".', status);
 	}
 	if (typeof refreshToken !== 'string' || refreshToken.length === 0) {
-		throw new OfflineTokenError('Keycloak token response missing "refresh_token" (offline token); ensure scope=offline_access.', status);
+		throw new OfflineTokenError(
+			'Keycloak token response missing "refresh_token" (offline token); ensure scope=offline_access.',
+			status
+		);
 	}
 	let expiresInS: number = 0;
 	if (typeof expiresIn === 'number' && Number.isFinite(expiresIn)) {
