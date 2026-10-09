@@ -7,7 +7,7 @@ Minimal, runnable examples for the `@ondewo/t2s-client-nodejs` SDK.
 Authenticates with the Keycloak **offline-token** flow and calls the T2S `Text2Speech.Synthesize` RPC.
 
 Authentication uses the current bearer convention (post-Keycloak migration): `login(...)` from
-[`../src/auth/offlineTokenProvider.ts`](../src/auth/offlineTokenProvider.ts) returns a provider whose
+[`../auth/offlineTokenProvider.ts`](../auth/offlineTokenProvider.ts) returns a provider whose
 `getAuthorizationMetadata()` yields the `{ authorization: 'Bearer <token>' }` gRPC metadata pairs
 (unlike the NLU client's `getAuthorizationHeader()`, which returns the header value as a plain string).
 The legacy per-request token / HTTP-basic credentials no longer exist.
@@ -51,7 +51,7 @@ runner — the same convention as the auth provider. The gRPC client, the token 
 `main()`'s outside-world boundaries are mocked, so the tests need no network:
 
 ```sh
-npm run test:examples      # compile examples/ + src/auth/, then run just this spec
+npm run test:examples      # compile examples/ + auth/, then run just this spec
 npm run typecheck:examples # tsc --noEmit over examples/
 make test_examples         # the same, via the Makefile
 ```
