@@ -13,7 +13,7 @@ import { ChannelCredentials, Metadata, ServiceError, credentials, status } from 
 
 import { SynthesizeRequest, RequestConfig, SynthesizeResponse } from '../api/ondewo/t2s/text-to-speech_pb';
 import { Text2SpeechClient } from '../api/ondewo/t2s/text-to-speech_grpc_pb';
-import { OfflineTokenLoginOptions } from '../api/auth/offlineTokenProvider';
+import { OfflineTokenLoginOptions } from '../auth/offlineTokenProvider';
 import {
 	AuthorizationMetadataSource,
 	LoginFunction,

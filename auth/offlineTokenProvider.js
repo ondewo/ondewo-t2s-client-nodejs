@@ -103,7 +103,7 @@ class OfflineTokenProvider {
         const token = await postToken(resolvedFetch, tokenUrl, body);
         let deadlineMs;
         if (options.tokenExpirationInS !== undefined) {
-            deadlineMs = now() + (options.tokenExpirationInS * 1000);
+            deadlineMs = now() + options.tokenExpirationInS * 1000;
         }
         return new OfflineTokenProvider({
             keycloakUrl: options.keycloakUrl,
