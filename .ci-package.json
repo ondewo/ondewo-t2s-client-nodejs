@@ -2,7 +2,7 @@
 	"description": "ONDEWO Text to Speech (T2S) Client library for Nodejs",
 	"scripts": {
 		"build:tests": "rm -rf .test-build && tsc src/auth/*.ts auth/*.ts examples/*.ts tests/*.ts --ignoreConfig --module commonjs --target es2020 --strict --lib es2020,dom --skipLibCheck --types node --typeRoots ./node_modules/@types --sourceMap --outDir .test-build && ln -sfn ../api .test-build/api && test -f .test-build/src/auth/offlineTokenProvider.js && test -f .test-build/auth/grpcChannel.js && test -f .test-build/examples/synthesizeExample.js",
-		"build:auth": "tsc auth/grpcChannel.ts --ignoreConfig --module commonjs --target es2020 --strict --lib es2020,dom --skipLibCheck --types node --typeRoots ./node_modules/@types --declaration --outDir auth",
+		"build:auth": "tsc auth/grpcChannel.ts --ignoreConfig --module commonjs --target es2020 --strict --lib es2020,dom --skipLibCheck --types node --typeRoots ./node_modules/@types --declaration --outDir auth && tsc src/auth/offlineTokenProvider.ts --ignoreConfig --module commonjs --target es2020 --strict --lib es2020,dom --skipLibCheck --types node --typeRoots ./node_modules/@types --declaration --outDir api/auth",
 		"pretest": "npm run build:tests",
 		"test": "c8 --check-coverage --statements 100 --lines 100 --branches 100 --functions 100 --temp-directory .test-build/.c8 --all --src .test-build --include '.test-build/src/auth/**/*.js' --include '.test-build/auth/**/*.js' --include '.test-build/examples/**/*.js' --exclude '**/*.spec.js' --reporter text node --test .test-build/src/auth/*.spec.js .test-build/auth/*.spec.js .test-build/examples/*.spec.js .test-build/tests/*.spec.js",
 		"pretest:examples": "npm run build:tests",
