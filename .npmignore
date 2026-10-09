@@ -1,1 +1,6 @@
 src/ondewo-t2s-api
+
+# Never publish test files or test build output.
+*.spec.*
+*.test.*
+.test-build/

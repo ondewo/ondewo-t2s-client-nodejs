@@ -120,6 +120,10 @@ release: ## Create Github and NPM Release
 	git add api
 	git add Makefile
 	git add src
+# auth/ is the hand-written gRPC channel (TLS / mutual TLS) helper, its spec and its build output.
+# It is top-level, so `git add src` does NOT cover it: leaving it out means a fix written there is
+# published to npm by `make build` while the git tag of that same version does not contain it.
+	git add auth
 # README.md is a BUILD OUTPUT: `make build` runs `cp src/README.md .`, so anything written only
 # in the root copy is destroyed on the next build. src/README.md is the source of truth (covered
 # by `git add src`); this stages the generated copy so the tracked file cannot drift from it.
@@ -246,6 +250,8 @@ create_npm_package: ## Create NPM Package for Release
 	rm -rf npm
 	mkdir npm
 	cp -R api npm
+	cp -R auth npm
+	rm -f npm/auth/*.spec.* npm/auth/*.test.*
 	cp public-api.d.ts npm
 	cp public-api.js npm
 	cp package.json npm

@@ -464,3 +464,20 @@ number over it; wait and re-check.
 ```bash
 npm view <pkg> version ; git tag --list <version> ; gh release view <version> --json body --jq '.body|length'
 ```
+
+## TLS / mutual TLS helper (`auth/grpcChannel.ts`)
+
+- Same contract as every ONDEWO SDK (reference: Python `ondewo-client-utils` 4.1.x): `grpcCert` /
+  `grpcClientCert` / `grpcClientKey` are PEM **content**; half a client identity, a non-PEM value (a path) and
+  `useSecureChannel: false` with an identity all throw before gRPC sees them; the key is `***REDACTED***` in
+  `toString` / `inspect` / `JSON.stringify`; no message renders a PEM. Documented in README "TLS, mutual TLS and
+  certificates" (edit `src/README.md`, the root copy is a build output).
+- It lives in the TOP-LEVEL `auth/` (not `src/auth/`, whose compiled copy under `api/auth/` the codegen wipes), so
+  the proto-compiler's `append-auth-exports.sh` re-exports it from `public-api.*`, `create_npm_package` copies it
+  into `npm/` and `make release` stages it (`git add auth`). `auth/grpcChannel.js` / `.d.ts` are committed
+  `npm run build:auth` output; CI fails if they drift from the source.
+- `grpc.keepalive_time_ms` stays UNSET on purpose: grpc-js has no `grpc.http2.max_pings_without_data`, so it pings
+  silent streams and a grpc-core server answers `GOAWAY too_many_pings` (measured RESOURCE_EXHAUSTED after 150 s at
+  30 s, 50 s at 10 s). Do not copy the Python keepalive into `DEFAULT_GRPC_CHANNEL_OPTIONS`.
+- `auth/grpcChannel.spec.ts` builds its PKI with the openssl CLI at test time and runs real handshakes against an
+  in-process grpc-js server. `tests/releaseNotes.spec.ts` pins the RELEASE.md heading spelling and separators.

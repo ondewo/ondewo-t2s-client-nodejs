@@ -41,3 +41,10 @@ jobs:
       # developer uses, so CI proves they are not bit-rotted.
       - name: Type-check + run the example mock tests
         run: npm run typecheck:examples && npm run test:examples
+
+      # auth/grpcChannel.js and .d.ts are tsc output COMMITTED because the npm package ships them,
+      # while the tests exercise the .ts source. Regenerate them and fail if they drifted.
+      - name: Committed auth build artifacts match their source
+        run: |
+          npm run build:auth
+          git diff --exit-code -- auth/
