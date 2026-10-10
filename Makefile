@@ -221,8 +221,9 @@ build: check_out_correct_submodule_versions build_compiler update_package npm_ru
 	-cd src/ondewo-t2s-api && git checkout -- '**/*.proto' && cd ../..
 	cp src/README.md .
 	cp src/RELEASE.md .
-	make compile_auth
+	# restore first: the codegen regenerates the root package.json without the build:auth script
 	make restore_ci_test_setup
+	make compile_auth
 	make create_npm_package
 	make remove_npm_script
 	@$(eval README_CUT_LINES:=$(shell cat -n src/README.md | perl -ne 'print if /START OF GITHUB README/../END OF GITHUB README/' | grep -o -E '[0-9]+' | perl -pe 's/^0+//' | awk 'NR==1; END{print}'))
