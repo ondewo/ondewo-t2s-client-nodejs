@@ -17,6 +17,8 @@ const compat = new FlatCompat({
 export default [
 	{
 		ignores: [
+			// the npm/ release package is a build artifact copied from files that are linted at their source
+			'npm/',
 			// tsc output of the hand-written .ts sources, and c8's report — lint the sources, not the build.
 			'.test-build/',
 			'coverage/',
