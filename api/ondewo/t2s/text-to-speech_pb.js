@@ -13,13 +13,13 @@
 
 var jspb = require('google-protobuf');
 var goog = jspb;
-var global = (function() {
-  if (this) { return this; }
-  if (typeof window !== 'undefined') { return window; }
-  if (typeof global !== 'undefined') { return global; }
-  if (typeof self !== 'undefined') { return self; }
-  return Function('return this')();
-}.call(null));
+var global =
+    (typeof globalThis !== 'undefined' && globalThis) ||
+    (typeof window !== 'undefined' && window) ||
+    (typeof global !== 'undefined' && global) ||
+    (typeof self !== 'undefined' && self) ||
+    (function () { return this; }).call(null) ||
+    Function('return this')();
 
 var google_protobuf_empty_pb = require('google-protobuf/google/protobuf/empty_pb.js');
 goog.object.extend(proto, google_protobuf_empty_pb);
@@ -1387,8 +1387,8 @@ proto.ondewo.t2s.SynthesizeRequest.prototype.toObject = function(opt_includeInst
  */
 proto.ondewo.t2s.SynthesizeRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    text: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    config: (f = msg.getConfig()) && proto.ondewo.t2s.RequestConfig.toObject(includeInstance, f)
+text: jspb.Message.getFieldWithDefault(msg, 1, ""),
+config: (f = msg.getConfig()) && proto.ondewo.t2s.RequestConfig.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -1575,7 +1575,7 @@ proto.ondewo.t2s.BatchSynthesizeRequest.prototype.toObject = function(opt_includ
  */
 proto.ondewo.t2s.BatchSynthesizeRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    batchRequestList: jspb.Message.toObjectList(msg.getBatchRequestList(),
+batchRequestList: jspb.Message.toObjectList(msg.getBatchRequestList(),
     proto.ondewo.t2s.SynthesizeRequest.toObject, includeInstance)
   };
 
@@ -1728,8 +1728,8 @@ proto.ondewo.t2s.StreamingSynthesizeRequest.prototype.toObject = function(opt_in
  */
 proto.ondewo.t2s.StreamingSynthesizeRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    text: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    config: (f = msg.getConfig()) && proto.ondewo.t2s.RequestConfig.toObject(includeInstance, f)
+text: jspb.Message.getFieldWithDefault(msg, 1, ""),
+config: (f = msg.getConfig()) && proto.ondewo.t2s.RequestConfig.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -1916,7 +1916,7 @@ proto.ondewo.t2s.BatchSynthesizeResponse.prototype.toObject = function(opt_inclu
  */
 proto.ondewo.t2s.BatchSynthesizeResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
-    batchResponseList: jspb.Message.toObjectList(msg.getBatchResponseList(),
+batchResponseList: jspb.Message.toObjectList(msg.getBatchResponseList(),
     proto.ondewo.t2s.SynthesizeResponse.toObject, includeInstance)
   };
 
@@ -2184,18 +2184,18 @@ proto.ondewo.t2s.RequestConfig.prototype.toObject = function(opt_includeInstance
  */
 proto.ondewo.t2s.RequestConfig.toObject = function(includeInstance, msg) {
   var f, obj = {
-    t2sPipelineId: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    lengthScale: jspb.Message.getFloatingPointFieldWithDefault(msg, 2, 0.0),
-    noiseScale: jspb.Message.getFloatingPointFieldWithDefault(msg, 3, 0.0),
-    sampleRate: jspb.Message.getFieldWithDefault(msg, 4, 0),
-    pcm: jspb.Message.getFieldWithDefault(msg, 5, 0),
-    audioFormat: jspb.Message.getFieldWithDefault(msg, 6, 0),
-    useCache: jspb.Message.getBooleanFieldWithDefault(msg, 7, false),
-    t2sServiceConfig: (f = msg.getT2sServiceConfig()) && google_protobuf_struct_pb.Struct.toObject(includeInstance, f),
-    t2sCloudProviderConfig: (f = msg.getT2sCloudProviderConfig()) && proto.ondewo.t2s.T2sCloudProviderConfig.toObject(includeInstance, f),
-    t2sNormalization: (f = msg.getT2sNormalization()) && proto.ondewo.t2s.T2SNormalization.toObject(includeInstance, f),
-    wordToPhonemeMapping: (f = msg.getWordToPhonemeMapping()) && google_protobuf_struct_pb.Struct.toObject(includeInstance, f),
-    instruction: jspb.Message.getFieldWithDefault(msg, 13, "")
+t2sPipelineId: jspb.Message.getFieldWithDefault(msg, 1, ""),
+lengthScale: (f = jspb.Message.getOptionalFloatingPointField(msg, 2)) == null ? undefined : f,
+noiseScale: (f = jspb.Message.getOptionalFloatingPointField(msg, 3)) == null ? undefined : f,
+sampleRate: (f = jspb.Message.getField(msg, 4)) == null ? undefined : f,
+pcm: (f = jspb.Message.getField(msg, 5)) == null ? undefined : f,
+audioFormat: (f = jspb.Message.getField(msg, 6)) == null ? undefined : f,
+useCache: (f = jspb.Message.getBooleanField(msg, 7)) == null ? undefined : f,
+t2sServiceConfig: (f = msg.getT2sServiceConfig()) && google_protobuf_struct_pb.Struct.toObject(includeInstance, f),
+t2sCloudProviderConfig: (f = msg.getT2sCloudProviderConfig()) && proto.ondewo.t2s.T2sCloudProviderConfig.toObject(includeInstance, f),
+t2sNormalization: (f = msg.getT2sNormalization()) && proto.ondewo.t2s.T2SNormalization.toObject(includeInstance, f),
+wordToPhonemeMapping: (f = msg.getWordToPhonemeMapping()) && google_protobuf_struct_pb.Struct.toObject(includeInstance, f),
+instruction: (f = jspb.Message.getField(msg, 13)) == null ? undefined : f
   };
 
   if (includeInstance) {
@@ -2854,9 +2854,9 @@ proto.ondewo.t2s.T2sCloudProviderConfig.prototype.toObject = function(opt_includ
  */
 proto.ondewo.t2s.T2sCloudProviderConfig.toObject = function(includeInstance, msg) {
   var f, obj = {
-    t2sCloudProviderConfigElevenlabs: (f = msg.getT2sCloudProviderConfigElevenlabs()) && proto.ondewo.t2s.T2sCloudProviderConfigElevenLabs.toObject(includeInstance, f),
-    t2sCloudProviderConfigGoogle: (f = msg.getT2sCloudProviderConfigGoogle()) && proto.ondewo.t2s.T2sCloudProviderConfigGoogle.toObject(includeInstance, f),
-    t2sCloudProviderConfigMicrosoft: (f = msg.getT2sCloudProviderConfigMicrosoft()) && proto.ondewo.t2s.T2sCloudProviderConfigMicrosoft.toObject(includeInstance, f)
+t2sCloudProviderConfigElevenlabs: (f = msg.getT2sCloudProviderConfigElevenlabs()) && proto.ondewo.t2s.T2sCloudProviderConfigElevenLabs.toObject(includeInstance, f),
+t2sCloudProviderConfigGoogle: (f = msg.getT2sCloudProviderConfigGoogle()) && proto.ondewo.t2s.T2sCloudProviderConfigGoogle.toObject(includeInstance, f),
+t2sCloudProviderConfigMicrosoft: (f = msg.getT2sCloudProviderConfigMicrosoft()) && proto.ondewo.t2s.T2sCloudProviderConfigMicrosoft.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -3107,11 +3107,11 @@ proto.ondewo.t2s.T2sCloudProviderConfigElevenLabs.prototype.toObject = function(
  */
 proto.ondewo.t2s.T2sCloudProviderConfigElevenLabs.toObject = function(includeInstance, msg) {
   var f, obj = {
-    stability: jspb.Message.getFloatingPointFieldWithDefault(msg, 1, 0.0),
-    similarityBoost: jspb.Message.getFloatingPointFieldWithDefault(msg, 2, 0.0),
-    style: jspb.Message.getFloatingPointFieldWithDefault(msg, 3, 0.0),
-    useSpeakerBoost: jspb.Message.getBooleanFieldWithDefault(msg, 4, false),
-    applyTextNormalization: jspb.Message.getFieldWithDefault(msg, 5, "")
+stability: jspb.Message.getFloatingPointFieldWithDefault(msg, 1, 0.0),
+similarityBoost: jspb.Message.getFloatingPointFieldWithDefault(msg, 2, 0.0),
+style: jspb.Message.getFloatingPointFieldWithDefault(msg, 3, 0.0),
+useSpeakerBoost: jspb.Message.getBooleanFieldWithDefault(msg, 4, false),
+applyTextNormalization: jspb.Message.getFieldWithDefault(msg, 5, "")
   };
 
   if (includeInstance) {
@@ -3357,7 +3357,7 @@ proto.ondewo.t2s.T2sCloudProviderConfigMicrosoft.prototype.toObject = function(o
  */
 proto.ondewo.t2s.T2sCloudProviderConfigMicrosoft.toObject = function(includeInstance, msg) {
   var f, obj = {
-    useDefaultSpeaker: jspb.Message.getBooleanFieldWithDefault(msg, 1, false)
+useDefaultSpeaker: jspb.Message.getBooleanFieldWithDefault(msg, 1, false)
   };
 
   if (includeInstance) {
@@ -3487,9 +3487,9 @@ proto.ondewo.t2s.T2sCloudProviderConfigGoogle.prototype.toObject = function(opt_
  */
 proto.ondewo.t2s.T2sCloudProviderConfigGoogle.toObject = function(includeInstance, msg) {
   var f, obj = {
-    speakingRate: jspb.Message.getFloatingPointFieldWithDefault(msg, 1, 0.0),
-    volumeGainDb: jspb.Message.getFloatingPointFieldWithDefault(msg, 2, 0.0),
-    pitch: jspb.Message.getFloatingPointFieldWithDefault(msg, 3, 0.0)
+speakingRate: jspb.Message.getFloatingPointFieldWithDefault(msg, 1, 0.0),
+volumeGainDb: jspb.Message.getFloatingPointFieldWithDefault(msg, 2, 0.0),
+pitch: jspb.Message.getFloatingPointFieldWithDefault(msg, 3, 0.0)
   };
 
   if (includeInstance) {
@@ -3677,14 +3677,14 @@ proto.ondewo.t2s.SynthesizeResponse.prototype.toObject = function(opt_includeIns
  */
 proto.ondewo.t2s.SynthesizeResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
-    audioUuid: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    audio: msg.getAudio_asB64(),
-    generationTime: jspb.Message.getFloatingPointFieldWithDefault(msg, 3, 0.0),
-    audioLength: jspb.Message.getFloatingPointFieldWithDefault(msg, 4, 0.0),
-    text: jspb.Message.getFieldWithDefault(msg, 5, ""),
-    config: (f = msg.getConfig()) && proto.ondewo.t2s.RequestConfig.toObject(includeInstance, f),
-    normalizedText: jspb.Message.getFieldWithDefault(msg, 7, ""),
-    sampleRate: jspb.Message.getFloatingPointFieldWithDefault(msg, 8, 0.0)
+audioUuid: jspb.Message.getFieldWithDefault(msg, 1, ""),
+audio: msg.getAudio_asB64(),
+generationTime: jspb.Message.getFloatingPointFieldWithDefault(msg, 3, 0.0),
+audioLength: jspb.Message.getFloatingPointFieldWithDefault(msg, 4, 0.0),
+text: jspb.Message.getFieldWithDefault(msg, 5, ""),
+config: (f = msg.getConfig()) && proto.ondewo.t2s.RequestConfig.toObject(includeInstance, f),
+normalizedText: jspb.Message.getFieldWithDefault(msg, 7, ""),
+sampleRate: jspb.Message.getFloatingPointFieldWithDefault(msg, 8, 0.0)
   };
 
   if (includeInstance) {
@@ -4062,14 +4062,14 @@ proto.ondewo.t2s.StreamingSynthesizeResponse.prototype.toObject = function(opt_i
  */
 proto.ondewo.t2s.StreamingSynthesizeResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
-    audioUuid: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    audio: msg.getAudio_asB64(),
-    generationTime: jspb.Message.getFloatingPointFieldWithDefault(msg, 3, 0.0),
-    audioLength: jspb.Message.getFloatingPointFieldWithDefault(msg, 4, 0.0),
-    text: jspb.Message.getFieldWithDefault(msg, 5, ""),
-    config: (f = msg.getConfig()) && proto.ondewo.t2s.RequestConfig.toObject(includeInstance, f),
-    normalizedText: jspb.Message.getFieldWithDefault(msg, 7, ""),
-    sampleRate: jspb.Message.getFloatingPointFieldWithDefault(msg, 8, 0.0)
+audioUuid: jspb.Message.getFieldWithDefault(msg, 1, ""),
+audio: msg.getAudio_asB64(),
+generationTime: jspb.Message.getFloatingPointFieldWithDefault(msg, 3, 0.0),
+audioLength: jspb.Message.getFloatingPointFieldWithDefault(msg, 4, 0.0),
+text: jspb.Message.getFieldWithDefault(msg, 5, ""),
+config: (f = msg.getConfig()) && proto.ondewo.t2s.RequestConfig.toObject(includeInstance, f),
+normalizedText: jspb.Message.getFieldWithDefault(msg, 7, ""),
+sampleRate: jspb.Message.getFloatingPointFieldWithDefault(msg, 8, 0.0)
   };
 
   if (includeInstance) {
@@ -4447,8 +4447,8 @@ proto.ondewo.t2s.NormalizeTextRequest.prototype.toObject = function(opt_includeI
  */
 proto.ondewo.t2s.NormalizeTextRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    t2sPipelineId: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    text: jspb.Message.getFieldWithDefault(msg, 2, "")
+t2sPipelineId: jspb.Message.getFieldWithDefault(msg, 1, ""),
+text: jspb.Message.getFieldWithDefault(msg, 2, "")
   };
 
   if (includeInstance) {
@@ -4607,7 +4607,7 @@ proto.ondewo.t2s.NormalizeTextResponse.prototype.toObject = function(opt_include
  */
 proto.ondewo.t2s.NormalizeTextResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
-    normalizedText: jspb.Message.getFieldWithDefault(msg, 1, "")
+normalizedText: jspb.Message.getFieldWithDefault(msg, 1, "")
   };
 
   if (includeInstance) {
@@ -4737,7 +4737,7 @@ proto.ondewo.t2s.T2SGetServiceInfoResponse.prototype.toObject = function(opt_inc
  */
 proto.ondewo.t2s.T2SGetServiceInfoResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
-    version: jspb.Message.getFieldWithDefault(msg, 1, "")
+version: jspb.Message.getFieldWithDefault(msg, 1, "")
   };
 
   if (includeInstance) {
@@ -4874,11 +4874,11 @@ proto.ondewo.t2s.ListT2sPipelinesRequest.prototype.toObject = function(opt_inclu
  */
 proto.ondewo.t2s.ListT2sPipelinesRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    languagesList: (f = jspb.Message.getRepeatedField(msg, 1)) == null ? undefined : f,
-    speakerSexesList: (f = jspb.Message.getRepeatedField(msg, 2)) == null ? undefined : f,
-    pipelineOwnersList: (f = jspb.Message.getRepeatedField(msg, 3)) == null ? undefined : f,
-    speakerNamesList: (f = jspb.Message.getRepeatedField(msg, 4)) == null ? undefined : f,
-    domainsList: (f = jspb.Message.getRepeatedField(msg, 5)) == null ? undefined : f
+languagesList: (f = jspb.Message.getRepeatedField(msg, 1)) == null ? undefined : f,
+speakerSexesList: (f = jspb.Message.getRepeatedField(msg, 2)) == null ? undefined : f,
+pipelineOwnersList: (f = jspb.Message.getRepeatedField(msg, 3)) == null ? undefined : f,
+speakerNamesList: (f = jspb.Message.getRepeatedField(msg, 4)) == null ? undefined : f,
+domainsList: (f = jspb.Message.getRepeatedField(msg, 5)) == null ? undefined : f
   };
 
   if (includeInstance) {
@@ -5226,7 +5226,7 @@ proto.ondewo.t2s.ListT2sPipelinesResponse.prototype.toObject = function(opt_incl
  */
 proto.ondewo.t2s.ListT2sPipelinesResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
-    pipelinesList: jspb.Message.toObjectList(msg.getPipelinesList(),
+pipelinesList: jspb.Message.toObjectList(msg.getPipelinesList(),
     proto.ondewo.t2s.Text2SpeechConfig.toObject, includeInstance)
   };
 
@@ -5386,10 +5386,10 @@ proto.ondewo.t2s.ListT2sLanguagesRequest.prototype.toObject = function(opt_inclu
  */
 proto.ondewo.t2s.ListT2sLanguagesRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    speakerSexesList: (f = jspb.Message.getRepeatedField(msg, 1)) == null ? undefined : f,
-    pipelineOwnersList: (f = jspb.Message.getRepeatedField(msg, 2)) == null ? undefined : f,
-    speakerNamesList: (f = jspb.Message.getRepeatedField(msg, 3)) == null ? undefined : f,
-    domainsList: (f = jspb.Message.getRepeatedField(msg, 4)) == null ? undefined : f
+speakerSexesList: (f = jspb.Message.getRepeatedField(msg, 1)) == null ? undefined : f,
+pipelineOwnersList: (f = jspb.Message.getRepeatedField(msg, 2)) == null ? undefined : f,
+speakerNamesList: (f = jspb.Message.getRepeatedField(msg, 3)) == null ? undefined : f,
+domainsList: (f = jspb.Message.getRepeatedField(msg, 4)) == null ? undefined : f
   };
 
   if (includeInstance) {
@@ -5689,7 +5689,7 @@ proto.ondewo.t2s.ListT2sLanguagesResponse.prototype.toObject = function(opt_incl
  */
 proto.ondewo.t2s.ListT2sLanguagesResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
-    languagesList: (f = jspb.Message.getRepeatedField(msg, 1)) == null ? undefined : f
+languagesList: (f = jspb.Message.getRepeatedField(msg, 1)) == null ? undefined : f
   };
 
   if (includeInstance) {
@@ -5845,10 +5845,10 @@ proto.ondewo.t2s.ListT2sDomainsRequest.prototype.toObject = function(opt_include
  */
 proto.ondewo.t2s.ListT2sDomainsRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    speakerSexesList: (f = jspb.Message.getRepeatedField(msg, 1)) == null ? undefined : f,
-    pipelineOwnersList: (f = jspb.Message.getRepeatedField(msg, 2)) == null ? undefined : f,
-    speakerNamesList: (f = jspb.Message.getRepeatedField(msg, 3)) == null ? undefined : f,
-    languagesList: (f = jspb.Message.getRepeatedField(msg, 4)) == null ? undefined : f
+speakerSexesList: (f = jspb.Message.getRepeatedField(msg, 1)) == null ? undefined : f,
+pipelineOwnersList: (f = jspb.Message.getRepeatedField(msg, 2)) == null ? undefined : f,
+speakerNamesList: (f = jspb.Message.getRepeatedField(msg, 3)) == null ? undefined : f,
+languagesList: (f = jspb.Message.getRepeatedField(msg, 4)) == null ? undefined : f
   };
 
   if (includeInstance) {
@@ -6148,7 +6148,7 @@ proto.ondewo.t2s.ListT2sDomainsResponse.prototype.toObject = function(opt_includ
  */
 proto.ondewo.t2s.ListT2sDomainsResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
-    domainsList: (f = jspb.Message.getRepeatedField(msg, 1)) == null ? undefined : f
+domainsList: (f = jspb.Message.getRepeatedField(msg, 1)) == null ? undefined : f
   };
 
   if (includeInstance) {
@@ -6297,7 +6297,7 @@ proto.ondewo.t2s.ListT2sNormalizationPipelinesRequest.prototype.toObject = funct
  */
 proto.ondewo.t2s.ListT2sNormalizationPipelinesRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    language: jspb.Message.getFieldWithDefault(msg, 1, "")
+language: jspb.Message.getFieldWithDefault(msg, 1, "")
   };
 
   if (includeInstance) {
@@ -6434,7 +6434,7 @@ proto.ondewo.t2s.ListT2sNormalizationPipelinesResponse.prototype.toObject = func
  */
 proto.ondewo.t2s.ListT2sNormalizationPipelinesResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
-    t2sNormalizationPipelinesList: (f = jspb.Message.getRepeatedField(msg, 1)) == null ? undefined : f
+t2sNormalizationPipelinesList: (f = jspb.Message.getRepeatedField(msg, 1)) == null ? undefined : f
   };
 
   if (includeInstance) {
@@ -6583,7 +6583,7 @@ proto.ondewo.t2s.T2sPipelineId.prototype.toObject = function(opt_includeInstance
  */
 proto.ondewo.t2s.T2sPipelineId.toObject = function(includeInstance, msg) {
   var f, obj = {
-    id: jspb.Message.getFieldWithDefault(msg, 1, "")
+id: jspb.Message.getFieldWithDefault(msg, 1, "")
   };
 
   if (includeInstance) {
@@ -6713,12 +6713,12 @@ proto.ondewo.t2s.Text2SpeechConfig.prototype.toObject = function(opt_includeInst
  */
 proto.ondewo.t2s.Text2SpeechConfig.toObject = function(includeInstance, msg) {
   var f, obj = {
-    id: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    description: (f = msg.getDescription()) && proto.ondewo.t2s.T2SDescription.toObject(includeInstance, f),
-    active: jspb.Message.getBooleanFieldWithDefault(msg, 3, false),
-    inference: (f = msg.getInference()) && proto.ondewo.t2s.T2SInference.toObject(includeInstance, f),
-    normalization: (f = msg.getNormalization()) && proto.ondewo.t2s.T2SNormalization.toObject(includeInstance, f),
-    postprocessing: (f = msg.getPostprocessing()) && proto.ondewo.t2s.Postprocessing.toObject(includeInstance, f)
+id: jspb.Message.getFieldWithDefault(msg, 1, ""),
+description: (f = msg.getDescription()) && proto.ondewo.t2s.T2SDescription.toObject(includeInstance, f),
+active: jspb.Message.getBooleanFieldWithDefault(msg, 3, false),
+inference: (f = msg.getInference()) && proto.ondewo.t2s.T2SInference.toObject(includeInstance, f),
+normalization: (f = msg.getNormalization()) && proto.ondewo.t2s.T2SNormalization.toObject(includeInstance, f),
+postprocessing: (f = msg.getPostprocessing()) && proto.ondewo.t2s.Postprocessing.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -7077,12 +7077,12 @@ proto.ondewo.t2s.T2SDescription.prototype.toObject = function(opt_includeInstanc
  */
 proto.ondewo.t2s.T2SDescription.toObject = function(includeInstance, msg) {
   var f, obj = {
-    language: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    speakerSex: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    pipelineOwner: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    comments: jspb.Message.getFieldWithDefault(msg, 4, ""),
-    speakerName: jspb.Message.getFieldWithDefault(msg, 5, ""),
-    domain: jspb.Message.getFieldWithDefault(msg, 6, "")
+language: jspb.Message.getFieldWithDefault(msg, 1, ""),
+speakerSex: jspb.Message.getFieldWithDefault(msg, 2, ""),
+pipelineOwner: jspb.Message.getFieldWithDefault(msg, 3, ""),
+comments: jspb.Message.getFieldWithDefault(msg, 4, ""),
+speakerName: jspb.Message.getFieldWithDefault(msg, 5, ""),
+domain: jspb.Message.getFieldWithDefault(msg, 6, "")
   };
 
   if (includeInstance) {
@@ -7357,10 +7357,10 @@ proto.ondewo.t2s.T2SInference.prototype.toObject = function(opt_includeInstance)
  */
 proto.ondewo.t2s.T2SInference.toObject = function(includeInstance, msg) {
   var f, obj = {
-    type: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    compositeInference: (f = msg.getCompositeInference()) && proto.ondewo.t2s.CompositeInference.toObject(includeInstance, f),
-    singleInference: (f = msg.getSingleInference()) && proto.ondewo.t2s.SingleInference.toObject(includeInstance, f),
-    caching: (f = msg.getCaching()) && proto.ondewo.t2s.Caching.toObject(includeInstance, f)
+type: jspb.Message.getFieldWithDefault(msg, 1, ""),
+compositeInference: (f = msg.getCompositeInference()) && proto.ondewo.t2s.CompositeInference.toObject(includeInstance, f),
+singleInference: (f = msg.getSingleInference()) && proto.ondewo.t2s.SingleInference.toObject(includeInstance, f),
+caching: (f = msg.getCaching()) && proto.ondewo.t2s.Caching.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -7640,8 +7640,8 @@ proto.ondewo.t2s.CompositeInference.prototype.toObject = function(opt_includeIns
  */
 proto.ondewo.t2s.CompositeInference.toObject = function(includeInstance, msg) {
   var f, obj = {
-    text2mel: (f = msg.getText2mel()) && proto.ondewo.t2s.Text2Mel.toObject(includeInstance, f),
-    mel2audio: (f = msg.getMel2audio()) && proto.ondewo.t2s.Mel2Audio.toObject(includeInstance, f)
+text2mel: (f = msg.getText2mel()) && proto.ondewo.t2s.Text2Mel.toObject(includeInstance, f),
+mel2audio: (f = msg.getMel2audio()) && proto.ondewo.t2s.Mel2Audio.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -7842,7 +7842,7 @@ proto.ondewo.t2s.SingleInference.prototype.toObject = function(opt_includeInstan
  */
 proto.ondewo.t2s.SingleInference.toObject = function(includeInstance, msg) {
   var f, obj = {
-    text2audio: (f = msg.getText2audio()) && proto.ondewo.t2s.Text2Audio.toObject(includeInstance, f)
+text2audio: (f = msg.getText2audio()) && proto.ondewo.t2s.Text2Audio.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -7993,9 +7993,9 @@ proto.ondewo.t2s.Text2Mel.prototype.toObject = function(opt_includeInstance) {
  */
 proto.ondewo.t2s.Text2Mel.toObject = function(includeInstance, msg) {
   var f, obj = {
-    type: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    glowTts: (f = msg.getGlowTts()) && proto.ondewo.t2s.GlowTTS.toObject(includeInstance, f),
-    glowTtsTriton: (f = msg.getGlowTtsTriton()) && proto.ondewo.t2s.GlowTTSTriton.toObject(includeInstance, f)
+type: jspb.Message.getFieldWithDefault(msg, 1, ""),
+glowTts: (f = msg.getGlowTts()) && proto.ondewo.t2s.GlowTTS.toObject(includeInstance, f),
+glowTtsTriton: (f = msg.getGlowTtsTriton()) && proto.ondewo.t2s.GlowTTSTriton.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -8225,15 +8225,15 @@ proto.ondewo.t2s.Text2Audio.prototype.toObject = function(opt_includeInstance) {
  */
 proto.ondewo.t2s.Text2Audio.toObject = function(includeInstance, msg) {
   var f, obj = {
-    type: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    vits: (f = msg.getVits()) && proto.ondewo.t2s.Vits.toObject(includeInstance, f),
-    vitsTriton: (f = msg.getVitsTriton()) && proto.ondewo.t2s.VitsTriton.toObject(includeInstance, f),
-    t2sCloudServiceElevenlabs: (f = msg.getT2sCloudServiceElevenlabs()) && proto.ondewo.t2s.T2sCloudServiceElevenLabs.toObject(includeInstance, f),
-    t2sCloudServiceAmazon: (f = msg.getT2sCloudServiceAmazon()) && proto.ondewo.t2s.T2sCloudServiceAmazon.toObject(includeInstance, f),
-    t2sCloudServiceGoogle: (f = msg.getT2sCloudServiceGoogle()) && proto.ondewo.t2s.T2sCloudServiceGoogle.toObject(includeInstance, f),
-    t2sCloudServiceMicrosoft: (f = msg.getT2sCloudServiceMicrosoft()) && proto.ondewo.t2s.T2sCloudServiceMicrosoft.toObject(includeInstance, f),
-    qwen3TtsCustomVoice: (f = msg.getQwen3TtsCustomVoice()) && proto.ondewo.t2s.Qwen3TtsCustomVoice.toObject(includeInstance, f),
-    qwen3TtsBase: (f = msg.getQwen3TtsBase()) && proto.ondewo.t2s.Qwen3TtsBase.toObject(includeInstance, f)
+type: jspb.Message.getFieldWithDefault(msg, 1, ""),
+vits: (f = msg.getVits()) && proto.ondewo.t2s.Vits.toObject(includeInstance, f),
+vitsTriton: (f = msg.getVitsTriton()) && proto.ondewo.t2s.VitsTriton.toObject(includeInstance, f),
+t2sCloudServiceElevenlabs: (f = msg.getT2sCloudServiceElevenlabs()) && proto.ondewo.t2s.T2sCloudServiceElevenLabs.toObject(includeInstance, f),
+t2sCloudServiceAmazon: (f = msg.getT2sCloudServiceAmazon()) && proto.ondewo.t2s.T2sCloudServiceAmazon.toObject(includeInstance, f),
+t2sCloudServiceGoogle: (f = msg.getT2sCloudServiceGoogle()) && proto.ondewo.t2s.T2sCloudServiceGoogle.toObject(includeInstance, f),
+t2sCloudServiceMicrosoft: (f = msg.getT2sCloudServiceMicrosoft()) && proto.ondewo.t2s.T2sCloudServiceMicrosoft.toObject(includeInstance, f),
+qwen3TtsCustomVoice: (f = msg.getQwen3TtsCustomVoice()) && proto.ondewo.t2s.Qwen3TtsCustomVoice.toObject(includeInstance, f),
+qwen3TtsBase: (f = msg.getQwen3TtsBase()) && proto.ondewo.t2s.Qwen3TtsBase.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -8770,13 +8770,13 @@ proto.ondewo.t2s.GlowTTS.prototype.toObject = function(opt_includeInstance) {
  */
 proto.ondewo.t2s.GlowTTS.toObject = function(includeInstance, msg) {
   var f, obj = {
-    batchSize: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    useGpu: jspb.Message.getBooleanFieldWithDefault(msg, 2, false),
-    lengthScale: jspb.Message.getFloatingPointFieldWithDefault(msg, 3, 0.0),
-    noiseScale: jspb.Message.getFloatingPointFieldWithDefault(msg, 4, 0.0),
-    path: jspb.Message.getFieldWithDefault(msg, 5, ""),
-    cleanersList: (f = jspb.Message.getRepeatedField(msg, 6)) == null ? undefined : f,
-    paramConfigPath: jspb.Message.getFieldWithDefault(msg, 7, "")
+batchSize: jspb.Message.getFieldWithDefault(msg, 1, 0),
+useGpu: jspb.Message.getBooleanFieldWithDefault(msg, 2, false),
+lengthScale: jspb.Message.getFloatingPointFieldWithDefault(msg, 3, 0.0),
+noiseScale: jspb.Message.getFloatingPointFieldWithDefault(msg, 4, 0.0),
+path: jspb.Message.getFieldWithDefault(msg, 5, ""),
+cleanersList: (f = jspb.Message.getRepeatedField(msg, 6)) == null ? undefined : f,
+paramConfigPath: jspb.Message.getFieldWithDefault(msg, 7, "")
   };
 
   if (includeInstance) {
@@ -9106,15 +9106,15 @@ proto.ondewo.t2s.GlowTTSTriton.prototype.toObject = function(opt_includeInstance
  */
 proto.ondewo.t2s.GlowTTSTriton.toObject = function(includeInstance, msg) {
   var f, obj = {
-    batchSize: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    lengthScale: jspb.Message.getFloatingPointFieldWithDefault(msg, 2, 0.0),
-    noiseScale: jspb.Message.getFloatingPointFieldWithDefault(msg, 3, 0.0),
-    cleanersList: (f = jspb.Message.getRepeatedField(msg, 4)) == null ? undefined : f,
-    maxTextLength: jspb.Message.getFieldWithDefault(msg, 5, 0),
-    paramConfigPath: jspb.Message.getFieldWithDefault(msg, 6, ""),
-    tritonModelName: jspb.Message.getFieldWithDefault(msg, 7, ""),
-    tritonServerHost: jspb.Message.getFieldWithDefault(msg, 8, ""),
-    tritonServerPort: jspb.Message.getFieldWithDefault(msg, 9, 0)
+batchSize: jspb.Message.getFieldWithDefault(msg, 1, 0),
+lengthScale: jspb.Message.getFloatingPointFieldWithDefault(msg, 2, 0.0),
+noiseScale: jspb.Message.getFloatingPointFieldWithDefault(msg, 3, 0.0),
+cleanersList: (f = jspb.Message.getRepeatedField(msg, 4)) == null ? undefined : f,
+maxTextLength: jspb.Message.getFieldWithDefault(msg, 5, 0),
+paramConfigPath: jspb.Message.getFieldWithDefault(msg, 6, ""),
+tritonModelName: jspb.Message.getFieldWithDefault(msg, 7, ""),
+tritonServerHost: jspb.Message.getFieldWithDefault(msg, 8, ""),
+tritonServerPort: jspb.Message.getFieldWithDefault(msg, 9, 0)
   };
 
   if (includeInstance) {
@@ -9502,13 +9502,13 @@ proto.ondewo.t2s.Vits.prototype.toObject = function(opt_includeInstance) {
  */
 proto.ondewo.t2s.Vits.toObject = function(includeInstance, msg) {
   var f, obj = {
-    batchSize: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    useGpu: jspb.Message.getBooleanFieldWithDefault(msg, 2, false),
-    lengthScale: jspb.Message.getFloatingPointFieldWithDefault(msg, 3, 0.0),
-    noiseScale: jspb.Message.getFloatingPointFieldWithDefault(msg, 4, 0.0),
-    path: jspb.Message.getFieldWithDefault(msg, 5, ""),
-    cleanersList: (f = jspb.Message.getRepeatedField(msg, 6)) == null ? undefined : f,
-    paramConfigPath: jspb.Message.getFieldWithDefault(msg, 7, "")
+batchSize: jspb.Message.getFieldWithDefault(msg, 1, 0),
+useGpu: jspb.Message.getBooleanFieldWithDefault(msg, 2, false),
+lengthScale: jspb.Message.getFloatingPointFieldWithDefault(msg, 3, 0.0),
+noiseScale: jspb.Message.getFloatingPointFieldWithDefault(msg, 4, 0.0),
+path: jspb.Message.getFieldWithDefault(msg, 5, ""),
+cleanersList: (f = jspb.Message.getRepeatedField(msg, 6)) == null ? undefined : f,
+paramConfigPath: jspb.Message.getFieldWithDefault(msg, 7, "")
   };
 
   if (includeInstance) {
@@ -9838,15 +9838,15 @@ proto.ondewo.t2s.VitsTriton.prototype.toObject = function(opt_includeInstance) {
  */
 proto.ondewo.t2s.VitsTriton.toObject = function(includeInstance, msg) {
   var f, obj = {
-    batchSize: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    lengthScale: jspb.Message.getFloatingPointFieldWithDefault(msg, 2, 0.0),
-    noiseScale: jspb.Message.getFloatingPointFieldWithDefault(msg, 3, 0.0),
-    cleanersList: (f = jspb.Message.getRepeatedField(msg, 4)) == null ? undefined : f,
-    maxTextLength: jspb.Message.getFieldWithDefault(msg, 5, 0),
-    paramConfigPath: jspb.Message.getFieldWithDefault(msg, 6, ""),
-    tritonModelName: jspb.Message.getFieldWithDefault(msg, 7, ""),
-    tritonServerHost: jspb.Message.getFieldWithDefault(msg, 8, ""),
-    tritonServerPort: jspb.Message.getFieldWithDefault(msg, 9, 0)
+batchSize: jspb.Message.getFieldWithDefault(msg, 1, 0),
+lengthScale: jspb.Message.getFloatingPointFieldWithDefault(msg, 2, 0.0),
+noiseScale: jspb.Message.getFloatingPointFieldWithDefault(msg, 3, 0.0),
+cleanersList: (f = jspb.Message.getRepeatedField(msg, 4)) == null ? undefined : f,
+maxTextLength: jspb.Message.getFieldWithDefault(msg, 5, 0),
+paramConfigPath: jspb.Message.getFieldWithDefault(msg, 6, ""),
+tritonModelName: jspb.Message.getFieldWithDefault(msg, 7, ""),
+tritonServerHost: jspb.Message.getFieldWithDefault(msg, 8, ""),
+tritonServerPort: jspb.Message.getFieldWithDefault(msg, 9, 0)
   };
 
   if (includeInstance) {
@@ -10227,11 +10227,11 @@ proto.ondewo.t2s.T2sCloudServiceElevenLabs.prototype.toObject = function(opt_inc
  */
 proto.ondewo.t2s.T2sCloudServiceElevenLabs.toObject = function(includeInstance, msg) {
   var f, obj = {
-    languageCode: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    modelId: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    voiceId: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    voiceSettings: (f = msg.getVoiceSettings()) && proto.ondewo.t2s.VoiceSettings.toObject(includeInstance, f),
-    applyTextNormalization: jspb.Message.getFieldWithDefault(msg, 5, "")
+languageCode: jspb.Message.getFieldWithDefault(msg, 1, ""),
+modelId: jspb.Message.getFieldWithDefault(msg, 2, ""),
+voiceId: jspb.Message.getFieldWithDefault(msg, 3, ""),
+voiceSettings: (f = msg.getVoiceSettings()) && proto.ondewo.t2s.VoiceSettings.toObject(includeInstance, f),
+applyTextNormalization: jspb.Message.getFieldWithDefault(msg, 5, "")
   };
 
   if (includeInstance) {
@@ -10498,10 +10498,10 @@ proto.ondewo.t2s.VoiceSettings.prototype.toObject = function(opt_includeInstance
  */
 proto.ondewo.t2s.VoiceSettings.toObject = function(includeInstance, msg) {
   var f, obj = {
-    stability: jspb.Message.getFloatingPointFieldWithDefault(msg, 1, 0.0),
-    similarityBoost: jspb.Message.getFloatingPointFieldWithDefault(msg, 2, 0.0),
-    style: jspb.Message.getFloatingPointFieldWithDefault(msg, 3, 0.0),
-    useSpeakerBoost: jspb.Message.getBooleanFieldWithDefault(msg, 4, false)
+stability: jspb.Message.getFloatingPointFieldWithDefault(msg, 1, 0.0),
+similarityBoost: jspb.Message.getFloatingPointFieldWithDefault(msg, 2, 0.0),
+style: jspb.Message.getFloatingPointFieldWithDefault(msg, 3, 0.0),
+useSpeakerBoost: jspb.Message.getBooleanFieldWithDefault(msg, 4, false)
   };
 
   if (includeInstance) {
@@ -10718,8 +10718,8 @@ proto.ondewo.t2s.T2sCloudServiceAmazon.prototype.toObject = function(opt_include
  */
 proto.ondewo.t2s.T2sCloudServiceAmazon.toObject = function(includeInstance, msg) {
   var f, obj = {
-    voiceId: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    modelId: jspb.Message.getFieldWithDefault(msg, 2, "")
+voiceId: jspb.Message.getFieldWithDefault(msg, 1, ""),
+modelId: jspb.Message.getFieldWithDefault(msg, 2, "")
   };
 
   if (includeInstance) {
@@ -10878,11 +10878,11 @@ proto.ondewo.t2s.T2sCloudServiceGoogle.prototype.toObject = function(opt_include
  */
 proto.ondewo.t2s.T2sCloudServiceGoogle.toObject = function(includeInstance, msg) {
   var f, obj = {
-    voiceId: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    speakingRate: jspb.Message.getFloatingPointFieldWithDefault(msg, 2, 0.0),
-    volumeGainDb: jspb.Message.getFloatingPointFieldWithDefault(msg, 3, 0.0),
-    pitch: jspb.Message.getFloatingPointFieldWithDefault(msg, 4, 0.0),
-    speakerLanguage: jspb.Message.getFieldWithDefault(msg, 5, "")
+voiceId: jspb.Message.getFieldWithDefault(msg, 1, ""),
+speakingRate: jspb.Message.getFloatingPointFieldWithDefault(msg, 2, 0.0),
+volumeGainDb: jspb.Message.getFloatingPointFieldWithDefault(msg, 3, 0.0),
+pitch: jspb.Message.getFloatingPointFieldWithDefault(msg, 4, 0.0),
+speakerLanguage: jspb.Message.getFieldWithDefault(msg, 5, "")
   };
 
   if (includeInstance) {
@@ -11128,8 +11128,8 @@ proto.ondewo.t2s.T2sCloudServiceMicrosoft.prototype.toObject = function(opt_incl
  */
 proto.ondewo.t2s.T2sCloudServiceMicrosoft.toObject = function(includeInstance, msg) {
   var f, obj = {
-    voiceId: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    useDefaultSpeaker: jspb.Message.getBooleanFieldWithDefault(msg, 2, false)
+voiceId: jspb.Message.getFieldWithDefault(msg, 1, ""),
+useDefaultSpeaker: jspb.Message.getBooleanFieldWithDefault(msg, 2, false)
   };
 
   if (includeInstance) {
@@ -11288,12 +11288,12 @@ proto.ondewo.t2s.Qwen3TtsCustomVoice.prototype.toObject = function(opt_includeIn
  */
 proto.ondewo.t2s.Qwen3TtsCustomVoice.toObject = function(includeInstance, msg) {
   var f, obj = {
-    voiceId: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    modelName: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    language: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    qwen3TtsServerHost: jspb.Message.getFieldWithDefault(msg, 4, ""),
-    qwen3TtsServerPort: jspb.Message.getFieldWithDefault(msg, 5, 0),
-    qwen3TtsServerHeader: (f = msg.getQwen3TtsServerHeader()) && google_protobuf_struct_pb.Struct.toObject(includeInstance, f)
+voiceId: jspb.Message.getFieldWithDefault(msg, 1, ""),
+modelName: jspb.Message.getFieldWithDefault(msg, 2, ""),
+language: jspb.Message.getFieldWithDefault(msg, 3, ""),
+qwen3TtsServerHost: jspb.Message.getFieldWithDefault(msg, 4, ""),
+qwen3TtsServerPort: jspb.Message.getFieldWithDefault(msg, 5, 0),
+qwen3TtsServerHeader: (f = msg.getQwen3TtsServerHeader()) && google_protobuf_struct_pb.Struct.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -11589,12 +11589,12 @@ proto.ondewo.t2s.Qwen3TtsBase.prototype.toObject = function(opt_includeInstance)
  */
 proto.ondewo.t2s.Qwen3TtsBase.toObject = function(includeInstance, msg) {
   var f, obj = {
-    modelName: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    language: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    embeddingPath: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    qwen3TtsServerHost: jspb.Message.getFieldWithDefault(msg, 4, ""),
-    qwen3TtsServerPort: jspb.Message.getFieldWithDefault(msg, 5, 0),
-    qwen3TtsServerHeader: (f = msg.getQwen3TtsServerHeader()) && google_protobuf_struct_pb.Struct.toObject(includeInstance, f)
+modelName: jspb.Message.getFieldWithDefault(msg, 1, ""),
+language: jspb.Message.getFieldWithDefault(msg, 2, ""),
+embeddingPath: jspb.Message.getFieldWithDefault(msg, 3, ""),
+qwen3TtsServerHost: jspb.Message.getFieldWithDefault(msg, 4, ""),
+qwen3TtsServerPort: jspb.Message.getFieldWithDefault(msg, 5, 0),
+qwen3TtsServerHeader: (f = msg.getQwen3TtsServerHeader()) && google_protobuf_struct_pb.Struct.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -11890,10 +11890,10 @@ proto.ondewo.t2s.Mel2Audio.prototype.toObject = function(opt_includeInstance) {
  */
 proto.ondewo.t2s.Mel2Audio.toObject = function(includeInstance, msg) {
   var f, obj = {
-    type: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    mbMelganTriton: (f = msg.getMbMelganTriton()) && proto.ondewo.t2s.MbMelganTriton.toObject(includeInstance, f),
-    hifiGan: (f = msg.getHifiGan()) && proto.ondewo.t2s.HiFiGan.toObject(includeInstance, f),
-    hifiGanTriton: (f = msg.getHifiGanTriton()) && proto.ondewo.t2s.HiFiGanTriton.toObject(includeInstance, f)
+type: jspb.Message.getFieldWithDefault(msg, 1, ""),
+mbMelganTriton: (f = msg.getMbMelganTriton()) && proto.ondewo.t2s.MbMelganTriton.toObject(includeInstance, f),
+hifiGan: (f = msg.getHifiGan()) && proto.ondewo.t2s.HiFiGan.toObject(includeInstance, f),
+hifiGanTriton: (f = msg.getHifiGanTriton()) && proto.ondewo.t2s.HiFiGanTriton.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -12173,10 +12173,10 @@ proto.ondewo.t2s.HiFiGan.prototype.toObject = function(opt_includeInstance) {
  */
 proto.ondewo.t2s.HiFiGan.toObject = function(includeInstance, msg) {
   var f, obj = {
-    useGpu: jspb.Message.getBooleanFieldWithDefault(msg, 1, false),
-    batchSize: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    configPath: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    modelPath: jspb.Message.getFieldWithDefault(msg, 4, "")
+useGpu: jspb.Message.getBooleanFieldWithDefault(msg, 1, false),
+batchSize: jspb.Message.getFieldWithDefault(msg, 2, 0),
+configPath: jspb.Message.getFieldWithDefault(msg, 3, ""),
+modelPath: jspb.Message.getFieldWithDefault(msg, 4, "")
   };
 
   if (includeInstance) {
@@ -12393,10 +12393,10 @@ proto.ondewo.t2s.HiFiGanTriton.prototype.toObject = function(opt_includeInstance
  */
 proto.ondewo.t2s.HiFiGanTriton.toObject = function(includeInstance, msg) {
   var f, obj = {
-    configPath: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    tritonModelName: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    tritonServerHost: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    tritonServerPort: jspb.Message.getFieldWithDefault(msg, 4, 0)
+configPath: jspb.Message.getFieldWithDefault(msg, 1, ""),
+tritonModelName: jspb.Message.getFieldWithDefault(msg, 2, ""),
+tritonServerHost: jspb.Message.getFieldWithDefault(msg, 3, ""),
+tritonServerPort: jspb.Message.getFieldWithDefault(msg, 4, 0)
   };
 
   if (includeInstance) {
@@ -12613,11 +12613,11 @@ proto.ondewo.t2s.MbMelganTriton.prototype.toObject = function(opt_includeInstanc
  */
 proto.ondewo.t2s.MbMelganTriton.toObject = function(includeInstance, msg) {
   var f, obj = {
-    configPath: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    statsPath: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    tritonModelName: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    tritonServerHost: jspb.Message.getFieldWithDefault(msg, 4, ""),
-    tritonServerPort: jspb.Message.getFieldWithDefault(msg, 5, 0)
+configPath: jspb.Message.getFieldWithDefault(msg, 1, ""),
+statsPath: jspb.Message.getFieldWithDefault(msg, 2, ""),
+tritonModelName: jspb.Message.getFieldWithDefault(msg, 3, ""),
+tritonServerHost: jspb.Message.getFieldWithDefault(msg, 4, ""),
+tritonServerPort: jspb.Message.getFieldWithDefault(msg, 5, 0)
   };
 
   if (includeInstance) {
@@ -12863,12 +12863,12 @@ proto.ondewo.t2s.Caching.prototype.toObject = function(opt_includeInstance) {
  */
 proto.ondewo.t2s.Caching.toObject = function(includeInstance, msg) {
   var f, obj = {
-    active: jspb.Message.getBooleanFieldWithDefault(msg, 1, false),
-    memoryCacheMaxSize: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    samplingRate: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    loadCache: jspb.Message.getBooleanFieldWithDefault(msg, 4, false),
-    saveCache: jspb.Message.getBooleanFieldWithDefault(msg, 5, false),
-    cacheSaveDir: jspb.Message.getFieldWithDefault(msg, 6, "")
+active: jspb.Message.getBooleanFieldWithDefault(msg, 1, false),
+memoryCacheMaxSize: jspb.Message.getFieldWithDefault(msg, 2, 0),
+samplingRate: jspb.Message.getFieldWithDefault(msg, 3, 0),
+loadCache: jspb.Message.getBooleanFieldWithDefault(msg, 4, false),
+saveCache: jspb.Message.getBooleanFieldWithDefault(msg, 5, false),
+cacheSaveDir: jspb.Message.getFieldWithDefault(msg, 6, "")
   };
 
   if (includeInstance) {
@@ -13150,14 +13150,14 @@ proto.ondewo.t2s.T2SNormalization.prototype.toObject = function(opt_includeInsta
  */
 proto.ondewo.t2s.T2SNormalization.toObject = function(includeInstance, msg) {
   var f, obj = {
-    language: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    pipelineList: (f = jspb.Message.getRepeatedField(msg, 2)) == null ? undefined : f,
-    customPhonemizerId: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    customLengthScales: (f = msg.getCustomLengthScales()) && proto.ondewo.t2s.T2SCustomLengthScales.toObject(includeInstance, f),
-    arpabetMapping: jspb.Message.getFieldWithDefault(msg, 5, ""),
-    numericMapping: jspb.Message.getFieldWithDefault(msg, 6, ""),
-    callsignsMapping: jspb.Message.getFieldWithDefault(msg, 7, ""),
-    phonemeCorrectionMapping: jspb.Message.getFieldWithDefault(msg, 8, "")
+language: jspb.Message.getFieldWithDefault(msg, 1, ""),
+pipelineList: (f = jspb.Message.getRepeatedField(msg, 2)) == null ? undefined : f,
+customPhonemizerId: jspb.Message.getFieldWithDefault(msg, 3, ""),
+customLengthScales: (f = msg.getCustomLengthScales()) && proto.ondewo.t2s.T2SCustomLengthScales.toObject(includeInstance, f),
+arpabetMapping: jspb.Message.getFieldWithDefault(msg, 5, ""),
+numericMapping: jspb.Message.getFieldWithDefault(msg, 6, ""),
+callsignsMapping: jspb.Message.getFieldWithDefault(msg, 7, ""),
+phonemeCorrectionMapping: jspb.Message.getFieldWithDefault(msg, 8, "")
   };
 
   if (includeInstance) {
@@ -13537,11 +13537,11 @@ proto.ondewo.t2s.Postprocessing.prototype.toObject = function(opt_includeInstanc
  */
 proto.ondewo.t2s.Postprocessing.toObject = function(includeInstance, msg) {
   var f, obj = {
-    silenceSecs: jspb.Message.getFloatingPointFieldWithDefault(msg, 1, 0.0),
-    pipelineList: (f = jspb.Message.getRepeatedField(msg, 2)) == null ? undefined : f,
-    logmmse: (f = msg.getLogmmse()) && proto.ondewo.t2s.Logmnse.toObject(includeInstance, f),
-    wiener: (f = msg.getWiener()) && proto.ondewo.t2s.Wiener.toObject(includeInstance, f),
-    apodization: (f = msg.getApodization()) && proto.ondewo.t2s.Apodization.toObject(includeInstance, f)
+silenceSecs: jspb.Message.getFloatingPointFieldWithDefault(msg, 1, 0.0),
+pipelineList: (f = jspb.Message.getRepeatedField(msg, 2)) == null ? undefined : f,
+logmmse: (f = msg.getLogmmse()) && proto.ondewo.t2s.Logmnse.toObject(includeInstance, f),
+wiener: (f = msg.getWiener()) && proto.ondewo.t2s.Wiener.toObject(includeInstance, f),
+apodization: (f = msg.getApodization()) && proto.ondewo.t2s.Apodization.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -13869,9 +13869,9 @@ proto.ondewo.t2s.Logmnse.prototype.toObject = function(opt_includeInstance) {
  */
 proto.ondewo.t2s.Logmnse.toObject = function(includeInstance, msg) {
   var f, obj = {
-    initialNoise: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    windowSize: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    noiseThreshold: jspb.Message.getFloatingPointFieldWithDefault(msg, 3, 0.0)
+initialNoise: jspb.Message.getFieldWithDefault(msg, 1, 0),
+windowSize: jspb.Message.getFieldWithDefault(msg, 2, 0),
+noiseThreshold: jspb.Message.getFloatingPointFieldWithDefault(msg, 3, 0.0)
   };
 
   if (includeInstance) {
@@ -14059,11 +14059,11 @@ proto.ondewo.t2s.Wiener.prototype.toObject = function(opt_includeInstance) {
  */
 proto.ondewo.t2s.Wiener.toObject = function(includeInstance, msg) {
   var f, obj = {
-    frameLen: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    lpcOrder: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    iterations: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    alpha: jspb.Message.getFloatingPointFieldWithDefault(msg, 4, 0.0),
-    thresh: jspb.Message.getFloatingPointFieldWithDefault(msg, 5, 0.0)
+frameLen: jspb.Message.getFieldWithDefault(msg, 1, 0),
+lpcOrder: jspb.Message.getFieldWithDefault(msg, 2, 0),
+iterations: jspb.Message.getFieldWithDefault(msg, 3, 0),
+alpha: jspb.Message.getFloatingPointFieldWithDefault(msg, 4, 0.0),
+thresh: jspb.Message.getFloatingPointFieldWithDefault(msg, 5, 0.0)
   };
 
   if (includeInstance) {
@@ -14309,7 +14309,7 @@ proto.ondewo.t2s.Apodization.prototype.toObject = function(opt_includeInstance) 
  */
 proto.ondewo.t2s.Apodization.toObject = function(includeInstance, msg) {
   var f, obj = {
-    apodizationSecs: jspb.Message.getFloatingPointFieldWithDefault(msg, 1, 0.0)
+apodizationSecs: jspb.Message.getFloatingPointFieldWithDefault(msg, 1, 0.0)
   };
 
   if (includeInstance) {
@@ -14439,14 +14439,14 @@ proto.ondewo.t2s.T2SCustomLengthScales.prototype.toObject = function(opt_include
  */
 proto.ondewo.t2s.T2SCustomLengthScales.toObject = function(includeInstance, msg) {
   var f, obj = {
-    text: jspb.Message.getFloatingPointFieldWithDefault(msg, 1, 0.0),
-    email: jspb.Message.getFloatingPointFieldWithDefault(msg, 2, 0.0),
-    url: jspb.Message.getFloatingPointFieldWithDefault(msg, 3, 0.0),
-    phone: jspb.Message.getFloatingPointFieldWithDefault(msg, 4, 0.0),
-    spell: jspb.Message.getFloatingPointFieldWithDefault(msg, 5, 0.0),
-    spellWithNames: jspb.Message.getFloatingPointFieldWithDefault(msg, 6, 0.0),
-    callsignLong: jspb.Message.getFloatingPointFieldWithDefault(msg, 7, 0.0),
-    callsignShort: jspb.Message.getFloatingPointFieldWithDefault(msg, 8, 0.0)
+text: jspb.Message.getFloatingPointFieldWithDefault(msg, 1, 0.0),
+email: jspb.Message.getFloatingPointFieldWithDefault(msg, 2, 0.0),
+url: jspb.Message.getFloatingPointFieldWithDefault(msg, 3, 0.0),
+phone: jspb.Message.getFloatingPointFieldWithDefault(msg, 4, 0.0),
+spell: jspb.Message.getFloatingPointFieldWithDefault(msg, 5, 0.0),
+spellWithNames: jspb.Message.getFloatingPointFieldWithDefault(msg, 6, 0.0),
+callsignLong: jspb.Message.getFloatingPointFieldWithDefault(msg, 7, 0.0),
+callsignShort: jspb.Message.getFloatingPointFieldWithDefault(msg, 8, 0.0)
   };
 
   if (includeInstance) {
@@ -14779,7 +14779,7 @@ proto.ondewo.t2s.PhonemizerId.prototype.toObject = function(opt_includeInstance)
  */
 proto.ondewo.t2s.PhonemizerId.toObject = function(includeInstance, msg) {
   var f, obj = {
-    id: jspb.Message.getFieldWithDefault(msg, 1, "")
+id: jspb.Message.getFieldWithDefault(msg, 1, "")
   };
 
   if (includeInstance) {
@@ -14916,8 +14916,8 @@ proto.ondewo.t2s.CustomPhonemizerProto.prototype.toObject = function(opt_include
  */
 proto.ondewo.t2s.CustomPhonemizerProto.toObject = function(includeInstance, msg) {
   var f, obj = {
-    id: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    mapsList: jspb.Message.toObjectList(msg.getMapsList(),
+id: jspb.Message.getFieldWithDefault(msg, 1, ""),
+mapsList: jspb.Message.toObjectList(msg.getMapsList(),
     proto.ondewo.t2s.Map.toObject, includeInstance)
   };
 
@@ -15099,8 +15099,8 @@ proto.ondewo.t2s.Map.prototype.toObject = function(opt_includeInstance) {
  */
 proto.ondewo.t2s.Map.toObject = function(includeInstance, msg) {
   var f, obj = {
-    word: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    phonemeGroups: jspb.Message.getFieldWithDefault(msg, 2, "")
+word: jspb.Message.getFieldWithDefault(msg, 1, ""),
+phonemeGroups: jspb.Message.getFieldWithDefault(msg, 2, "")
   };
 
   if (includeInstance) {
@@ -15266,7 +15266,7 @@ proto.ondewo.t2s.ListCustomPhonemizerResponse.prototype.toObject = function(opt_
  */
 proto.ondewo.t2s.ListCustomPhonemizerResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
-    phonemizersList: jspb.Message.toObjectList(msg.getPhonemizersList(),
+phonemizersList: jspb.Message.toObjectList(msg.getPhonemizersList(),
     proto.ondewo.t2s.CustomPhonemizerProto.toObject, includeInstance)
   };
 
@@ -15426,7 +15426,7 @@ proto.ondewo.t2s.ListCustomPhonemizerRequest.prototype.toObject = function(opt_i
  */
 proto.ondewo.t2s.ListCustomPhonemizerRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    pipelineIdsList: (f = jspb.Message.getRepeatedField(msg, 1)) == null ? undefined : f
+pipelineIdsList: (f = jspb.Message.getRepeatedField(msg, 1)) == null ? undefined : f
   };
 
   if (includeInstance) {
@@ -15582,9 +15582,9 @@ proto.ondewo.t2s.UpdateCustomPhonemizerRequest.prototype.toObject = function(opt
  */
 proto.ondewo.t2s.UpdateCustomPhonemizerRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    id: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    updateMethod: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    mapsList: jspb.Message.toObjectList(msg.getMapsList(),
+id: jspb.Message.getFieldWithDefault(msg, 1, ""),
+updateMethod: jspb.Message.getFieldWithDefault(msg, 2, 0),
+mapsList: jspb.Message.toObjectList(msg.getMapsList(),
     proto.ondewo.t2s.Map.toObject, includeInstance)
   };
 
@@ -15811,8 +15811,8 @@ proto.ondewo.t2s.CreateCustomPhonemizerRequest.prototype.toObject = function(opt
  */
 proto.ondewo.t2s.CreateCustomPhonemizerRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    prefix: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    mapsList: jspb.Message.toObjectList(msg.getMapsList(),
+prefix: jspb.Message.getFieldWithDefault(msg, 1, ""),
+mapsList: jspb.Message.toObjectList(msg.getMapsList(),
     proto.ondewo.t2s.Map.toObject, includeInstance)
   };
 
@@ -15994,11 +15994,11 @@ proto.ondewo.t2s.VoiceCloningRequest.prototype.toObject = function(opt_includeIn
  */
 proto.ondewo.t2s.VoiceCloningRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    sampleAudio: msg.getSampleAudio_asB64(),
-    transcription: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    speakerName: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    speakerLanguage: jspb.Message.getFieldWithDefault(msg, 4, ""),
-    modelName: jspb.Message.getFieldWithDefault(msg, 5, "")
+sampleAudio: msg.getSampleAudio_asB64(),
+transcription: jspb.Message.getFieldWithDefault(msg, 2, ""),
+speakerName: jspb.Message.getFieldWithDefault(msg, 3, ""),
+speakerLanguage: jspb.Message.getFieldWithDefault(msg, 4, ""),
+modelName: jspb.Message.getFieldWithDefault(msg, 5, "")
   };
 
   if (includeInstance) {
