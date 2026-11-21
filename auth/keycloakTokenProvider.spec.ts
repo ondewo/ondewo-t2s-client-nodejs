@@ -23,6 +23,7 @@
 
 import assert from 'node:assert/strict';
 import { describe, it, mock } from 'node:test';
+import { createHash } from 'node:crypto';
 import { inspect } from 'util';
 
 import {
@@ -681,7 +682,7 @@ describe('Keycloak token provider catalogue', () => {
 			);
 			assert.match(error.message, /refresh_token/);
 			assert.ok(!error.message.includes('secret-offline-token-77'));
-			assert.match(error.message, /\[expires_in, refresh_token\]/);
+			assert.match(error.message, /\['expires_in', 'refresh_token'\]/);
 		});
 
 		it('T32 a non-numeric expires_in on refresh changes nothing', async () => {
@@ -691,6 +692,51 @@ describe('Keycloak token provider catalogue', () => {
 			assert.equal(h.provider.getAccessToken(), 'acc-1');
 			assert.equal(internals(h.provider).accessTokenExpiresAtS, 1300);
 			assert.match(h.logger.warnings[0], /non-numeric expires_in \(value withheld\)/);
+		});
+
+		it('S3 a password login without a refresh_token is accepted, and the refresh then sends an empty one', async () => {
+			const h: Harness = await build([{ body: { access_token: 'acc-1', expires_in: 300 } }, token('acc-2')], {
+				startBackgroundRefresh: false
+			});
+			h.clock.advance(280);
+			assert.deepEqual(await h.provider.getAuthorizationMetadataAsync(), ['authorization', 'Bearer acc-2']);
+			assert.equal(h.transport.calls.length, 2);
+			assert.equal(h.transport.calls[1].form.get('grant_type'), 'refresh_token');
+			assert.equal(h.transport.calls[1].form.get('refresh_token'), '');
+			assert.ok(!h.transport.calls[1].form.has('password'));
+		});
+
+		it('S3 an empty refresh_token in the login response is not adopted', async () => {
+			const h: Harness = await build([token('acc-1', 300, ''), token('acc-2', 300, 'off-new'), token('acc-3')], {
+				startBackgroundRefresh: false
+			});
+			h.clock.advance(280);
+			await h.provider.getAuthorizationMetadataAsync();
+			assert.equal(h.transport.calls[1].form.get('refresh_token'), '');
+			h.clock.advance(280);
+			await h.provider.getAuthorizationMetadataAsync();
+			assert.equal(h.transport.calls[2].form.get('refresh_token'), 'off-new');
+		});
+
+		it('the explicit refresh() sends no request after the login lifetime elapsed', async () => {
+			const h: Harness = await build([token('acc-1')], { tokenExpirationInS: 60, startBackgroundRefresh: false });
+			h.clock.advance(61);
+			const error: KeycloakAuthenticationError = await rejection(() => h.provider.refresh());
+			assert.match(error.message, /login lifetime \(tokenExpirationInS\) has elapsed/);
+			assert.equal(h.transport.calls.length, 1);
+		});
+
+		it('the explicit refresh() sends no request while the shared backoff is pending', async () => {
+			const h: Harness = await build([token('acc-1'), UNAVAILABLE, token('acc-2')], { startBackgroundRefresh: false });
+			h.clock.advance(280);
+			assert.deepEqual(await h.provider.getAuthorizationMetadataAsync(), ['authorization', 'Bearer acc-1']);
+			const error: KeycloakAuthenticationError = await rejection(() => h.provider.refresh());
+			assert.match(error.message, /backing off after 1 consecutive failure\(s\); the next attempt is due in 5\.0s/);
+			assert.equal(h.transport.calls.length, 2);
+			h.clock.advance(5);
+			await h.provider.refresh();
+			assert.equal(h.transport.calls.length, 3);
+			assert.deepEqual(await h.provider.getAuthorizationMetadataAsync(), ['authorization', 'Bearer acc-2']);
 		});
 
 		it('T33 a numeric string expires_in is accepted', async () => {
@@ -1075,6 +1121,17 @@ describe('Keycloak token provider catalogue', () => {
 			assert.equal(b.transport.calls[0].form.get('refresh_token'), 'off-tenant-b');
 			first.stop();
 			second.stop();
+		});
+
+		it('the key renders verify_ssl as True / False, exactly like the python SDK', () => {
+			const fields: string[] = [BASE.keycloakUrl, BASE.realm, BASE.clientId, BASE.username, String(BASE.password), ''];
+			const digest: (verify: string) => string = (verify: string): string =>
+				createHash('sha256')
+					.update([...fields, verify, ''].join('\0'), 'utf8')
+					.digest('hex');
+			assert.equal(keycloakProviderRegistryKey({ ...BASE }), digest('True'));
+			assert.equal(keycloakProviderRegistryKey({ ...BASE, keycloakVerifySsl: true }), digest('True'));
+			assert.equal(keycloakProviderRegistryKey({ ...BASE, keycloakVerifySsl: false }), digest('False'));
 		});
 
 		it('T52 / T53 the key holds neither the refresh token nor the password and is 64 hex characters', () => {

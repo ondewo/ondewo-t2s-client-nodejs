@@ -296,19 +296,17 @@ describe('offlineTokenProvider.login (ROPC + offline_access)', () => {
 		);
 	});
 
-	/** A login response without the offline `refresh_token` is rejected. */
-	it('rejects a response missing the offline refresh_token', async () => {
+	/** A login response without the offline `refresh_token` is accepted, like the python SDK. */
+	it('accepts a response missing the offline refresh_token', async () => {
 		const fake: { fetchImpl: FetchLike; requests: CapturedRequest[] } = makeFakeFetch([
 			jsonResponse({ access_token: 'access-1', expires_in: 300 })
 		]);
-		await assert.rejects(
-			() => login({ ...BASE_OPTIONS, fetchImpl: fake.fetchImpl }),
-			(reason: unknown): boolean => {
-				assert.ok(reason instanceof OfflineTokenError);
-				assert.match(reason.message, /offline_access/);
-				return true;
-			}
-		);
+		const provider: OfflineTokenProvider = await login({ ...BASE_OPTIONS, fetchImpl: fake.fetchImpl });
+		try {
+			assert.equal(provider.getAccessToken(), 'access-1');
+		} finally {
+			provider.stop();
+		}
 	});
 
 	/** A body that is not valid JSON is rejected as an {@link OfflineTokenError}. */
