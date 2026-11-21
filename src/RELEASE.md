@@ -2,6 +2,28 @@
 
 *****************
 
+## Release ONDEWO T2S Nodejs Client 6.7.1
+
+### New Features
+
+* [[OND236-120]](https://ondewo.atlassian.net/browse/OND236-120) Offline-token start-up, as the python SDK has it: a handed-off Keycloak OFFLINE refresh token (`refreshToken`) replaces the password. The provider then starts with ONE `grant_type=refresh_token` exchange and never sends a password grant, not even when the token is refused, because Keycloak's brute-force detection counts failed password logins and N processes sharing one technical user would lock it. A Keycloak config needs `password` or `refreshToken`; with both, the refresh token wins.
+* [[OND236-120]](https://ondewo.atlassian.net/browse/OND236-120) `getKeycloakTokenProvider(config)` returns the shared provider for a credential set and `createGrpcClient` attaches its `authorization: Bearer <token>` metadata to every call; `tokenExpirationInS` bounds the auto-refresh.
+
+### Bug Fixes
+
+* [[OND236-120]](https://ondewo.atlassian.net/browse/OND236-120) A failed token refresh never ends the refreshing: every failure (an unreachable or timed-out token endpoint, a non-2xx answer, a body that is not a JSON object, a missing `access_token`, a non-numeric `expires_in`) is retried with a full-jitter backoff from 5 s doubling up to 300 s, which the background refresh and the per-call refresh share, so a Keycloak outage costs one token request per backoff step instead of one per call. A success resets the backoff.
+* [[OND236-120]](https://ondewo.atlassian.net/browse/OND236-120) A token that is still valid keeps being served while its refresh fails; only an EXPIRED token that cannot be refreshed fails, with a Keycloak authentication error that chains the underlying cause. A malformed token response changes no provider state, and an error about a response without an `access_token` names its field names only, never their values.
+* [[OND236-120]](https://ondewo.atlassian.net/browse/OND236-120) A password login whose response carries no `refresh_token` is accepted and the previous (empty) refresh token is kept, as in python; the refresh grant sends an empty `refresh_token` instead of the string `"null"`.
+* [[OND236-120]](https://ondewo.atlassian.net/browse/OND236-120) The explicit `refresh()` skips only the expiry leeway: after `tokenExpirationInS` has elapsed or while the shared backoff is pending it sends no request and rejects with a `KeycloakAuthenticationError`.
+
+### Improvements
+
+* [[OND236-120]](https://ondewo.atlassian.net/browse/OND236-120) One provider is shared per credential set: the registry key is a SHA-256 over the Keycloak connection and credential fields (the password and the refresh token enter it only as hashes), so two configs of different tenants never share a provider and all clients of one identity log in once.
+* [[OND236-120]](https://ondewo.atlassian.net/browse/OND236-120) The token request times out after 10 s, quoted Keycloak error bodies are cut at 500 characters, each failed attempt logs one WARNING (attempt number, retry delay, remaining token validity) and the first success afterwards one INFO; no error message and no log line carries a password or a token.
+* [[OND236-120]](https://ondewo.atlassian.net/browse/OND236-120) The behaviour is pinned by the same test catalogue as the python SDK (`test_keycloak_refresh_resilience.py`, `test_client_config_refresh_token.py`), plus edge cases: every failure kind, the backoff ladder and its bounds, concurrent callers during an outage (one token request), malformed responses, credential-free logs and the credential-keyed registry.
+
+*****************
+
 ## Release ONDEWO T2S Nodejs Client 6.7.0
 
 ### Breaking Changes
