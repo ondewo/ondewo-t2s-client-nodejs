@@ -1,60 +1,50 @@
-/**
- * Options for {@link login}.
- */
-export interface OfflineTokenLoginOptions {
-    /** Base Keycloak URL, e.g. `https://keycloak.example.com/auth`. */
-    keycloakUrl: string;
-    /** Realm name, e.g. `ondewo-ccai-platform`. */
-    realm: string;
-    /** Public SDK client id (no secret), e.g. `ondewo-nlu-cai-sdk-public`. */
-    clientId: string;
-    /** Technical-user username / email. */
-    username: string;
-    /** Technical-user password. */
-    password: string;
-    /**
-     * Optional bound (seconds) on how long the auto-refresh loop runs. Once this
-     * many seconds have elapsed since login the loop stops and the access token is
-     * allowed to lapse; omit to run until the offline session itself expires.
-     */
-    tokenExpirationInS?: number;
-    /**
-     * Optional fetch implementation, primarily for testing. Defaults to the global
-     * `fetch` (Node >= 18). Injecting a stub keeps unit tests fully offline.
-     */
-    fetchImpl?: FetchLike;
-    /**
-     * When `false`, DISABLE TLS certificate verification on the Keycloak token
-     * request (opt-in insecure, for a self-signed local Envoy). Defaults to `true`
-     * (verify — secure, unchanged behaviour). Ignored when a custom `fetchImpl` is
-     * injected. Node-only: implemented via an undici dispatcher, so it is a no-op in
-     * a browser bundle.
-     */
-    keycloakVerifySsl?: boolean;
-    /**
-     * Optional clock, for testing. Returns the current time in milliseconds since
-     * the epoch. Defaults to `Date.now`.
-     */
-    nowMs?: () => number;
-    /**
-     * Refresh the access token this many seconds *before* it expires, to keep a
-     * comfortable margin on the hot path. Defaults to 30 seconds.
-     */
-    refreshSkewInS?: number;
+import { inspect } from 'util';
+/** Timing constants of the token provider; every SDK uses the production values of {@link DEFAULT_KEYCLOAK_TOKEN_TIMINGS}. */
+export interface KeycloakTokenTimings {
+    /** Refresh this many seconds before the access token expires. */
+    expiryLeewayS: number;
+    /** Floor (seconds) of any background wait, so an `expires_in` of 0 cannot spin a hot loop. */
+    minRefreshDelayS: number;
+    /** First retry delay (seconds) after a failed refresh. */
+    retryBaseDelayS: number;
+    /** Ceiling (seconds) of the failure backoff. */
+    retryMaxDelayS: number;
+    /** Exponent cap of the backoff (`base * 2 ** cap >= max`), so a huge failure count cannot overflow. */
+    maxRetryExponent: number;
+    /** Timeout (seconds) of one whole token-endpoint call; must stay below `expiryLeewayS`. */
+    httpTimeoutS: number;
+    /** Longest slice of an error body quoted in an error message. */
+    maxErrorBodyChars: number;
 }
 /**
- * Minimal structural type for the subset of the fetch API this helper uses, so a
- * stub can be injected in tests without pulling in DOM lib typings.
+ * Production timings, identical in every ONDEWO SDK. A Keycloak outage is retried no faster than every
+ * 5 s and backs off to every 300 s: ondewo runs one client per call container, so a 1 Hz retry that is
+ * harmless for one process is an amplifier against the realm all of them share.
  */
-export interface FetchLike {
-    (url: string, init: FetchInit): Promise<FetchResponseLike>;
-}
+export declare const DEFAULT_KEYCLOAK_TOKEN_TIMINGS: Readonly<KeycloakTokenTimings>;
 /**
- * Minimal structural type for the request init this helper passes to fetch.
+ * Minimal structural type of the fetch `Response` fields this helper reads. Keeps the module
+ * self-contained (no DOM lib dependency) while still typing the injectable `fetchImpl`.
  */
-export interface FetchInit {
+export interface TokenFetchResponse {
+    /** Whether the HTTP status is in the 2xx success range. */
+    ok: boolean;
+    /** The numeric HTTP status code (e.g. `200`, `401`, `500`). */
+    status: number;
+    /**
+     * Read the full response body as text.
+     *
+     * @returns A promise resolving to the raw response body.
+     */
+    text(): Promise<string>;
+}
+/** Init object passed to the injectable fetch when POSTing to the token endpoint. */
+export interface TokenFetchInit {
+    /** HTTP method; always `"POST"` for the token endpoint call. */
     method: string;
+    /** Request headers (`Content-Type`/`Accept`), keyed by header name. */
     headers: Record<string, string>;
+    /** The `application/x-www-form-urlencoded` request body. */
     body: string;
     /**
      * Optional undici dispatcher (Node's non-standard `fetch` extension). Set only
@@ -63,174 +53,423 @@ export interface FetchInit {
      * TLS certificate verification. Left `undefined` on the secure default path.
      */
     dispatcher?: unknown;
+    /** Aborts the whole call (connect + body) after {@link TokenFetchInit.timeoutInMs}. */
+    signal?: AbortSignal;
+    /** The timeout the `signal` enforces, in milliseconds (informational, for injected transports). */
+    timeoutInMs?: number;
 }
 /**
- * Minimal structural type for the fetch response this helper consumes.
+ * Injectable fetch signature (a subset of the global `fetch`) used by the token endpoint call.
+ *
+ * @param url - The fully-qualified OIDC token endpoint URL.
+ * @param init - The request init (method, headers, form-encoded body, abort signal).
+ * @returns A promise resolving to the {@link TokenFetchResponse} for the request.
  */
-export interface FetchResponseLike {
-    ok: boolean;
-    status: number;
-    text(): Promise<string>;
-}
-/**
- * Raised when the Keycloak token endpoint rejects a credential or refresh-token
- * exchange, or returns a malformed payload.
- */
-export declare class OfflineTokenError extends Error {
+export type TokenFetch = (url: string, init: TokenFetchInit) => Promise<TokenFetchResponse>;
+/** The t2s 6.x name of {@link TokenFetch}. */
+export type FetchLike = TokenFetch;
+/** The t2s 6.x name of {@link TokenFetchInit}. */
+export type FetchInit = TokenFetchInit;
+/** The t2s 6.x name of {@link TokenFetchResponse}. */
+export type FetchResponseLike = TokenFetchResponse;
+/** Destination of the provider's log lines; `console` satisfies it. */
+export interface KeycloakTokenLogger {
     /**
-     * The HTTP status code returned by the Keycloak token endpoint, or `0` when the
-     * failure happened before any HTTP exchange (e.g. no fetch implementation).
+     * Log a warning (one per failed refresh).
+     *
+     * @param message - The warning text; never contains a credential.
      */
+    warn(message: string): void;
+    /**
+     * Log an informational line (a refresh that recovered).
+     *
+     * @param message - The text; never contains a credential.
+     */
+    info(message: string): void;
+    /**
+     * Optionally log a debug line (a swallowed background failure that was already warned about).
+     *
+     * @param message - The text; never contains a credential.
+     */
+    debug?(message: string): void;
+}
+/** Arms and cancels the background refresh timer (tests inject a fake one). */
+export interface RefreshScheduler {
+    /**
+     * Run `task` once after `delayInMs`.
+     *
+     * @param task - The background refresh step; it never rejects.
+     * @param delayInMs - Milliseconds to wait.
+     * @returns A handle for {@link RefreshScheduler.cancel}.
+     */
+    schedule(task: () => Promise<void>, delayInMs: number): unknown;
+    /**
+     * Cancel a scheduled task.
+     *
+     * @param handle - What {@link RefreshScheduler.schedule} returned.
+     */
+    cancel(handle: unknown): void;
+}
+/** Options for the D18 headless-SDK token provider. */
+export interface OfflineTokenLoginOptions {
+    /** Base Keycloak URL, e.g. "https://auth.example.com/auth" (trailing slash tolerated). */
+    keycloakUrl: string;
+    /** Realm name, e.g. "ondewo-ccai-platform". */
+    realm: string;
+    /** Public SDK client id, e.g. "ondewo-t2s-cai-sdk-public". NO client_secret (Q1). */
+    clientId: string;
+    /** 2FA-exempt technical-user email. */
+    username: string;
+    /** Technical-user password; may be empty when `refreshToken` is set. SECRET. */
+    password: string;
+    /** Optional cap (seconds) on how long the auto-refresh runs after the initial token acquisition. */
+    tokenExpirationInS?: number;
+    /** Optional fetch override (tests inject a mock); defaults to the global fetch. */
+    fetchImpl?: TokenFetch;
+    /**
+     * When `false`, DISABLE TLS certificate verification on the Keycloak token
+     * request (opt-in insecure, for a self-signed local Envoy). Defaults to `true`
+     * (verify — secure, unchanged behaviour). Ignored when a custom `fetchImpl` is
+     * injected. Node-only: implemented via an undici dispatcher scoped to the token request.
+     */
+    keycloakVerifySsl?: boolean;
+    /** Optional MONOTONIC clock override returning milliseconds (tests); defaults to `performance.now`. */
+    nowInMs?: () => number;
+    /**
+     * Optional [0,1) random source for the failure-backoff jitter; defaults to `Math.random`.
+     * Tests inject a constant to make the retry delay exact. Consulted only on the failure path.
+     */
+    randomFraction?: () => number;
+    /** Where warnings and recoveries are logged; defaults to `console`. */
+    logger?: KeycloakTokenLogger;
+    /** Background timer (tests inject a fake one); defaults to an `unref`-ed `setTimeout`. */
+    scheduler?: RefreshScheduler;
+    /** Test seam: `false` acquires the token without arming the background refresh. Defaults to `true`. */
+    startBackgroundRefresh?: boolean;
+    /** Test seam: override individual {@link DEFAULT_KEYCLOAK_TOKEN_TIMINGS}. */
+    timings?: Partial<KeycloakTokenTimings>;
+    /** Deprecated alias (t2s 6.x) of `timings.expiryLeewayS`: refresh this many seconds before expiry. */
+    refreshSkewInS?: number;
+    /** Deprecated alias (t2s 6.x) of `nowInMs`. */
+    nowMs?: () => number;
+    /**
+     * A handed-off Keycloak OFFLINE refresh token to use instead of the password. When non-empty the
+     * provider starts with one `grant_type=refresh_token` exchange and NEVER sends a password grant,
+     * not even as a fallback. SECRET.
+     */
+    refreshToken?: string;
+}
+/** Error raised on an invalid configuration, and the base class of {@link KeycloakAuthenticationError}. */
+export declare class OfflineTokenError extends Error {
+    /** The HTTP status of a token request Keycloak refused, or `0` for every other failure. */
     readonly status: number;
     /**
-     * Creates a new {@link OfflineTokenError}.
+     * Create an {@link OfflineTokenError} with a fixed `name` of `"OfflineTokenError"`.
      *
-     * @param message Human-readable description of the failure.
-     * @param status HTTP status from the token endpoint, or `0` if the failure
-     *   occurred before an HTTP exchange.
+     * @param message - Human-readable description of the token failure.
+     * @param status - The HTTP status of a refused token request; `0` when there is none.
      */
-    constructor(message: string, status: number);
+    constructor(message: string, status?: number);
+}
+export { OfflineTokenError as TokenError };
+/**
+ * Raised for every failure of a login, a refresh, or the lazy read of an expired token. The original
+ * error, if any, is its `cause`. The message never contains a credential.
+ */
+export declare class KeycloakAuthenticationError extends OfflineTokenError {
+    /** The underlying error (network failure, JSON parse error, ...), or `undefined`. */
+    readonly cause: unknown;
+    /**
+     * @param message - Description of the failure; never contains a credential.
+     * @param cause - The underlying error, if any.
+     * @param status - The HTTP status of a refused token request; `0` when there is none.
+     */
+    constructor(message: string, cause?: unknown, status?: number);
 }
 /**
- * A live offline-token session. Holds the current access token, auto-refreshes it
- * in the background, and exposes it for the `Authorization: Bearer` gRPC metadata.
+ * Compute the wait before the next attempt after `consecutiveFailures` failed refreshes: uniform in
+ * `[base, ceiling]` with the ceiling doubling per failure up to the maximum (full jitter). The jitter is
+ * the load-bearing half: N containers whose refreshes fail in the same instant would otherwise retry in
+ * lockstep for as long as the outage lasts.
  *
- * Always call {@link OfflineTokenProvider.stop} when done to clear the refresh
- * timer (otherwise the process may not exit).
+ * @param consecutiveFailures - Failed refreshes so far; values below 1 count as 1.
+ * @param randomFraction - Source of a [0,1) fraction; a value outside [0,1] is clamped.
+ * @param timings - Timings to use; defaults to {@link DEFAULT_KEYCLOAK_TOKEN_TIMINGS}.
+ * @returns Seconds to wait.
+ */
+export declare function computeRefreshBackoffS(consecutiveFailures: number, randomFraction: () => number, timings?: Readonly<KeycloakTokenTimings>): number;
+/**
+ * A live access-token holder backed by a bounded, failure-tolerant auto-refresh. Obtain one from
+ * {@link login} or {@link getKeycloakTokenProvider}; read {@link getAuthorizationMetadataAsync} for the gRPC
+ * metadata of every call and call {@link stop} when done.
  */
 export declare class OfflineTokenProvider {
-    /** Base Keycloak URL with any trailing slash stripped. */
-    private readonly keycloakUrl;
-    /** Realm name the token endpoint is scoped to. */
-    private readonly realm;
-    /** Public SDK client id (no secret) used for every token exchange. */
+    /** Pre-computed OIDC token endpoint URL for the configured realm. */
+    private readonly tokenEndpoint;
+    /** Public SDK client id sent on every token request (no `client_secret`). */
     private readonly clientId;
-    /** Fetch implementation used for token-endpoint requests. */
+    /** Optional cap (seconds) after which the auto-refresh stops; `undefined` means unbounded. */
+    private readonly tokenExpirationInS;
+    /** The {@link TokenFetch} used for all token-endpoint calls (injectable for tests). */
     private readonly fetchImpl;
-    /** Clock returning the current time in milliseconds since the epoch. */
-    private readonly nowMs;
-    /** How many milliseconds before expiry the access token is refreshed. */
-    private readonly refreshSkewInMs;
-    /**
-     * Absolute time (ms since epoch) past which no further refresh is scheduled, or
-     * `undefined` to refresh until the offline session itself expires.
-     */
-    private readonly deadlineMs;
-    /** The current access token (JWT) exposed for `Authorization: Bearer`. */
+    /** Monotonic clock returning milliseconds. */
+    private readonly nowInMs;
+    /** [0,1) random source used for the failure-backoff jitter (test-injectable). */
+    private readonly randomFraction;
+    /** Destination of the WARNING / INFO lines. */
+    private readonly logger;
+    /** Arms the background refresh timer. */
+    private readonly scheduler;
+    /** Whether {@link bootstrap} arms the background refresh. */
+    private readonly startBackgroundRefresh;
+    /** The effective timings. */
+    private readonly timings;
+    /** Weak self-reference handed to the timer callback. */
+    private readonly selfRef;
+    /** The current access token, or `null` only until {@link bootstrap} completes; never cleared afterwards. */
     private accessToken;
-    /** The current offline refresh token used for the next token exchange. */
+    /** The current offline refresh token, or `null` before bootstrap (or the handed-off one). */
     private refreshToken;
-    /** Handle of the pending auto-refresh timer, or `undefined` when none is armed. */
-    private refreshTimer;
-    /** Whether {@link OfflineTokenProvider.stop} has been called. */
+    /** Monotonic time (seconds) at which the current access token expires. */
+    private accessTokenExpiresAtS;
+    /** Handle of the armed refresh timer, or `null` when no refresh is scheduled. */
+    private timer;
+    /** Whether the background refresh has ended (stop() or the bounded deadline). */
     private stopped;
+    /** Whether {@link stop} was called by the user; a closed provider is never handed out again. */
+    private closed;
+    /** Monotonic deadline (seconds) of the bounded refresh, or `null` when unbounded. */
+    private deadlineS;
+    /** Optional callback invoked with the error of a failed background refresh. */
+    private onRefreshErrorHandler;
+    /** Consecutive failed refreshes (both paths); drives the backoff, reset on every success. */
+    private consecutiveRefreshFailures;
+    /** Monotonic time (seconds) before which no refresh request is sent. */
+    private nextRefreshAttemptAtS;
+    /** The error of the most recent failed refresh. */
+    private lastRefreshFailure;
+    /** The refresh currently on the wire (single flight), or `null`. It never rejects. */
+    private inFlightRefresh;
     /**
-     * Initializes the provider from an already-obtained token and arms the first
-     * auto-refresh. Private: instances are created via
-     * {@link OfflineTokenProvider.create} (or {@link login}).
+     * Construct an inert provider from login options. No network call is made here; call
+     * {@link bootstrap} (or use the {@link login} factory) to acquire the first token.
      *
-     * @param options Resolved login options (every optional field filled in) except
-     *   `tokenExpirationInS`, which is pre-converted to `deadlineMs`.
-     * @param initial The token payload from the initial ROPC login.
-     * @param deadlineMs Absolute time (ms since epoch) past which refreshes stop, or
-     *   `undefined` for no bound.
+     * @param options - The {@link OfflineTokenLoginOptions}.
      */
-    private constructor();
+    constructor(options: OfflineTokenLoginOptions);
     /**
-     * Performs the one-time ROPC + `offline_access` login against the PUBLIC SDK
-     * client (no client_secret), then returns a started provider that
-     * auto-refreshes the access token.
+     * Acquire the first token and arm the background refresh. Awaited by {@link login}.
      *
-     * @param options Login options; see {@link OfflineTokenLoginOptions}.
-     * @returns A started {@link OfflineTokenProvider}.
-     * @throws {OfflineTokenError} If the credentials are rejected or the response
-     *   is malformed.
+     * With a handed-off `refreshToken` this is ONE refresh grant and the password is never sent (a
+     * refused token is raised, not answered with a password login); otherwise ONE password grant. A
+     * failure is raised without retry and without arming anything.
+     *
+     * @param username - The 2FA-exempt technical-user email.
+     * @param password - The technical-user password (unused when a refresh token was handed off).
+     * @returns A promise that resolves once the first token is stored and the refresh is armed.
+     * @throws {@link KeycloakAuthenticationError} If the token endpoint fails, or a password login's
+     *   response carries no `refresh_token` (the SDK client lacks `directAccessGrants` + `offline_access`).
      */
-    static create(options: OfflineTokenLoginOptions): Promise<OfflineTokenProvider>;
+    bootstrap(username: string, password: string): Promise<void>;
     /**
-     * Returns the current access token (a JWT) for the `Authorization: Bearer`
-     * header / gRPC metadata.
+     * The `authorization` gRPC metadata of the next call, refreshing first when the token is within the
+     * leeway of its expiry. Concurrent callers share one refresh. While a failed refresh backs off no
+     * request is sent and the still-valid token is served; an expired token that cannot be refreshed is
+     * raised instead of being handed to a server that would refuse it. After the bounded deadline the
+     * token is served as it is and allowed to lapse.
+     *
+     * @returns `['authorization', 'Bearer <access_token>']`.
+     * @throws {@link OfflineTokenError} If no token was acquired yet.
+     * @throws {@link KeycloakAuthenticationError} If the access token has expired and could not be refreshed.
+     */
+    getAuthorizationMetadataAsync(): Promise<[string, string]>;
+    /**
+     * Register a callback invoked with the error of a failed background refresh (optional diagnostics).
+     * A later call replaces any previously registered handler.
+     *
+     * @param handler - Callback receiving the {@link KeycloakAuthenticationError} of the failed refresh.
+     */
+    onRefreshError(handler: (error: unknown) => void): void;
+    /**
+     * Return the current access token without refreshing it; prefer {@link getAuthorizationMetadataAsync}.
      *
      * @returns The current access token.
+     * @throws {@link OfflineTokenError} If no access token is available yet, i.e. login has not completed.
      */
     getAccessToken(): string;
     /**
-     * Returns gRPC metadata key/value pairs carrying the current access token, i.e.
-     * `{ authorization: 'Bearer <jwt>' }`. The key is the lowercase `authorization`
-     * that native gRPC (grpc-python / @grpc/grpc-js) requires — a capitalized
-     * `Authorization` key is rejected at call time.
+     * Build the value for an `Authorization` gRPC metadata header WITHOUT refreshing it; prefer
+     * {@link getAuthorizationMetadataAsync}, which refreshes on demand.
      *
-     * @returns The authorization metadata object.
+     * @returns The header value `Bearer <access_token>`.
+     * @throws {@link OfflineTokenError} If no access token is available yet, i.e. login has not completed.
+     */
+    getAuthorizationHeader(): string;
+    /**
+     * Perform the initial token acquisition and return a started provider (the t2s 6.x entry point that
+     * {@link login} delegates to).
+     *
+     * @param options - The {@link OfflineTokenLoginOptions}.
+     * @returns A promise resolving to a bootstrapped provider.
+     * @throws {@link OfflineTokenError} If the options are invalid (before any network call).
+     * @throws {@link KeycloakAuthenticationError} If the initial token acquisition fails.
+     */
+    static create(options: OfflineTokenLoginOptions): Promise<OfflineTokenProvider>;
+    /**
+     * The `authorization` metadata as a plain object, WITHOUT refreshing it (t2s 6.x); prefer
+     * {@link getAuthorizationMetadataAsync} or the `tokenProvider` option of `createGrpcClient`, which
+     * refresh on demand.
+     *
+     * @returns `{ authorization: 'Bearer <access_token>' }` (lowercase key, as gRPC requires).
+     * @throws {@link OfflineTokenError} If no access token is available yet.
      */
     getAuthorizationMetadata(): Record<string, string>;
     /**
-     * Forces an immediate access-token refresh from the offline refresh token and
-     * reschedules the next automatic refresh. Useful to recover from an
-     * `UNAUTHENTICATED` upstream response.
+     * Refresh the access token now, whatever its expiry (t2s 6.x).
      *
-     * @returns The freshly minted access token.
-     * @throws {OfflineTokenError} If the refresh-token exchange fails.
+     * @returns The refreshed access token.
+     * @throws {@link KeycloakAuthenticationError} If the refresh fails.
      */
     refresh(): Promise<string>;
     /**
-     * Stops the background refresh loop and clears the timer. Idempotent. After
-     * this the access token is no longer renewed and will eventually lapse.
-     *
-     * @returns Nothing.
+     * Stop the background refresh, interrupting a pending wait (also a backoff wait) so no further
+     * request is sent. Idempotent and safe from any state, also from inside an `onRefreshError` handler.
+     * The lazy {@link getAuthorizationMetadataAsync} keeps refreshing on demand afterwards.
      */
     stop(): void;
+    /** Alias of {@link stop}. */
+    close(): void;
     /**
-     * Arms a single `setTimeout` to refresh the access token `refreshSkewInMs`
-     * before it expires. No-op if the provider is stopped, or if the next refresh
-     * would fall past {@link OfflineTokenProvider.deadlineMs}. The delay is clamped
-     * to at least {@link MIN_REFRESH_DELAY_IN_MS}, and the timer is `unref`-ed so it
-     * does not keep the Node event loop alive on its own.
+     * Whether {@link stop} / {@link close} was called.
      *
-     * @param expiresInS Lifetime of the just-issued access token, in seconds.
-     * @returns Nothing.
+     * @returns `true` once the provider was closed by its user.
      */
-    private scheduleRefresh;
+    isClosed(): boolean;
     /**
-     * Body of the auto-refresh timer: exchanges the refresh token, applies the new
-     * token and arms the next refresh. Background-refresh failures are swallowed
-     * (and logged via `console.warn`) so a transient outage never throws on the hot
-     * path — the current access token stays valid until its own expiry and callers
-     * can still trigger an explicit {@link OfflineTokenProvider.refresh}. No-op if
-     * the provider was stopped before the timer fired.
+     * Redacted description: no token value, an empty token stays visible as `''`.
      *
-     * @returns A promise that resolves once the refresh attempt has settled.
+     * @returns For example `OfflineTokenProvider(tokenEndpoint=..., clientId=..., accessToken=***REDACTED***, refreshToken=***REDACTED***)`.
      */
-    private runScheduledRefresh;
+    toString(): string;
     /**
-     * Posts `grant_type=refresh_token` (with the current refresh token and the
-     * public client id, no secret) to the Keycloak token endpoint.
+     * Loggable form with the tokens redacted.
      *
-     * @returns The parsed token payload from the refresh exchange.
-     * @throws {OfflineTokenError} If the endpoint rejects the exchange or returns a
-     *   malformed payload.
+     * @returns A plain object safe to log or `JSON.stringify`.
+     */
+    toJSON(): Record<string, string>;
+    /**
+     * `util.inspect()` / `console.log()` rendering: the same as {@link toString}.
+     *
+     * @returns The redacted description.
+     */
+    [inspect.custom](): string;
+    /** End the background refresh (user stop or the bounded deadline) and release the armed timer. */
+    private halt;
+    /**
+     * The current monotonic time in seconds.
+     *
+     * @returns Seconds.
+     */
+    private nowS;
+    /**
+     * Arm the background timer for the next refresh: the leeway before expiry, or after a failure the
+     * backoff (never the floor alone), floored at the minimum delay and clamped to the bounded deadline.
+     * Stops the loop once the deadline has passed.
+     */
+    private armNextRefresh;
+    /**
+     * One background step: refresh if due, report a failure, re-arm. A failure never ends the loop.
+     *
+     * @returns A promise that settles when the step is done; it never rejects.
+     */
+    private onBackgroundTimer;
+    /**
+     * The refresh decision shared by the lazy and the background path (single flight).
+     *
+     * @returns A promise that resolves when the token may be served.
+     * @throws {@link KeycloakAuthenticationError} If the token has expired and could not be refreshed.
+     */
+    private refreshIfWithinWindow;
+    /**
+     * Count a failed refresh, schedule the next attempt (backoff measured from NOW) and warn once.
+     * Deliberately not a fallback to a password grant.
+     *
+     * @param error - The failure; only its type and message are logged.
+     */
+    private recordRefreshFailure;
+    /** Reset the failure backoff after a successful refresh and log the recovery, if any. */
+    private recordRefreshSuccess;
+    /**
+     * Exchange the offline refresh token for a fresh access token.
+     *
+     * @returns A promise that resolves once the new token is stored.
+     * @throws {@link KeycloakAuthenticationError} On any failure.
      */
     private exchangeRefreshToken;
     /**
-     * Stores the new access token and, honoring Keycloak refresh-token rotation,
-     * adopts the rotated refresh token (when the payload carries a non-empty one) so
-     * the next exchange uses the latest refresh token.
+     * POST a form to the token endpoint and return the parsed JSON object. Every failure becomes a
+     * {@link KeycloakAuthenticationError} carrying the original error as its cause.
      *
-     * @param token The token payload from a login or refresh exchange.
-     * @returns Nothing.
+     * @param params - Form fields (grant type, client id, credentials).
+     * @param action - `login` or `refresh`, for the messages.
+     * @returns The parsed token response.
+     * @throws {@link KeycloakAuthenticationError} On a transport error, a non-2xx status or an unusable body.
      */
-    private applyToken;
+    private postTokenRequest;
+    /**
+     * Validate a token response, then store the access token, a rotated refresh token and the expiry.
+     * A malformed response changes no state.
+     *
+     * @param payload - The parsed token response.
+     * @throws {@link KeycloakAuthenticationError} If it carries no usable `access_token` or a non-numeric
+     *   `expires_in`. The message names the response's FIELDS, never a value.
+     */
+    private storeTokens;
+    /**
+     * Refresh the access token NOW, whatever its expiry: the explicit "refresh" of the earlier API. It
+     * joins a refresh already in flight instead of sending a second one, counts towards the shared
+     * failure backoff like any other refresh, and never sends a password grant.
+     *
+     * @returns A promise that resolves once the refreshed token is stored.
+     * @throws {@link OfflineTokenError} If no token was acquired yet.
+     * @throws {@link KeycloakAuthenticationError} If the refresh fails.
+     */
+    private runForcedRefresh;
 }
 /**
- * Convenience wrapper around {@link OfflineTokenProvider.create}.
+ * Acquire a Keycloak token against the PUBLIC SDK client and return a live provider whose access token
+ * is auto-refreshed until `tokenExpirationInS` elapses. With `refreshToken` set this is one refresh
+ * grant (no password is ever sent); otherwise a one-time ROPC + `offline_access` login.
  *
- * Performs the D18 ROPC + `offline_access` login against the public SDK client and
- * returns a started provider that auto-refreshes the access token and exposes it
- * for the `Authorization: Bearer` metadata. The refresh loop stops after
- * `tokenExpirationInS` seconds when provided.
+ * Every call builds a NEW provider (one login); share one with {@link getKeycloakTokenProvider}.
  *
- * @param options Login options; see {@link OfflineTokenLoginOptions}.
- * @returns A started {@link OfflineTokenProvider}.
- * @throws {OfflineTokenError} If the credentials are rejected or the response is
- *   malformed.
+ * @param options - The {@link OfflineTokenLoginOptions}; `keycloakUrl`, `realm`, `clientId` and
+ *   `username` are required, plus `password` or `refreshToken`.
+ * @returns A promise resolving to a bootstrapped {@link OfflineTokenProvider}.
+ * @throws {@link OfflineTokenError} If the options are invalid (before any network call).
+ * @throws {@link KeycloakAuthenticationError} If the initial token acquisition fails.
  */
 export declare function login(options: OfflineTokenLoginOptions): Promise<OfflineTokenProvider>;
+/**
+ * The registry key of a credential set: the SHA-256 hex digest of the fields that define the identity,
+ * so the key holds no secret and is never an object identity. `refreshToken` takes part: two token-only
+ * configs carry an EMPTY password and would otherwise share one provider across tenants.
+ *
+ * @param options - The Keycloak options.
+ * @returns A 64-character hex digest.
+ */
+export declare function keycloakProviderRegistryKey(options: Partial<OfflineTokenLoginOptions>): string;
+/**
+ * Return the provider shared by every client of one credential set, logging in once.
+ *
+ * Returns `null` when Keycloak is not configured (none of `keycloakUrl`, `realm`, `clientId` is set):
+ * then no authorization metadata is attached at all (plaintext server, or an ingress that injects auth).
+ * A closed provider is never handed out; a new one is created instead.
+ *
+ * @param options - The Keycloak options; the transport seams of the FIRST caller of a key are used.
+ * @returns The shared provider, or `null` without a Keycloak configuration.
+ * @throws {@link OfflineTokenError} If only some of `keycloakUrl`, `realm`, `clientId` are set, or the other
+ *   login options are invalid.
+ * @throws {@link KeycloakAuthenticationError} If the initial token acquisition fails.
+ */
+export declare function getKeycloakTokenProvider(options: Partial<OfflineTokenLoginOptions>): Promise<OfflineTokenProvider | null>;

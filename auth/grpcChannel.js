@@ -51,6 +51,7 @@ exports.GrpcClientConfig = exports.DEFAULT_GRPC_CHANNEL_OPTIONS = exports.MAX_ME
 exports.hostAndPort = hostAndPort;
 exports.createChannelCredentials = createChannelCredentials;
 exports.createGrpcClient = createGrpcClient;
+exports.createKeycloakCallCredentials = createKeycloakCallCredentials;
 /**
  * gRPC channel helper: TLS, mutual TLS and the ONDEWO default channel options for the generated
  * `@grpc/grpc-js` clients of this package.
@@ -338,9 +339,34 @@ function createChannelCredentials(config, options = {}) {
  */
 function createGrpcClient(clientConstructor, config, options = {}) {
     assertConfigShape(config, 'createGrpcClient');
-    const credentials = options.credentials ?? createChannelCredentials(config, options);
+    let credentials = options.credentials ?? createChannelCredentials(config, options);
+    if (options.tokenProvider !== undefined && options.tokenProvider !== null) {
+        if (!credentials._isSecure()) {
+            throw new Error(`createGrpcClient for ${hostAndPort(config.host, config.port)}: a tokenProvider needs a secure channel; ` +
+                'gRPC does not send bearer tokens over plaintext.');
+        }
+        credentials = credentials.compose(createKeycloakCallCredentials(options.tokenProvider));
+    }
     return new clientConstructor(hostAndPort(config.host, config.port), credentials, {
         ...exports.DEFAULT_GRPC_CHANNEL_OPTIONS,
         ...options.channelOptions
+    });
+}
+/**
+ * Call credentials that attach the `authorization` metadata of `source` to every call. A failure of
+ * the source (an expired token that cannot be refreshed) fails that call, carrying the error message.
+ *
+ * @param source - E.g. an `OfflineTokenProvider`.
+ * @returns Call credentials to compose onto secure channel credentials.
+ */
+function createKeycloakCallCredentials(source) {
+    return grpc.credentials.createFromMetadataGenerator((_options, done) => {
+        source.getAuthorizationMetadataAsync().then(([key, value]) => {
+            const metadata = new grpc.Metadata();
+            metadata.set(key, value);
+            done(null, metadata);
+        }, (error) => {
+            done(error instanceof Error ? error : new Error(String(error)));
+        });
     });
 }

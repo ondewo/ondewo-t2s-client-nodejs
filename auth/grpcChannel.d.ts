@@ -61,6 +61,20 @@ export interface CreateGrpcClientOptions extends ChannelCredentialsOptions {
      * are not consulted.
      */
     credentials?: grpc.ChannelCredentials;
+    /**
+     * Attaches `authorization: Bearer <token>` to EVERY call, read (and refreshed on demand) per call,
+     * e.g. an `OfflineTokenProvider` from `login(...)` or `getKeycloakTokenProvider(...)`. `null` /
+     * unset attaches nothing (no Keycloak configured). Requires a secure channel: gRPC never sends call
+     * credentials over plaintext.
+     */
+    tokenProvider?: AuthorizationMetadataSource | null;
+}
+/** Anything that yields the `authorization` metadata of the next call (an `OfflineTokenProvider` does). */
+export interface AuthorizationMetadataSource {
+    /**
+     * @returns `['authorization', 'Bearer <access_token>']`, refreshed if needed.
+     */
+    getAuthorizationMetadataAsync(): Promise<[string, string]>;
 }
 /** Constructor of a generated gRPC client (every `*Client` class in `api/`, or `grpc.Client`). */
 export type GrpcClientConstructor<T> = new (address: string, credentials: grpc.ChannelCredentials, options?: grpc.ClientOptions) => T;
@@ -144,3 +158,11 @@ export declare function createChannelCredentials(config: GrpcClientConfigFields,
  * @throws {Error} See {@link createChannelCredentials}.
  */
 export declare function createGrpcClient<T>(clientConstructor: GrpcClientConstructor<T>, config: GrpcClientConfigFields, options?: CreateGrpcClientOptions): T;
+/**
+ * Call credentials that attach the `authorization` metadata of `source` to every call. A failure of
+ * the source (an expired token that cannot be refreshed) fails that call, carrying the error message.
+ *
+ * @param source - E.g. an `OfflineTokenProvider`.
+ * @returns Call credentials to compose onto secure channel credentials.
+ */
+export declare function createKeycloakCallCredentials(source: AuthorizationMetadataSource): grpc.CallCredentials;

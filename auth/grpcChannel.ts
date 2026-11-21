@@ -119,6 +119,21 @@ export interface CreateGrpcClientOptions extends ChannelCredentialsOptions {
 	 * are not consulted.
 	 */
 	credentials?: grpc.ChannelCredentials;
+	/**
+	 * Attaches `authorization: Bearer <token>` to EVERY call, read (and refreshed on demand) per call,
+	 * e.g. an `OfflineTokenProvider` from `login(...)` or `getKeycloakTokenProvider(...)`. `null` /
+	 * unset attaches nothing (no Keycloak configured). Requires a secure channel: gRPC never sends call
+	 * credentials over plaintext.
+	 */
+	tokenProvider?: AuthorizationMetadataSource | null;
+}
+
+/** Anything that yields the `authorization` metadata of the next call (an `OfflineTokenProvider` does). */
+export interface AuthorizationMetadataSource {
+	/**
+	 * @returns `['authorization', 'Bearer <access_token>']`, refreshed if needed.
+	 */
+	getAuthorizationMetadataAsync(): Promise<[string, string]>;
 }
 
 /** Constructor of a generated gRPC client (every `*Client` class in `api/`, or `grpc.Client`). */
@@ -400,9 +415,42 @@ export function createGrpcClient<T>(
 	options: CreateGrpcClientOptions = {}
 ): T {
 	assertConfigShape(config, 'createGrpcClient');
-	const credentials: grpc.ChannelCredentials = options.credentials ?? createChannelCredentials(config, options);
+	let credentials: grpc.ChannelCredentials = options.credentials ?? createChannelCredentials(config, options);
+	if (options.tokenProvider !== undefined && options.tokenProvider !== null) {
+		if (!credentials._isSecure()) {
+			throw new Error(
+				`createGrpcClient for ${hostAndPort(config.host, config.port)}: a tokenProvider needs a secure channel; ` +
+					'gRPC does not send bearer tokens over plaintext.'
+			);
+		}
+		credentials = credentials.compose(createKeycloakCallCredentials(options.tokenProvider));
+	}
 	return new clientConstructor(hostAndPort(config.host, config.port), credentials, {
 		...DEFAULT_GRPC_CHANNEL_OPTIONS,
 		...options.channelOptions
 	});
+}
+
+/**
+ * Call credentials that attach the `authorization` metadata of `source` to every call. A failure of
+ * the source (an expired token that cannot be refreshed) fails that call, carrying the error message.
+ *
+ * @param source - E.g. an `OfflineTokenProvider`.
+ * @returns Call credentials to compose onto secure channel credentials.
+ */
+export function createKeycloakCallCredentials(source: AuthorizationMetadataSource): grpc.CallCredentials {
+	return grpc.credentials.createFromMetadataGenerator(
+		(_options: unknown, done: (error: Error | null, metadata?: grpc.Metadata) => void): void => {
+			source.getAuthorizationMetadataAsync().then(
+				([key, value]: [string, string]): void => {
+					const metadata: grpc.Metadata = new grpc.Metadata();
+					metadata.set(key, value);
+					done(null, metadata);
+				},
+				(error: unknown): void => {
+					done(error instanceof Error ? error : new Error(String(error)));
+				}
+			);
+		}
+	);
 }

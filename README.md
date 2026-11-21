@@ -57,41 +57,33 @@ The Keycloak helper is also reachable by its path, `@ondewo/t2s-client-nodejs/au
 
 ### Authentication — Keycloak offline token
 
-`login()` performs a one-time ROPC login with `scope=offline_access` against the **public** SDK
-client (no client secret), then keeps the short-lived access token fresh in the background.
-`getAuthorizationMetadata()` returns `{ authorization: 'Bearer <jwt>' }` — the **lowercase** key
-native gRPC requires. Always `stop()` the provider: it holds a background refresh timer.
+All RPCs are authenticated with a Keycloak-issued **bearer token**. The package ships a token provider that acquires it, refreshes it before it expires and attaches it to every call as the `authorization: Bearer <token>` gRPC metadata.
 
-```js
-const { credentials, Metadata } = require('@grpc/grpc-js');
+```ts
+import { Text2SpeechClient, createGrpcClient, getKeycloakTokenProvider, GrpcClientConfig } from '@ondewo/t2s-client-nodejs';
 
-const provider = await login({
-  keycloakUrl: 'https://keycloak.example.com/auth',
-  realm: 'ondewo',
-  clientId: 'ondewo-nlu-cai-sdk-public',
+// One provider per credential set, shared by every client built from it (one login).
+const tokenProvider = await getKeycloakTokenProvider({
+  keycloakUrl: 'https://auth.example.com/auth',
+  realm: 'ondewo-ccai-platform',
+  clientId: 'ondewo-t2s-cai-sdk-public',
   username: 'tech-user@example.com',
-  password: '...',
-  keycloakVerifySsl: true // set false ONLY for a self-signed certificate
+  password: '...', // password login: one ROPC grant with scope=offline_access
+  // refreshToken: '...', // OR a handed-off OFFLINE token: one refresh grant, no password is ever sent
+  tokenExpirationInS: undefined // optional bound on how long the token is refreshed
 });
 
-const metadata = new Metadata();
-const headers = provider.getAuthorizationMetadata();
-for (const key of Object.keys(headers)) {
-  metadata.set(key, headers[key]);
-}
-
-const config = new RequestConfig();
-config.setT2sPipelineId('default_pipeline');
-const request = new SynthesizeRequest();
-request.setText('Hello from the ONDEWO T2S NodeJS client.');
-request.setConfig(config);
-
-const client = new Text2SpeechClient('localhost:50055', credentials.createInsecure());
-client.synthesize(request, metadata, (error, response) => {
-  console.log(response.getAudio_asU8().length, response.getAudioUuid(), response.getSampleRate());
-  provider.stop();
+const client: Text2SpeechClient = createGrpcClient(Text2SpeechClient, new GrpcClientConfig({ host: 't2s.example.com', port: 443 }), {
+  tokenProvider // null (no Keycloak fields set) attaches nothing
 });
 ```
+
+- **Password or offline token.** With `refreshToken` set the provider starts with one `grant_type=refresh_token` exchange and never sends a password grant, not even when the token is refused (the refusal is raised). Keycloak's brute-force protection counts failed *logins*, so many processes sharing one technical user should start from an offline token.
+- **Refresh.** A background timer (unref-ed, so it never keeps the process alive) refreshes 30 s before expiry; `getAuthorizationMetadataAsync()`, which every call reads, refreshes on demand as well. Concurrent calls share one refresh.
+- **Failures never end the refresh.** A failed refresh is retried with jittered exponential backoff (5 s, doubling, capped at 300 s), logs one warning per failure (`logger`, default `console`) and one info line on recovery. While the token is still valid it keeps being served; only an expired token that cannot be refreshed fails the call, with a `KeycloakAuthenticationError` (an `OfflineTokenError` subclass whose `cause` is the underlying error). No message or rendering contains a password or token.
+- **Validation.** `keycloakUrl`, `realm` and `clientId` go together (setting only some throws), and one of `password` / `refreshToken` is required. `keycloakVerifySsl: false` disables TLS verification for the token request only.
+- `login(options)` builds a new, unshared provider; call `provider.stop()` (or `close()`) when you are done with one. The legacy `cai-token` / HTTP-basic credentials no longer exist.
+- **Earlier (6.x) surface, unchanged.** `OfflineTokenProvider.create(options)` is still the entry point `login()` delegates to, `nowMs` and `refreshSkewInS` still work as aliases of `nowInMs` and `timings.expiryLeewayS`, `getAuthorizationMetadata()` still returns `{ authorization: 'Bearer <jwt>' }` synchronously (the current token, without refreshing it; the lowercase key native gRPC requires), `refresh()` still refreshes immediately, and every error is still an `OfflineTokenError` (exported as `TokenError` too) whose `status` is the HTTP status of a refused request (`0` otherwise).
 
 A complete, runnable version — including the TLS channel and `dotenv` configuration — is in
 [`examples/synthesizeExample.ts`](examples/synthesizeExample.ts); see [`examples/README.md`](examples/README.md).

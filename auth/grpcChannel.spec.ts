@@ -37,8 +37,10 @@ import {
 	GrpcClientConfigFields,
 	hostAndPort,
 	MAX_MESSAGE_LENGTH,
-	REDACTED
+	REDACTED,
+	type AuthorizationMetadataSource
 } from './grpcChannel';
+import { login, type OfflineTokenProvider, type TokenFetchResponse } from './offlineTokenProvider';
 
 /** PEMs of the test PKI, read back from the openssl output. */
 interface TestPki {
@@ -63,6 +65,8 @@ interface RecordingLogger extends GrpcChannelLogger {
 const PEM_MARKER: string = '-----BEGIN';
 const NOT_REALLY_PEM: string = '-----BEGIN CERTIFICATE-----\nnot base64\n-----END CERTIFICATE-----\n';
 const PING_PATH: string = '/ondewo.test.TlsProbe/Ping';
+/** The `authorization` metadata each Ping received, in order (`[]` when none was sent). */
+const receivedAuthorization: string[][] = [];
 
 /**
  * Generate the test PKI with the openssl CLI.
@@ -159,7 +163,8 @@ async function startServer(
 			}
 		},
 		{
-			Ping: (_call: grpc.ServerUnaryCall<Buffer, Buffer>, done: grpc.sendUnaryData<Buffer>): void => {
+			Ping: (call: grpc.ServerUnaryCall<Buffer, Buffer>, done: grpc.sendUnaryData<Buffer>): void => {
+				receivedAuthorization.push(call.metadata.get('authorization').map(String));
 				done(null, Buffer.from('pong'));
 			}
 		}
@@ -705,6 +710,104 @@ describe('grpcChannel', () => {
 			} finally {
 				ipv6Server.server.forceShutdown();
 			}
+		});
+
+		describe('tokenProvider', () => {
+			const tlsConfig: () => GrpcClientConfigFields = (): GrpcClientConfigFields => ({
+				host: '127.0.0.1',
+				port: tlsServer.port,
+				grpcCert: pki.caCert
+			});
+
+			it('attaches authorization: Bearer <token> to every call, read per call', async () => {
+				const tokens: string[] = ['Bearer t-1', 'Bearer t-2'];
+				const source: AuthorizationMetadataSource = {
+					getAuthorizationMetadataAsync: (): Promise<[string, string]> =>
+						Promise.resolve(['authorization', tokens.shift() as string])
+				};
+				const client: grpc.Client = createGrpcClient(grpc.Client, tlsConfig(), { tokenProvider: source });
+				receivedAuthorization.length = 0;
+				try {
+					assert.equal(await ping(client), null);
+					assert.equal(await ping(client), null);
+				} finally {
+					client.close();
+				}
+				assert.deepEqual(receivedAuthorization, [['Bearer t-1'], ['Bearer t-2']]);
+			});
+
+			it('an OfflineTokenProvider plugs in directly', async () => {
+				const provider: OfflineTokenProvider = await login({
+					keycloakUrl: 'https://kc.example.com/auth',
+					realm: 'r',
+					clientId: 'c',
+					username: 'u',
+					password: '',
+					refreshToken: 'off-handed',
+					startBackgroundRefresh: false,
+					fetchImpl: (): Promise<TokenFetchResponse> =>
+						Promise.resolve({
+							ok: true,
+							status: 200,
+							text: (): Promise<string> => Promise.resolve('{"access_token":"acc-grpc","expires_in":300}')
+						})
+				});
+				const client: grpc.Client = createGrpcClient(grpc.Client, tlsConfig(), { tokenProvider: provider });
+				receivedAuthorization.length = 0;
+				try {
+					assert.equal(await ping(client), null);
+				} finally {
+					client.close();
+					provider.stop();
+				}
+				assert.deepEqual(receivedAuthorization, [['Bearer acc-grpc']]);
+			});
+
+			it('null attaches nothing (no Keycloak configured)', async () => {
+				const client: grpc.Client = createGrpcClient(grpc.Client, tlsConfig(), { tokenProvider: null });
+				receivedAuthorization.length = 0;
+				try {
+					assert.equal(await ping(client), null);
+				} finally {
+					client.close();
+				}
+				assert.deepEqual(receivedAuthorization, [[]]);
+			});
+
+			it('a failing provider fails the call with its message and never reaches the server', async () => {
+				for (const failure of [new Error('token expired: backing off'), 'a bare rejection']) {
+					const source: AuthorizationMetadataSource = {
+						// A non-Error rejection is part of what is tested.
+						// eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
+						getAuthorizationMetadataAsync: (): Promise<[string, string]> => Promise.reject(failure)
+					};
+					const client: grpc.Client = createGrpcClient(grpc.Client, tlsConfig(), { tokenProvider: source });
+					receivedAuthorization.length = 0;
+					try {
+						const outcome: CallOutcome = await ping(client);
+						assert.ok(outcome !== null);
+						assert.match(outcome.details, failure instanceof Error ? /token expired: backing off/ : /a bare rejection/);
+					} finally {
+						client.close();
+					}
+					assert.deepEqual(receivedAuthorization, []);
+				}
+			});
+
+			it('refuses a plaintext channel', () => {
+				const source: AuthorizationMetadataSource = {
+					getAuthorizationMetadataAsync: (): Promise<[string, string]> => Promise.resolve(['authorization', 'Bearer x'])
+				};
+				assert.throws(
+					() =>
+						createGrpcClient(grpc.Client, tlsConfig(), {
+							useSecureChannel: false,
+							logger: recordingLogger(),
+							tokenProvider: source
+						}),
+					/a tokenProvider needs a secure channel/
+				);
+			});
 		});
 
 		it('clients built with the same credentials share one connection', async () => {

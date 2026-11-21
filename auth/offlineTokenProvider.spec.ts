@@ -10,6 +10,7 @@ import {
 	FetchInit,
 	FetchLike,
 	FetchResponseLike,
+	KeycloakAuthenticationError,
 	login,
 	OfflineTokenError,
 	OfflineTokenProvider
@@ -331,7 +332,7 @@ describe('offlineTokenProvider.login (ROPC + offline_access)', () => {
 			() => login({ ...BASE_OPTIONS, fetchImpl: fake.fetchImpl }),
 			(reason: unknown): boolean => {
 				assert.ok(reason instanceof OfflineTokenError);
-				assert.match(reason.message, /not a JSON object/);
+				assert.match(reason.message, /JSON \w+ instead of an object/);
 				return true;
 			}
 		);
@@ -347,7 +348,7 @@ describe('offlineTokenProvider.login (ROPC + offline_access)', () => {
 			() => login({ ...BASE_OPTIONS, fetchImpl: fake.fetchImpl }),
 			(reason: unknown): boolean => {
 				assert.ok(reason instanceof OfflineTokenError);
-				assert.match(reason.message, /not a JSON object/);
+				assert.match(reason.message, /JSON \w+ instead of an object/);
 				return true;
 			}
 		);
@@ -368,10 +369,8 @@ describe('offlineTokenProvider.login (ROPC + offline_access)', () => {
 		);
 	});
 
-	/** A non-numeric `expires_in` defaults to a `0` lifetime, clamping the first refresh delay. */
-	it('defaults expires_in to 0 when it is not a finite number', async () => {
-		// A non-number expires_in exercises the false side of the finite-number guard;
-		// the resulting 0 lifetime clamps the first refresh delay to MIN_REFRESH_DELAY.
+	/** A non-numeric `expires_in` is refused (as in every ONDEWO SDK), without quoting the value. */
+	it('rejects a non-numeric expires_in without quoting it', async () => {
 		const fake: { fetchImpl: FetchLike; requests: CapturedRequest[] } = makeFakeFetch([
 			{
 				ok: true,
@@ -379,13 +378,15 @@ describe('offlineTokenProvider.login (ROPC + offline_access)', () => {
 				body: JSON.stringify({ access_token: 'access-1', refresh_token: 'offline-1', expires_in: 'soon' })
 			}
 		]);
-		const clock: { value: number } = { value: 0 };
-		const scheduled: { delayMs: number; run: () => void } | undefined = await captureSchedule(async () => {
-			return login({ ...BASE_OPTIONS, fetchImpl: fake.fetchImpl, nowMs: () => clock.value });
-		});
-
-		assert.ok(scheduled !== undefined, 'a refresh must still be scheduled');
-		assert.equal(scheduled.delayMs, 1000, 'a 0 lifetime clamps to MIN_REFRESH_DELAY_IN_MS');
+		await assert.rejects(
+			() => login({ ...BASE_OPTIONS, fetchImpl: fake.fetchImpl }),
+			(reason: unknown): boolean => {
+				assert.ok(reason instanceof KeycloakAuthenticationError);
+				assert.match(reason.message, /non-numeric expires_in \(value withheld\)/);
+				assert.doesNotMatch(reason.message, /soon/);
+				return true;
+			}
+		);
 	});
 });
 
@@ -403,7 +404,7 @@ describe('offlineTokenProvider global fetch fallback', () => {
 		assert.equal(fake.requests.length, 1);
 	});
 
-	/** With no `fetchImpl` and no `globalThis.fetch`, login throws `OfflineTokenError(status=0)`. */
+	/** With no `fetchImpl` and no `globalThis.fetch`, login throws the typed error (status 0) carrying the TypeError. */
 	it('throws OfflineTokenError(status=0) when no fetch is available', async () => {
 		await withGlobalFetch(undefined, async () => {
 			await assert.rejects(
@@ -411,7 +412,9 @@ describe('offlineTokenProvider global fetch fallback', () => {
 				(reason: unknown): boolean => {
 					assert.ok(reason instanceof OfflineTokenError);
 					assert.equal(reason.status, 0);
-					assert.match(reason.message, /No fetch implementation/);
+					assert.ok(reason instanceof KeycloakAuthenticationError);
+					assert.match(reason.message, /Keycloak token login failed \(TypeError: /);
+					assert.ok(reason.cause instanceof TypeError);
 					return true;
 				}
 			);
@@ -576,26 +579,34 @@ describe('offlineTokenProvider auto-refresh scheduling', () => {
 		assert.equal(scheduled.delayMs, 270 * 1000);
 	});
 
-	/** No refresh is scheduled when the next one would fall past the `tokenExpirationInS` bound. */
-	it('does NOT schedule past the tokenExpirationInS bound', async () => {
+	/**
+	 * A refresh that would fall past the `tokenExpirationInS` bound is clamped to the bound, and when that
+	 * wait ends the loop stops without sending a request.
+	 */
+	it('does NOT refresh past the tokenExpirationInS bound', async () => {
 		const fake: { fetchImpl: FetchLike; requests: CapturedRequest[] } = makeFakeFetch([
 			jsonResponse({ access_token: 'access-1', refresh_token: 'offline-1', expires_in: 300 })
 		]);
 		const clock: { value: number } = { value: 0 };
-		const scheduled: { delayMs: number; run: () => void } | undefined = await captureSchedule(async () => {
-			// Bound of 100s < the ~270s first refresh, so no refresh should be scheduled.
-			const provider: OfflineTokenProvider = await login({
-				...BASE_OPTIONS,
-				fetchImpl: fake.fetchImpl,
-				nowMs: () => clock.value,
-				refreshSkewInS: 30,
-				tokenExpirationInS: 100
+		const captured: { provider: OfflineTokenProvider; scheduled: { delayMs: number; run: () => void } | undefined } =
+			await captureScheduleKeepAlive(async () => {
+				// Bound of 100s < the ~270s first refresh: the wait is clamped to the bound.
+				return login({
+					...BASE_OPTIONS,
+					fetchImpl: fake.fetchImpl,
+					nowMs: () => clock.value,
+					refreshSkewInS: 30,
+					tokenExpirationInS: 100
+				});
 			});
-			return provider;
-		});
 
-		assert.equal(scheduled, undefined, 'no refresh should be scheduled past the bound');
+		assert.ok(captured.scheduled !== undefined);
+		assert.equal(captured.scheduled.delayMs, 100 * 1000, 'the wait is clamped to the bound');
+		clock.value = 100 * 1000;
+		captured.scheduled.run();
+		await flushAsync();
 		assert.equal(fake.requests.length, 1, 'only the initial login call should have happened');
+		captured.provider.stop();
 	});
 });
 
@@ -614,6 +625,8 @@ describe('offlineTokenProvider scheduled refresh execution', () => {
 			});
 
 		assert.ok(captured.scheduled !== undefined, 'a refresh must have been scheduled');
+		// The wait ran out: the refresh decision reads the clock, so move it to the refresh point.
+		clock.value = captured.scheduled.delayMs;
 		captured.scheduled.run();
 		await flushAsync();
 
@@ -655,6 +668,7 @@ describe('offlineTokenProvider scheduled refresh execution', () => {
 			});
 
 		assert.ok(captured.scheduled !== undefined, 'a refresh must have been scheduled');
+		clock.value = captured.scheduled.delayMs;
 		const warnings: unknown[][] = await captureConsoleWarn(async () => {
 			captured.scheduled!.run();
 			await flushAsync();
@@ -663,7 +677,7 @@ describe('offlineTokenProvider scheduled refresh execution', () => {
 		// The failed refresh must not change the access token, and must be logged.
 		assert.equal(captured.provider.getAccessToken(), 'access-1');
 		assert.equal(warnings.length, 1);
-		assert.match(String(warnings[0][0]), /background refresh failed/);
+		assert.match(String(warnings[0][0]), /Keycloak token refresh failed \(attempt 1\)/);
 		captured.provider.stop();
 	});
 
@@ -693,6 +707,7 @@ describe('offlineTokenProvider scheduled refresh execution', () => {
 			});
 
 		assert.ok(captured.scheduled !== undefined, 'a refresh must have been scheduled');
+		clock.value = captured.scheduled.delayMs;
 		const warnings: unknown[][] = await captureConsoleWarn(async () => {
 			captured.scheduled!.run();
 			await flushAsync();
@@ -700,7 +715,7 @@ describe('offlineTokenProvider scheduled refresh execution', () => {
 
 		assert.equal(captured.provider.getAccessToken(), 'access-1');
 		assert.equal(warnings.length, 1);
-		assert.equal(String(warnings[0][1]), 'connection reset');
+		assert.match(String(warnings[0][0]), /Keycloak token refresh failed \(string: connection reset\)/);
 		captured.provider.stop();
 	});
 });
@@ -731,3 +746,104 @@ async function captureSchedule(
 	}
 	return captured;
 }
+
+/**
+ * The t2s 6.x surface on top of the cross-SDK provider (the catalogue in keycloakTokenProvider.spec.ts covers
+ * the shared behaviour; these pin what only this SDK's earlier API reaches).
+ */
+describe('offlineTokenProvider 6.x surface', () => {
+	/** Before any token was acquired every reader and refresh() refuse with an OfflineTokenError. */
+	it('refuses the token readers and refresh() before a token was acquired', async () => {
+		const provider: OfflineTokenProvider = new OfflineTokenProvider({ ...BASE_OPTIONS });
+		assert.throws(() => provider.getAccessToken(), { name: 'OfflineTokenError', message: /No access token/ });
+		assert.throws(() => provider.getAuthorizationHeader(), { name: 'OfflineTokenError' });
+		assert.throws(() => provider.getAuthorizationMetadata(), { name: 'OfflineTokenError' });
+		await assert.rejects(() => provider.refresh(), { name: 'OfflineTokenError' });
+		provider.stop();
+	});
+
+	/** Concurrent refresh() calls share one in-flight refresh request. */
+	it('shares one in-flight refresh between concurrent refresh() calls', async () => {
+		const fake: { fetchImpl: FetchLike; requests: CapturedRequest[] } = makeFakeFetch([
+			jsonResponse({ access_token: 'access-1', refresh_token: 'offline-1', expires_in: 300 }),
+			jsonResponse({ access_token: 'access-2', refresh_token: 'offline-2', expires_in: 300 })
+		]);
+		const provider: OfflineTokenProvider = await login({ ...BASE_OPTIONS, fetchImpl: fake.fetchImpl });
+		try {
+			const tokens: string[] = await Promise.all([provider.refresh(), provider.refresh(), provider.refresh()]);
+			assert.deepEqual(tokens, ['access-2', 'access-2', 'access-2']);
+			assert.equal(fake.requests.length, 2);
+		} finally {
+			provider.stop();
+		}
+	});
+
+	/** A refused refresh() raises the typed error with the HTTP status and never falls back to a password. */
+	it('raises the typed error with the status for a refused refresh()', async () => {
+		const fake: { fetchImpl: FetchLike; requests: CapturedRequest[] } = makeFakeFetch([
+			jsonResponse({ access_token: 'access-1', refresh_token: 'offline-1', expires_in: 300 }),
+			{ ok: false, status: 400, body: '{"error":"invalid_grant"}' }
+		]);
+		const provider: OfflineTokenProvider = await login({ ...BASE_OPTIONS, fetchImpl: fake.fetchImpl });
+		try {
+			await assert.rejects(
+				() => provider.refresh(),
+				(reason: unknown): boolean => {
+					assert.ok(reason instanceof KeycloakAuthenticationError);
+					assert.ok(reason instanceof OfflineTokenError);
+					assert.equal(reason.status, 400);
+					return true;
+				}
+			);
+			assert.equal(provider.getAccessToken(), 'access-1');
+			assert.equal(fake.requests[1].form.password, undefined);
+		} finally {
+			provider.stop();
+		}
+	});
+
+	/** A diagnostics handler that throws never ends the background loop. */
+	it('keeps the loop armed when an onRefreshError handler throws', async () => {
+		const fake: { fetchImpl: FetchLike; requests: CapturedRequest[] } = makeFakeFetch([
+			jsonResponse({ access_token: 'access-1', refresh_token: 'offline-1', expires_in: 300 }),
+			{ ok: false, status: 503, body: 'down' }
+		]);
+		const clock: { value: number } = { value: 0 };
+		const captured: { provider: OfflineTokenProvider; scheduled: { delayMs: number; run: () => void } | undefined } =
+			await captureScheduleKeepAlive(async () => {
+				return login({ ...BASE_OPTIONS, fetchImpl: fake.fetchImpl, nowMs: () => clock.value });
+			});
+		let handlerCalls: number = 0;
+		captured.provider.onRefreshError((): void => {
+			handlerCalls += 1;
+			throw new Error('a buggy diagnostics handler');
+		});
+		assert.ok(captured.scheduled !== undefined);
+		clock.value = captured.scheduled.delayMs;
+		const rearmed: { provider: OfflineTokenProvider; scheduled: { delayMs: number; run: () => void } | undefined } =
+			await captureScheduleKeepAlive(async () => {
+				await captureConsoleWarn(async () => {
+					captured.scheduled!.run();
+					await new Promise<void>((resolve: () => void): void => {
+						setImmediate(resolve);
+					});
+				});
+				return captured.provider;
+			});
+		assert.equal(handlerCalls, 1);
+		assert.ok(rearmed.scheduled !== undefined, 'the loop must re-arm after a throwing handler');
+		captured.provider.stop();
+	});
+
+	/** A missing options object and an empty username are refused before any request. */
+	it('refuses a missing options object and an empty username', async () => {
+		await assert.rejects(() => login(undefined as unknown as typeof BASE_OPTIONS), {
+			name: 'OfflineTokenError',
+			message: /requires an options object/
+		});
+		await assert.rejects(() => login({ ...BASE_OPTIONS, username: '' }), {
+			name: 'OfflineTokenError',
+			message: /"username" is required/
+		});
+	});
+});
